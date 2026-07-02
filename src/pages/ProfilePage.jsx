@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { stats } from "../data";
@@ -10,12 +10,51 @@ import { FaSignOutAlt } from "react-icons/fa";
 const SELECTED_GREEN = "#4CAF50";
 
 export default function ProfilePage() {
-  const { user, logout, updateUser } = useAuth();
+  const { user, ready, logout, updateUser } = useAuth();
   const [hovered, setHovered] = useState(null);
+  const [mapMarkup, setMapMarkup] = useState(null);
+  const mapRef = useRef(null);
 
+  const visited = user?.visitedDistricts || [];
+
+  useEffect(() => {
+    fetch("/assets/BD_Map_dark.svg")
+      .then((res) => res.text())
+      .then(setMapMarkup)
+      .catch(() => {});
+  }, []);
+
+  // Bake visited-district colors directly into the SVG markup so they
+  // survive every React re-render without imperative DOM patching.
+  const coloredMarkup = useMemo(() => {
+    if (!mapMarkup) return "";
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(mapMarkup, "image/svg+xml");
+    const svg = doc.querySelector("svg");
+    if (!svg) return mapMarkup;
+
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    svg.style.display = "block";
+
+    svg.querySelectorAll("[data-slug]").forEach((el) => {
+      if (visited.includes(el.dataset.slug)) {
+        // Use !important to override any inline fill styles baked into the SVG
+        el.style.setProperty("fill", SELECTED_GREEN, "important");
+        el.style.setProperty("fill-opacity", "0.9", "important");
+      } else {
+        el.style.removeProperty("fill");
+        el.style.removeProperty("fill-opacity");
+      }
+      el.style.setProperty("transition", "fill-opacity 0.15s");
+    });
+
+    return svg.outerHTML;
+  }, [mapMarkup, visited]);
+
+  if (!ready) return null;
   if (!user) return <Navigate to="/login" replace />;
 
-  const visited = user.visitedDistricts || [];
   const progress = Math.round((visited.length / stats.districts) * 100);
 
   function toggleDistrict(slug) {
@@ -26,7 +65,6 @@ export default function ProfilePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile sidebar — top on mobile, left on desktop */}
         <div className="lg:col-span-1 space-y-5">
           <div className="card bg-base-200 border border-base-300 p-6 text-center">
             <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-primary-content font-bold text-3xl mx-auto mb-3">
@@ -94,10 +132,12 @@ export default function ProfilePage() {
         <div className="lg:col-span-2">
           <div className="card bg-base-200 border border-base-300 p-4">
             <div className="relative w-full" style={{ aspectRatio: `${MAP_VIEWBOX.width} / ${MAP_VIEWBOX.height}` }}>
-              <img
-                src="/assets/BD_Map_dark.svg"
-                alt="Map of Bangladesh"
-                className="absolute inset-0 w-full h-full object-contain"
+              <div
+                ref={mapRef}
+                role="img"
+                aria-label="Map of Bangladesh"
+                className="absolute inset-0 w-full h-full"
+                dangerouslySetInnerHTML={{ __html: coloredMarkup }}
               />
               <svg
                 viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
@@ -118,9 +158,7 @@ export default function ProfilePage() {
                       onMouseEnter={() => setHovered(d.slug)}
                       onMouseLeave={() => setHovered((h) => (h === d.slug ? null : h))}
                     >
-                      {/* Invisible larger hit-area so the whole district "region" is clickable, not just the pin */}
                       <circle r={22} fill="transparent" />
-                      {/* Glow halo standing in for the district's highlighted area */}
                       <circle
                         r={isHovered ? 20 : 17}
                         fill={isVisited ? SELECTED_GREEN : "#ffffff"}

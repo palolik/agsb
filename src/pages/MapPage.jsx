@@ -1,60 +1,95 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { districts, divisions } from "../data";
+import { ALL_DISTRICTS } from "../data/allDistricts";
+import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { HiX, HiExternalLink } from "react-icons/hi";
 
+const MARKER_GREEN = "#4CAF50";
+
+// Only the districts with full guides get a marker — positioned using the same
+// pin coordinates the profile page's check-in map uses.
+const MAP_DISTRICTS = districts
+  .map((d) => ({ ...d, pin: ALL_DISTRICTS.find((ad) => ad.slug === d.slug)?.pin }))
+  .filter((d) => d.pin);
+
 export default function MapPage() {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
+  const [mapMarkup, setMapMarkup] = useState(null);
+  const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    if (mapInstance.current) return;
-    const L = window.L;
-    if (!L) return;
-
-    const map = L.map(mapRef.current, {
-      center: [23.8, 90.4],
-      zoom: 7,
-      zoomControl: false,
-      attributionControl: false,
-    });
-
-    L.control.zoom({ position: "topright" }).addTo(map);
-
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19,
-    }).addTo(map);
-
-    const greenIcon = L.divIcon({
-      className: "",
-      html: `<div style="width:24px;height:24px;background:#4CAF50;border:2px solid #1B5E20;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.4);">📍</div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-    });
-
-    districts.forEach(d => {
-      const marker = L.marker([d.lat, d.lng], { icon: greenIcon }).addTo(map);
-      marker.on("click", () => setSelected(d));
-      marker.bindTooltip(d.name_en, {
-        className: "!bg-base-200 !text-base-content !border-base-300 !rounded-lg !px-2 !py-1 !text-xs !shadow-lg",
-        direction: "top",
-        offset: [0, -12],
-      });
-    });
-
-    mapInstance.current = map;
-
-    return () => {
-      map.remove();
-      mapInstance.current = null;
-    };
+    fetch("/assets/BD_Map_dark.svg")
+      .then((res) => res.text())
+      .then(setMapMarkup)
+      .catch(() => {});
   }, []);
 
   return (
-    <div className="relative h-[calc(100vh-64px)]">
+    <div className="relative h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden bg-base-100">
       {/* Map */}
-      <div ref={mapRef} className="w-full h-full" />
+      <div className="relative h-full" style={{ aspectRatio: `${MAP_VIEWBOX.width} / ${MAP_VIEWBOX.height}` }}>
+        <div
+          role="img"
+          aria-label="Map of Bangladesh"
+          className="absolute inset-0 w-full h-full"
+          dangerouslySetInnerHTML={{ __html: mapMarkup || "" }}
+        />
+        <svg
+          viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
+          className="absolute inset-0 w-full h-full"
+        >
+          {MAP_DISTRICTS.map((d) => {
+            const [x, y] = d.pin;
+            const isHovered = hovered === d.slug;
+            const isSelected = selected?.slug === d.slug;
+            const tooltipWidth = Math.max(40, d.name_en.length * 5.6 + 14);
+
+            return (
+              <g
+                key={d.slug}
+                transform={`translate(${x},${y})`}
+                className="cursor-pointer"
+                onClick={() => setSelected(d)}
+                onMouseEnter={() => setHovered(d.slug)}
+                onMouseLeave={() => setHovered((h) => (h === d.slug ? null : h))}
+              >
+                {/* Invisible larger hit-area so the whole district "region" is clickable, not just the pin */}
+                <circle r={22} fill="transparent" />
+                <circle
+                  r={isHovered || isSelected ? 20 : 17}
+                  fill={MARKER_GREEN}
+                  opacity={isSelected ? 0.35 : isHovered ? 0.15 : 0}
+                  style={{ transition: "opacity 0.15s, r 0.15s" }}
+                />
+                <circle
+                  r={isHovered ? 7 : 5.5}
+                  fill={MARKER_GREEN}
+                  stroke="#1B5E20"
+                  strokeWidth="1.5"
+                  style={{ transition: "r 0.15s" }}
+                />
+                {isHovered && (
+                  <g transform="translate(0,-14)" pointerEvents="none">
+                    <rect
+                      x={-tooltipWidth / 2}
+                      y={-18}
+                      width={tooltipWidth}
+                      height={20}
+                      rx={5}
+                      fill="#181c27"
+                      stroke="#2f333e"
+                    />
+                    <text textAnchor="middle" y={-4} fontSize="10" fill="#e8e8ec">
+                      {d.name_en}
+                    </text>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
 
       {/* Header overlay */}
       <div className="absolute top-4 left-4 z-[1000]">
