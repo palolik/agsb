@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e//**)",
+      "Bash(find /c -maxdepth 1 -name \"tmp_labels.json\")",
+      "Bash(find /e -maxdepth 1 -iname \"tmp_labels.json\")",
+      "Bash(grep -oE 'fill=\"#[0-9A-Fa-f]{3,6}\"' public/assets/BD_Map_admin.svg)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

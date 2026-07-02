@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: agsb --default,
+    light --prefersdark;
+}
+
+@plugin "daisyui/theme" {
+  name: "agsb";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: oklch(0.15 0.02 270);
+  --color-base-200: oklch(0.18 0.025 270);
+  --color-base-300: oklch(0.22 0.03 270);
+  --color-base-content: oklch(0.92 0.01 270);
+  --color-primary: oklch(0.45 0.15 145);
+  --color-primary-content: oklch(0.98 0.01 145);
+  --color-secondary: oklch(0.55 0.15 145);
+  --color-secondary-content: oklch(0.98 0.01 145);
+  --color-accent: oklch(0.65 0.12 145);
+  --color-accent-content: oklch(0.15 0.02 145);
+  --color-neutral: oklch(0.25 0.02 270);
+  --color-neutral-content: oklch(0.85 0.01 270);
+  --color-info: oklch(0.65 0.15 240);
+  --color-success: oklch(0.65 0.2 145);
+  --color-warning: oklch(0.75 0.15 80);
+  --color-error: oklch(0.6 0.2 25);
+  --radius-box: 0.75rem;
+  --radius-btn: 0.5rem;
+  --radius-field: 0.5rem;
+}
+
+@theme {
+  --font-sans: 'Inter', 'Noto Sans Bengali', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: oklch(0.13 0.02 270);
+  min-height: 100vh;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, oklch(0.15 0.04 145 / 0.6), oklch(0.12 0.02 270) 60%);
+}
+
+.card-hover {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px oklch(0 0 0 / 0.3);
+}
+
+.district-badge {
+  background: linear-gradient(135deg, oklch(0.35 0.12 145), oklch(0.45 0.15 145));
+}
+
+.leaflet-container {
+  background: oklch(0.15 0.02 270) !important;
+  border-radius: 0.75rem;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: oklch(0.15 0.02 270); }
+::-webkit-scrollbar-thumb { background: oklch(0.3 0.03 270); border-radius: 3px; }

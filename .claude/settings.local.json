@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sL \"https://raw.githubusercontent.com/johan/world.geo.json/master/countries/BGD.geo.json\" -o /tmp/bgd.geojson)",
+      "Read(//tmp/**)",
+      "Bash(node -e \"console.log\\(process.version\\)\")",
+      "Bash(cd /tmp)",
+      "Bash(node -e ' *)",
+      "Bash(cp /tmp/bdBoundary.js \"/e/websites/AGSB-Frontend-Website/src/data/bdBoundary.js\" && wc -l \"/e/websites/AGSB-Frontend-Website/src/data/bdBoundary.js\")"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}
