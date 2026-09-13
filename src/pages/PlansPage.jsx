@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
-import { travelPlans } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiLocationMarker, HiClock } from "react-icons/hi";
 
 export default function PlansPage() {
+  const { data: travelPlans } = useFetch("/plans");
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
@@ -10,10 +13,10 @@ export default function PlansPage() {
         <p className="text-base-content/50 mt-1">Ready-made itineraries — pick one and go, or request a custom plan</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {travelPlans.map(p => (
+        {(travelPlans || []).map(p => (
           <div key={p.id} className="card bg-base-200 card-hover overflow-hidden border border-base-300 group">
             <figure className="h-44 overflow-hidden relative">
-              <img src={p.image} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute top-3 right-3 flex gap-1">
                 <span className="badge badge-primary">{p.duration}</span>
                 <span className="badge badge-ghost bg-base-200/80">{p.type}</span>
@@ -36,7 +39,7 @@ export default function PlansPage() {
               </div>
               <div className="mt-4 flex gap-2">
                 <Link to="/contact" className="btn btn-primary btn-sm flex-1">Get this plan</Link>
-                <button className="btn btn-ghost btn-sm border-base-300">Save</button>
+                <button className="btn btn-ghost btn-sm">Save</button>
               </div>
             </div>
           </div>

@@ -1,37 +1,10 @@
 import { Link } from "react-router-dom";
+import { useFetch } from "../hooks/useFetch";
 import { HiCheck, HiStar } from "react-icons/hi";
 
-const plans = [
-  {
-    name: "Explorer",
-    price: "Free",
-    period: "",
-    desc: "Start your 64-district journey",
-    features: ["64-district badge tracker", "3 free frames/month (watermarked)", "Save trip plans", "Basic district guides", "Community access"],
-    cta: "Sign Up Free",
-    popular: false,
-  },
-  {
-    name: "Premium",
-    price: "৳199",
-    period: "/month",
-    desc: "For serious Bangladesh travellers",
-    features: ["Everything in Explorer", "Unlimited HD frames (no watermark)", "Exclusive premium guides", "15% partner hotel discounts", "Priority custom plan support", "Early access to new districts", "64-district completion certificate"],
-    cta: "Start Premium",
-    popular: true,
-  },
-  {
-    name: "Annual",
-    price: "৳999",
-    period: "/year",
-    desc: "Best value — save ৳1,389",
-    features: ["Everything in Premium", "2 months free", "Exclusive annual member badge", "Free custom travel plan (1x/year)", "20% partner discounts", "Featured traveller spotlight"],
-    cta: "Go Annual",
-    popular: false,
-  },
-];
-
 export default function MembershipPage() {
+  const { data: plans } = useFetch("/membership-plans");
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       <div className="text-center mb-12">
@@ -41,7 +14,7 @@ export default function MembershipPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {plans.map(p => (
+        {(plans || []).map(p => (
           <div key={p.name} className={`card p-6 border ${p.popular ? "bg-primary/10 border-primary/30 ring-2 ring-primary/20" : "bg-base-200 border-base-300"}`}>
             {p.popular && <span className="badge badge-primary badge-sm mb-2">Most Popular</span>}
             <h3 className="text-xl font-bold text-base-content">{p.name}</h3>
@@ -58,7 +31,7 @@ export default function MembershipPage() {
                 </div>
               ))}
             </div>
-            <button className={`btn w-full ${p.popular ? "btn-primary" : "btn-ghost border-base-300"}`}>
+            <button className={`btn w-full ${p.popular ? "btn-primary" : "btn-ghost"}`}>
               {p.cta}
             </button>
           </div>

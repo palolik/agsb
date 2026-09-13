@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { districts, divisions } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiSearch, HiFilter } from "react-icons/hi";
 
 export default function DistrictsPage() {
@@ -8,9 +9,11 @@ export default function DistrictsPage() {
   const divFilter = searchParams.get("division");
   const [search, setSearch] = useState("");
   const [activeDivision, setActiveDivision] = useState(divFilter || "all");
+  const { data: districts, loading } = useFetch("/districts");
+  const { data: divisions } = useFetch("/divisions");
 
-  const filtered = districts.filter(d => {
-    const matchDiv = activeDivision === "all" || divisions.find(dv => dv.id === d.division_id)?.slug === activeDivision;
+  const filtered = (districts || []).filter(d => {
+    const matchDiv = activeDivision === "all" || (divisions || []).find(dv => dv.id === d.division_id)?.slug === activeDivision;
     const matchSearch = !search || d.name_en.toLowerCase().includes(search.toLowerCase()) || d.name_bn.includes(search);
     return matchDiv && matchSearch;
   });
@@ -45,7 +48,7 @@ export default function DistrictsPage() {
         >
           All (64)
         </button>
-        {divisions.map(dv => (
+        {(divisions || []).map(dv => (
           <button
             key={dv.slug}
             onClick={() => setActiveDivision(dv.slug)}
@@ -57,22 +60,22 @@ export default function DistrictsPage() {
       </div>
 
       {/* Results count */}
-      <p className="text-sm text-base-content/40 mb-4">{filtered.length} districts found</p>
+      <p className="text-sm text-base-content/40 mb-4">{loading ? "Loading…" : `${filtered.length} districts found`}</p>
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filtered.map(d => (
           <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
             <figure className="h-36 overflow-hidden relative">
-              <img src={d.image} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               <div className={`absolute top-2 right-2 badge badge-sm ${d.status === "complete" ? "badge-success" : d.status === "good" ? "badge-info" : "badge-ghost"}`}>
                 {d.status}
               </div>
             </figure>
             <div className="p-3">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full" style={{background: divisions.find(dv => dv.id === d.division_id)?.color}} />
-                <span className="text-xs text-base-content/40">{divisions.find(dv => dv.id === d.division_id)?.name_en}</span>
+                <span className="w-2 h-2 rounded-full" style={{background: (divisions || []).find(dv => dv.id === d.division_id)?.color}} />
+                <span className="text-xs text-base-content/40">{(divisions || []).find(dv => dv.id === d.division_id)?.name_en}</span>
               </div>
               <h3 className="font-bold text-base-content">{d.name_bn}</h3>
               <p className="text-sm text-base-content/50">{d.name_en}</p>

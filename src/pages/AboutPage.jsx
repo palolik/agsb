@@ -38,7 +38,7 @@ export default function AboutPage() {
         <p className="text-base-content/60 mb-4">Whether you've visited 5 districts or 50, there's always a new story waiting.</p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link to="/districts" className="btn btn-primary">Explore Districts</Link>
-          <Link to="/contact" className="btn btn-ghost border-base-300">Get in Touch</Link>
+          <Link to="/contact" className="btn btn-ghost">Get in Touch</Link>
         </div>
       </div>
     </div>

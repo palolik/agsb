@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
-import { districts, divisions } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiDownload, HiPhotograph, HiStar } from "react-icons/hi";
 
-const featured = districts.filter(d => d.status === "complete").slice(0, 8);
-
 export default function FramesPage() {
+  const { data: districts } = useFetch("/districts");
+  const featured = (districts || []).filter(d => d.status === "complete").slice(0, 8);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="text-center mb-10">
@@ -34,7 +36,7 @@ export default function FramesPage() {
         {featured.map(d => (
           <div key={d.id} className="card bg-base-200 overflow-hidden border border-base-300 card-hover group">
             <div className="relative h-40">
-              <img src={d.image} alt={d.name_en} className="w-full h-full object-cover" />
+              <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-base-100/90 via-transparent to-transparent" />
               <div className="absolute inset-0 border-[6px] border-primary/30 rounded-lg m-2" />
               <div className="absolute bottom-2 left-3 right-3">

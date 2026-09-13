@@ -11,11 +11,11 @@ export default function LoginPage() {
 
   if (user) return <Navigate to="/profile" replace />;
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     try {
-      login(form);
+      await login(form);
       navigate("/profile");
     } catch (err) {
       setError(err.message);

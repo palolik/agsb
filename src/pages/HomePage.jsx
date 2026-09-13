@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
-import { districts, divisions, blogPosts, travelPlans, stats } from "../data";
+import { stats } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiArrowRight, HiLocationMarker, HiMap, HiBookOpen, HiStar, HiClock } from "react-icons/hi";
 
-const featured = districts.filter(d => d.status === "complete").slice(0, 6);
-
 export default function HomePage() {
+  const { data: districts } = useFetch("/districts");
+  const { data: divisions } = useFetch("/divisions");
+  const { data: blogPosts } = useFetch("/blog");
+  const { data: travelPlans } = useFetch("/plans");
+  const featured = (districts || []).filter(d => d.status === "complete").slice(0, 6);
+
   return (
     <div>
       {/* Hero */}
@@ -29,7 +35,7 @@ export default function HomePage() {
               <Link to="/districts" className="btn btn-primary btn-lg">
                 Explore Districts <HiArrowRight className="ml-1" />
               </Link>
-              <Link to="/map" className="btn btn-outline border-base-content/20 btn-lg">
+              <Link to="/map" className="btn btn-ghost btn-lg border-none">
                 <HiMap className="mr-1" /> Open Map
               </Link>
             </div>
@@ -72,12 +78,12 @@ export default function HomePage() {
           {featured.map(d => (
             <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
               <figure className="h-48 overflow-hidden">
-                <img src={d.image} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </figure>
               <div className="card-body p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="badge badge-sm" style={{background: divisions.find(dv => dv.id === d.division_id)?.color + "22", color: divisions.find(dv => dv.id === d.division_id)?.color, border: "none"}}>
-                    {divisions.find(dv => dv.id === d.division_id)?.name_en}
+                  <span className="badge badge-sm" style={{background: (divisions || []).find(dv => dv.id === d.division_id)?.color + "22", color: (divisions || []).find(dv => dv.id === d.division_id)?.color, border: "none"}}>
+                    {(divisions || []).find(dv => dv.id === d.division_id)?.name_en}
                   </span>
                   <span className="badge badge-sm badge-ghost">{d.trip_type}</span>
                 </div>
@@ -103,7 +109,7 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-bold text-base-content mb-2">৮ বিভাগ</h2>
           <p className="text-base-content/50 mb-8">Explore Bangladesh division by division</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {divisions.map(dv => (
+            {(divisions || []).map(dv => (
               <Link key={dv.id} to={`/districts?division=${dv.slug}`} className="card bg-base-200 card-hover p-4 text-center border border-base-300">
                 <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-lg font-bold" style={{background: dv.color + "22", color: dv.color}}>
                   {dv.districtCount}
@@ -128,10 +134,10 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {travelPlans.slice(0, 3).map(p => (
+          {(travelPlans || []).slice(0, 3).map(p => (
             <Link key={p.id} to={`/plans/${p.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
               <figure className="h-40 overflow-hidden relative">
-                <img src={p.image} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-3 right-3 badge badge-primary">{p.duration}</div>
               </figure>
               <div className="card-body p-4">
@@ -160,10 +166,10 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {blogPosts.slice(0, 3).map(b => (
+            {(blogPosts || []).slice(0, 3).map(b => (
               <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
                 <figure className="h-40 overflow-hidden">
-                  <img src={b.image} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </figure>
                 <div className="card-body p-4">
                   <div className="flex items-center gap-2 mb-1">
@@ -186,7 +192,7 @@ export default function HomePage() {
           <p className="text-primary-content/70 mb-6 max-w-xl mx-auto">Track your progress, earn district badges, collect photo frames, and get the ultimate 64-district certificate.</p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link to="/membership" className="btn bg-base-100 text-primary hover:bg-base-200 border-none">Join Now — Free</Link>
-            <Link to="/frames" className="btn btn-outline border-primary-content/30 text-primary-content hover:bg-primary-content/10">Browse Frames</Link>
+            <Link to="/frames" className="btn btn-ghost text-primary-content hover:bg-primary-content/10 border-none">Browse Frames</Link>
           </div>
         </div>
       </section>

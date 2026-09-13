@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { districts } from "../data";
+import { useFetch } from "../hooks/useFetch";
 import { HiUser, HiMail, HiPhone, HiLockClosed } from "react-icons/hi";
 
 export default function SignupPage() {
   const { user, signup } = useAuth();
   const navigate = useNavigate();
+  const { data: districts } = useFetch("/districts");
   const [form, setForm] = useState({ name: "", email: "", phone: "", district: "", password: "", confirm: "" });
   const [error, setError] = useState("");
 
   if (user) return <Navigate to="/profile" replace />;
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     if (form.password !== form.confirm) {
@@ -24,7 +25,7 @@ export default function SignupPage() {
       return;
     }
     try {
-      signup(form);
+      await signup(form);
       navigate("/profile");
     } catch (err) {
       setError(err.message);
@@ -94,7 +95,7 @@ export default function SignupPage() {
             onChange={(e) => setForm({ ...form, district: e.target.value })}
           >
             <option value="">Select district</option>
-            {districts.map((d) => (
+            {(districts || []).map((d) => (
               <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>
             ))}
           </select>

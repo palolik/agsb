@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
-import { blogPosts } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiClock, HiArrowRight } from "react-icons/hi";
 
 export default function BlogPage() {
+  const { data: blogPosts } = useFetch("/blog");
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
@@ -11,10 +14,10 @@ export default function BlogPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {blogPosts.map(b => (
+        {(blogPosts || []).map(b => (
           <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
             <figure className="h-44 overflow-hidden">
-              <img src={b.image} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
             </figure>
             <div className="card-body p-4">
               <div className="flex items-center gap-2 mb-2">

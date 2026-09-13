@@ -1,13 +1,25 @@
 import { useState } from "react";
 import { HiMail, HiPhone, HiLocationMarker } from "react-icons/hi";
 import { FaWhatsapp, FaFacebook, FaInstagram } from "react-icons/fa";
-import { districts } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { apiSend } from "../lib/api";
 
 export default function ContactPage() {
+  const { data: districts } = useFetch("/districts");
   const [form, setForm] = useState({ name: "", phone: "", district: "", purpose: "general", message: "" });
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => { e.preventDefault(); setSent(true); };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await apiSend("/contact", "POST", form);
+      setSent(true);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -25,6 +37,7 @@ export default function ContactPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="card bg-base-200 p-6 border border-base-300 space-y-4">
+              {error && <div className="alert alert-error text-sm py-2">{error}</div>}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label"><span className="label-text">আপনার নাম</span></label>
@@ -40,7 +53,7 @@ export default function ContactPage() {
                   <label className="label"><span className="label-text">জেলা (optional)</span></label>
                   <select className="select select-bordered bg-base-300 w-full" value={form.district} onChange={e => setForm({...form, district: e.target.value})}>
                     <option value="">Select district</option>
-                    {districts.map(d => <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>)}
+                    {(districts || []).map(d => <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>)}
                   </select>
                 </div>
                 <div>

@@ -1,13 +1,17 @@
 import { useParams, Link } from "react-router-dom";
-import { blogPosts, districts } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiArrowLeft, HiClock, HiCalendar } from "react-icons/hi";
 
 export default function BlogDetailPage() {
   const { slug } = useParams();
-  const post = blogPosts.find(b => b.slug === slug);
-  if (!post) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">Post not found</h1><Link to="/blog" className="btn btn-primary mt-4">Back to Blog</Link></div>;
+  const { data: post, loading, error } = useFetch(`/blog/${slug}`);
+  const { data: districts } = useFetch("/districts");
 
-  const district = districts.find(d => d.slug === post.districtSlug);
+  if (loading) return null;
+  if (error || !post) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">Post not found</h1><Link to="/blog" className="btn btn-primary mt-4">Back to Blog</Link></div>;
+
+  const district = (districts || []).find(d => d.slug === post.districtSlug);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -23,7 +27,7 @@ export default function BlogDetailPage() {
         <p className="text-lg text-base-content/60">{post.title_en}</p>
       </div>
 
-      <img src={post.image} alt={post.title_en} className="w-full h-64 md:h-96 object-cover rounded-xl mb-8" />
+      <img src={resolveImage(post.image)} alt={post.title_en} className="w-full h-64 md:h-96 object-cover rounded-xl mb-8" />
 
       <div className="prose prose-invert max-w-none">
         <p className="text-lg text-base-content/70 leading-relaxed">{post.excerpt}</p>
@@ -34,7 +38,7 @@ export default function BlogDetailPage() {
           <div className="mt-8">
             <h3 className="text-xl font-bold text-base-content mb-3">Related District</h3>
             <Link to={`/districts/${district.slug}`} className="card bg-base-200 p-4 border border-base-300 card-hover flex flex-row items-center gap-4">
-              <img src={district.image} alt={district.name_en} className="w-20 h-20 rounded-lg object-cover" />
+              <img src={resolveImage(district.image)} alt={district.name_en} className="w-20 h-20 rounded-lg object-cover" />
               <div>
                 <h4 className="font-bold text-base-content">{district.name_bn}</h4>
                 <p className="text-sm text-base-content/50">{district.name_en} — {district.tagline}</p>

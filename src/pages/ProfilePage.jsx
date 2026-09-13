@@ -79,7 +79,7 @@ export default function ProfilePage() {
               {user.phone && <div className="flex items-center justify-center gap-1.5"><HiPhone /> {user.phone}</div>}
               <div className="flex items-center justify-center gap-1.5"><HiCalendar /> Joined {user.joined}</div>
             </div>
-            <button onClick={logout} className="btn btn-ghost btn-sm border-base-300 w-full mt-4">
+            <button onClick={logout} className="btn btn-ghost btn-sm w-full mt-4">
               <FaSignOutAlt className="mr-1" /> Logout
             </button>
           </div>

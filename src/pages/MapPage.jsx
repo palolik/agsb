@@ -1,22 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { districts, divisions } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { HiX, HiExternalLink } from "react-icons/hi";
 
 const MARKER_GREEN = "#4CAF50";
 
-// Only the districts with full guides get a marker — positioned using the same
-// pin coordinates the profile page's check-in map uses.
-const MAP_DISTRICTS = districts
-  .map((d) => ({ ...d, pin: ALL_DISTRICTS.find((ad) => ad.slug === d.slug)?.pin }))
-  .filter((d) => d.pin);
-
 export default function MapPage() {
+  const { data: districts } = useFetch("/districts");
+  const { data: divisions } = useFetch("/divisions");
   const [mapMarkup, setMapMarkup] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
+
+  // Only the districts with full guides get a marker — positioned using the same
+  // pin coordinates the profile page's check-in map uses.
+  const MAP_DISTRICTS = useMemo(() => (districts || [])
+    .map((d) => ({ ...d, pin: ALL_DISTRICTS.find((ad) => ad.slug === d.slug)?.pin }))
+    .filter((d) => d.pin), [districts]);
 
   useEffect(() => {
     fetch("/assets/BD_Map_dark.svg")
@@ -104,7 +107,7 @@ export default function MapPage() {
         <div className="bg-base-200/90 backdrop-blur-lg rounded-xl p-3 border border-base-300 shadow-xl">
           <p className="text-xs font-medium text-base-content/70 mb-2">Divisions</p>
           <div className="grid grid-cols-2 gap-1">
-            {divisions.map(dv => (
+            {(divisions || []).map(dv => (
               <div key={dv.id} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{background: dv.color}} />
                 <span className="text-xs text-base-content/60">{dv.name_en}</span>
@@ -119,13 +122,13 @@ export default function MapPage() {
         <div className="absolute top-4 right-4 bottom-4 z-[1000] w-72 sm:w-80">
           <div className="bg-base-200/95 backdrop-blur-lg rounded-xl border border-base-300 shadow-2xl h-full overflow-y-auto">
             <div className="relative">
-              <img src={selected.image} alt={selected.name_en} className="w-full h-36 object-cover rounded-t-xl" />
+              <img src={resolveImage(selected.image)} alt={selected.name_en} className="w-full h-36 object-cover rounded-t-xl" />
               <button onClick={() => setSelected(null)} className="absolute top-2 right-2 btn btn-circle btn-sm btn-ghost bg-base-200/80">
                 <HiX />
               </button>
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-base-200 p-3">
-                <span className="badge badge-sm" style={{background: divisions.find(dv => dv.id === selected.division_id)?.color + "33", color: divisions.find(dv => dv.id === selected.division_id)?.color, border: "none"}}>
-                  {divisions.find(dv => dv.id === selected.division_id)?.name_en}
+                <span className="badge badge-sm" style={{background: (divisions || []).find(dv => dv.id === selected.division_id)?.color + "33", color: (divisions || []).find(dv => dv.id === selected.division_id)?.color, border: "none"}}>
+                  {(divisions || []).find(dv => dv.id === selected.division_id)?.name_en}
                 </span>
               </div>
             </div>

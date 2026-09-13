@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { districts, divisions, travelPlans } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -7,18 +8,23 @@ const typeColors = { nature: "badge-success", historical: "badge-warning", relig
 
 export default function DistrictDetailPage() {
   const { slug } = useParams();
-  const district = districts.find(d => d.slug === slug);
-  if (!district) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">District not found</h1><Link to="/districts" className="btn btn-primary mt-4">Back to Districts</Link></div>;
+  const { data: district, loading, error } = useFetch(`/districts/${slug}`);
+  const { data: allDistricts } = useFetch("/districts");
+  const { data: divisions } = useFetch("/divisions");
+  const { data: travelPlans } = useFetch("/plans");
 
-  const division = divisions.find(dv => dv.id === district.division_id);
-  const relatedPlans = travelPlans.filter(p => p.districts.includes(district.name_en));
-  const nearby = districts.filter(d => d.division_id === district.division_id && d.id !== district.id).slice(0, 3);
+  if (loading) return null;
+  if (error || !district) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">District not found</h1><Link to="/districts" className="btn btn-primary mt-4">Back to Districts</Link></div>;
+
+  const division = (divisions || []).find(dv => dv.id === district.division_id);
+  const relatedPlans = (travelPlans || []).filter(p => p.districts.includes(district.name_en));
+  const nearby = (allDistricts || []).filter(d => d.division_id === district.division_id && d.id !== district.id).slice(0, 3);
 
   return (
     <div>
       {/* Hero */}
       <div className="relative h-64 md:h-80 overflow-hidden">
-        <img src={district.image} alt={district.name_en} className="w-full h-full object-cover" />
+        <img src={resolveImage(district.image)} alt={district.name_en} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 max-w-7xl mx-auto">
           <Link to="/districts" className="btn btn-sm btn-ghost text-base-content/70 mb-3">
@@ -146,7 +152,7 @@ export default function DistrictDetailPage() {
                 <div className="space-y-2">
                   {nearby.map(d => (
                     <Link key={d.id} to={`/districts/${d.slug}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-base-300/50 transition-colors">
-                      <img src={d.image} alt={d.name_en} className="w-12 h-12 rounded-lg object-cover" />
+                      <img src={resolveImage(d.image)} alt={d.name_en} className="w-12 h-12 rounded-lg object-cover" />
                       <div>
                         <div className="text-sm font-medium text-base-content">{d.name_bn}</div>
                         <div className="text-xs text-base-content/50">{d.name_en}</div>

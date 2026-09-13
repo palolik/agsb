@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
-import { partners } from "../data";
+import { useFetch } from "../hooks/useFetch";
+import { resolveImage } from "../lib/api";
 import { HiStar, HiBadgeCheck, HiLocationMarker } from "react-icons/hi";
 
 export default function PartnersPage() {
+  const { data: partners } = useFetch("/partners");
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
@@ -11,10 +14,10 @@ export default function PartnersPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
-        {partners.map(p => (
+        {(partners || []).map(p => (
           <div key={p.id} className="card bg-base-200 border border-base-300 card-hover overflow-hidden">
             <figure className="h-36 overflow-hidden">
-              <img src={p.image} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+              <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
             </figure>
             <div className="p-4">
               <div className="flex items-center gap-1 mb-1">

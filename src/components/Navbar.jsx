@@ -100,7 +100,7 @@ export default function Navbar() {
               <Link
                 to={user ? "/profile" : "/login"}
                 onClick={() => setOpen(false)}
-                className="btn btn-ghost btn-sm w-full border-base-300"
+                className="btn btn-ghost btn-sm w-full"
               >
                 {user ? `My Profile (${user.name})` : "Log In / Sign Up"}
               </Link>

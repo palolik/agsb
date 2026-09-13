@@ -1,20 +1,22 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { apiGet, apiSend } from "../lib/api";
 
 const AuthContext = createContext(null);
 
-const USERS_KEY = "agsb_users";
-const SESSION_KEY = "agsb_session";
+const TOKEN_KEY = "agsb_token";
+const USER_KEY = "agsb_user";
 
-function loadUsers() {
+function loadStoredUser() {
   try {
-    return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+    return JSON.parse(localStorage.getItem(USER_KEY));
   } catch {
-    return [];
+    return null;
   }
 }
 
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+function persist(token, user) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 export function AuthProvider({ children }) {
@@ -22,61 +24,46 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const email = localStorage.getItem(SESSION_KEY);
-    if (email) {
-      const found = loadUsers().find((u) => u.email === email);
-      if (found) setUser(found);
-    }
+    const stored = loadStoredUser();
+    if (stored) setUser(stored);
     setReady(true);
+
+    if (stored && localStorage.getItem(TOKEN_KEY)) {
+      apiGet("/profile")
+        .then((data) => {
+          setUser(data.user);
+          localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+        })
+        .catch(() => {
+          // stale/expired token — clear silently, user stays logged out on next reload
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+        });
+    }
   }, []);
 
-  function signup({ name, email, phone, password, district }) {
-    const users = loadUsers();
-    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      throw new Error("An account with this email already exists.");
-    }
-    const newUser = {
-      name,
-      email,
-      phone,
-      password,
-      district,
-      plan: "Explorer",
-      joined: new Date().toISOString().slice(0, 10),
-      visitedDistricts: [],
-    };
-    saveUsers([...users, newUser]);
-    localStorage.setItem(SESSION_KEY, email);
-    setUser(newUser);
+  async function signup({ name, email, phone, password, district }) {
+    const data = await apiSend("/auth/signup", "POST", { name, email, phone, password, district });
+    persist(data.token, data.user);
+    setUser(data.user);
   }
 
-  function login({ email, password }) {
-    const users = loadUsers();
-    const found = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-    if (!found) throw new Error("Invalid email or password.");
-    localStorage.setItem(SESSION_KEY, found.email);
-    setUser(found);
+  async function login({ email, password }) {
+    const data = await apiSend("/auth/login", "POST", { email, password });
+    persist(data.token, data.user);
+    setUser(data.user);
   }
 
   function logout() {
-    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
     setUser(null);
   }
 
-  function updateUser(patch) {
-    setUser((current) => {
-      if (!current) return current;
-      const users = loadUsers();
-      const idx = users.findIndex((u) => u.email === current.email);
-      const updated = { ...current, ...patch };
-      if (idx !== -1) {
-        users[idx] = updated;
-        saveUsers(users);
-      }
-      return updated;
-    });
+  async function updateUser(patch) {
+    const data = await apiSend("/profile", "PATCH", patch);
+    setUser(data.user);
+    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
   }
 
   return (
