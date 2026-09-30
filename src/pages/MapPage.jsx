@@ -4,9 +4,9 @@ import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
-import { HiX, HiExternalLink } from "react-icons/hi";
+import { HiX, HiExternalLink, HiMap, HiLocationMarker } from "react-icons/hi";
 
-const MARKER_GREEN = "#4CAF50";
+const MARKER_COLOR = "#3FA66B";
 
 export default function MapPage() {
   const { data: districts } = useFetch("/districts");
@@ -61,14 +61,14 @@ export default function MapPage() {
                 <circle r={22} fill="transparent" />
                 <circle
                   r={isHovered || isSelected ? 20 : 17}
-                  fill={MARKER_GREEN}
+                  fill={MARKER_COLOR}
                   opacity={isSelected ? 0.35 : isHovered ? 0.15 : 0}
                   style={{ transition: "opacity 0.15s, r 0.15s" }}
                 />
                 <circle
                   r={isHovered ? 7 : 5.5}
-                  fill={MARKER_GREEN}
-                  stroke="#1B5E20"
+                  fill={MARKER_COLOR}
+                  stroke="#0F3D24"
                   strokeWidth="1.5"
                   style={{ transition: "r 0.15s" }}
                 />
@@ -80,10 +80,10 @@ export default function MapPage() {
                       width={tooltipWidth}
                       height={20}
                       rx={5}
-                      fill="#181c27"
-                      stroke="#2f333e"
+                      fill="#0A140F"
+                      stroke="#1F3A2B"
                     />
-                    <text textAnchor="middle" y={-4} fontSize="10" fill="#e8e8ec">
+                    <text textAnchor="middle" y={-4} fontSize="10" fill="#E3EDE7">
                       {d.name_en}
                     </text>
                   </g>
@@ -97,7 +97,7 @@ export default function MapPage() {
       {/* Header overlay */}
       <div className="absolute top-4 left-4 z-[1000]">
         <div className="bg-base-200/90 backdrop-blur-lg rounded-xl p-3 border border-base-300 shadow-xl">
-          <h1 className="text-lg font-bold text-base-content">🗺️ Bangladesh Map</h1>
+          <h1 className="text-lg font-bold text-base-content flex items-center gap-2"><HiMap className="text-primary" /> Bangladesh Map</h1>
           <p className="text-xs text-base-content/50">Click any marker to explore</p>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function MapPage() {
                 <p className="text-xs font-medium text-base-content/50 mb-2">Top attractions</p>
                 {selected.attractions.slice(0, 3).map((a, i) => (
                   <div key={i} className="flex items-center gap-2 py-1.5 border-b border-base-300/50 last:border-0">
-                    <span className="text-xs">📍</span>
+                    <HiLocationMarker className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span className="text-sm text-base-content/70">{a.name}</span>
                   </div>
                 ))}

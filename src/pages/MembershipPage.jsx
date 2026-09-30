@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { HiCheck, HiStar } from "react-icons/hi";
+import { HiCheck, HiStar, HiDeviceMobile, HiCreditCard, HiLibrary } from "react-icons/hi";
 
 export default function MembershipPage() {
   const { data: plans } = useFetch("/membership-plans");
@@ -42,13 +42,13 @@ export default function MembershipPage() {
         <h2 className="text-xl font-bold text-base-content mb-4">Payment Methods</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { name: "bKash", icon: "💜", desc: "Mobile payment" },
-            { name: "Nagad", icon: "🧡", desc: "Mobile payment" },
-            { name: "SSLCommerz", icon: "💳", desc: "Card payment" },
-            { name: "Rocket", icon: "💙", desc: "Mobile banking" },
+            { name: "bKash", icon: HiDeviceMobile, desc: "Mobile payment" },
+            { name: "Nagad", icon: HiDeviceMobile, desc: "Mobile payment" },
+            { name: "SSLCommerz", icon: HiCreditCard, desc: "Card payment" },
+            { name: "Rocket", icon: HiLibrary, desc: "Mobile banking" },
           ].map(pm => (
             <div key={pm.name} className="flex items-center gap-3 p-3 bg-base-300/50 rounded-lg">
-              <span className="text-2xl">{pm.icon}</span>
+              <pm.icon className="w-7 h-7 text-primary shrink-0" />
               <div>
                 <div className="text-sm font-medium text-base-content">{pm.name}</div>
                 <div className="text-xs text-base-content/40">{pm.desc}</div>

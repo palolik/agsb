@@ -18,6 +18,10 @@ import PartnersPage from "./pages/PartnersPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
+import BookingPage from "./pages/BookingPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import PaymentPage from "./pages/PaymentPage";
+import RequireAuth from "./components/RequireAuth";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -48,6 +52,9 @@ export default function App() {
         <Route path="/blog/:slug" element={<Layout><BlogDetailPage /></Layout>} />
         <Route path="/plans" element={<Layout><PlansPage /></Layout>} />
         <Route path="/plans/:slug" element={<Layout><PlanDetailPage /></Layout>} />
+        <Route path="/plans/:slug/book" element={<Layout><RequireAuth><BookingPage /></RequireAuth></Layout>} />
+        <Route path="/bookings/:id/checkout" element={<Layout><RequireAuth><CheckoutPage /></RequireAuth></Layout>} />
+        <Route path="/bookings/:id/pay" element={<Layout><RequireAuth><PaymentPage /></RequireAuth></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/frames" element={<Layout><FramesPage /></Layout>} />

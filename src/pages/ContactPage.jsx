@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HiMail, HiPhone, HiLocationMarker } from "react-icons/hi";
+import { HiMail, HiPhone, HiLocationMarker, HiCheckCircle } from "react-icons/hi";
 import { FaWhatsapp, FaFacebook, FaInstagram } from "react-icons/fa";
 import { useFetch } from "../hooks/useFetch";
 import { apiSend } from "../lib/api";
@@ -24,13 +24,13 @@ export default function ContactPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="text-3xl md:text-4xl font-bold text-base-content mb-2">যোগাযোগ করুন</h1>
-      <p className="text-base-content/50 mb-8">Need a custom travel plan? Have a question? We'd love to hear from you.</p>
+      <p className="text-base-content/50 mb-8">Have a question about a trip plan or a district? We'd love to hear from you.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           {sent ? (
             <div className="card bg-success/10 border border-success/20 p-8 text-center">
-              <div className="text-5xl mb-4">✅</div>
+              <HiCheckCircle className="w-14 h-14 text-success mx-auto mb-4" />
               <h2 className="text-xl font-bold text-base-content mb-2">Message sent!</h2>
               <p className="text-base-content/60">We'll get back to you within 4 hours. Check WhatsApp for a faster response.</p>
               <button onClick={() => setSent(false)} className="btn btn-ghost btn-sm mt-4">Send another</button>
@@ -60,7 +60,7 @@ export default function ContactPage() {
                   <label className="label"><span className="label-text">বিষয়</span></label>
                   <select className="select select-bordered bg-base-300 w-full" value={form.purpose} onChange={e => setForm({...form, purpose: e.target.value})}>
                     <option value="general">General inquiry</option>
-                    <option value="plan">Custom travel plan</option>
+                    <option value="plan">Trip plan inquiry</option>
                     <option value="partner">Partner with us</option>
                     <option value="feedback">Feedback</option>
                   </select>

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
-import { HiDownload, HiPhotograph, HiStar } from "react-icons/hi";
+import { HiDownload, HiPhotograph, HiStar, HiCamera, HiLocationMarker, HiShare } from "react-icons/hi";
+import { FaMedal } from "react-icons/fa";
 
 export default function FramesPage() {
   const { data: districts } = useFetch("/districts");
@@ -10,7 +11,7 @@ export default function FramesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="text-center mb-10">
-        <div className="text-5xl mb-3">📸</div>
+        <HiCamera className="w-12 h-12 text-primary mx-auto mb-3" />
         <h1 className="text-3xl md:text-4xl font-bold text-base-content">আমি ঘুরেছি — Photo Frames</h1>
         <p className="text-base-content/50 mt-2 max-w-xl mx-auto">Download beautiful district photo frames, share your travel memories, and collect all 64!</p>
       </div>
@@ -18,12 +19,12 @@ export default function FramesPage() {
       {/* How it works */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
         {[
-          { step: "1", icon: "📍", title: "Pick your district", desc: "Choose from 64 district frames plus special edition designs" },
-          { step: "2", icon: "📷", title: "Upload your photo", desc: "Add your travel photo to the frame using our builder" },
-          { step: "3", icon: "📤", title: "Share your memory", desc: "Download and share on social media with #আমিঘুরেছি" },
+          { step: "1", icon: HiLocationMarker, title: "Pick your district", desc: "Choose from 64 district frames plus special edition designs" },
+          { step: "2", icon: HiCamera, title: "Upload your photo", desc: "Add your travel photo to the frame using our builder" },
+          { step: "3", icon: HiShare, title: "Share your memory", desc: "Download and share on social media with #আমিঘুরেছি" },
         ].map(s => (
           <div key={s.step} className="card bg-base-200 p-5 border border-base-300 text-center">
-            <div className="text-3xl mb-2">{s.icon}</div>
+            <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
             <h3 className="font-bold text-base-content">{s.title}</h3>
             <p className="text-sm text-base-content/60 mt-1">{s.desc}</p>
           </div>
@@ -73,7 +74,7 @@ export default function FramesPage() {
           </div>
           <div className="grid grid-cols-2 gap-2 w-48">
             {[1,2,3,4].map(i => (
-              <div key={i} className="h-20 bg-base-300 rounded-lg flex items-center justify-center text-2xl">🖼️</div>
+              <div key={i} className="h-20 bg-base-300 rounded-lg flex items-center justify-center"><HiPhotograph className="w-7 h-7 text-base-content/40" /></div>
             ))}
           </div>
         </div>
@@ -81,7 +82,7 @@ export default function FramesPage() {
 
       {/* 64 district badge tracker */}
       <div className="card bg-primary/10 border border-primary/20 p-6 text-center">
-        <h2 className="text-2xl font-bold text-base-content mb-2">🏅 64-District Badge Tracker</h2>
+        <h2 className="text-2xl font-bold text-base-content mb-2 flex items-center justify-center gap-2"><FaMedal className="text-primary" /> 64-District Badge Tracker</h2>
         <p className="text-base-content/60 mb-4">Create an account to track your district visits, collect badges, and earn the ultimate completion certificate!</p>
         <Link to="/membership" className="btn btn-primary">Start Tracking</Link>
       </div>

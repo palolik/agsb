@@ -1,8 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
-import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload } from "react-icons/hi";
-import { FaWhatsapp } from "react-icons/fa";
+import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload, HiCamera } from "react-icons/hi";
+import { FaWhatsapp, FaMedal } from "react-icons/fa";
 
 const typeColors = { nature: "badge-success", historical: "badge-warning", religious: "badge-info", cultural: "badge-secondary", food: "badge-error", market: "badge-accent" };
 
@@ -119,7 +119,7 @@ export default function DistrictDetailPage() {
             {/* CTA card */}
             <div className="card bg-primary/10 border border-primary/20 p-5">
               <h3 className="font-bold text-base-content mb-2">এই জেলা ভ্রমণের পরিকল্পনা করুন</h3>
-              <p className="text-sm text-base-content/60 mb-4">Get a custom travel plan with hotel, food, and transport recommendations.</p>
+              <p className="text-sm text-base-content/60 mb-4">Questions about hotels, food or transport here? Get in touch.</p>
               <a href="#" className="btn btn-primary w-full mb-2">
                 <FaWhatsapp className="mr-1" /> WhatsApp us
               </a>
@@ -128,7 +128,7 @@ export default function DistrictDetailPage() {
 
             {/* Frame CTA */}
             <div className="card bg-base-200 border border-base-300 p-5">
-              <h3 className="font-bold text-base-content mb-2">📸 আমি ঘুরেছি — {district.name_bn}</h3>
+              <h3 className="font-bold text-base-content mb-2 flex items-center gap-2"><HiCamera className="text-primary shrink-0" /> আমি ঘুরেছি — {district.name_bn}</h3>
               <p className="text-sm text-base-content/60 mb-3">Download this district's photo frame and share your memory.</p>
               <Link to="/frames" className="btn btn-secondary btn-sm w-full">
                 <HiDownload className="mr-1" /> Get Frame
@@ -138,7 +138,7 @@ export default function DistrictDetailPage() {
             {/* Badge */}
             <div className="card bg-base-200 border border-base-300 p-5 text-center">
               <div className="district-badge w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center">
-                <span className="text-2xl">🏅</span>
+                <FaMedal className="w-7 h-7 text-base-content" />
               </div>
               <h3 className="font-bold text-base-content">District Badge</h3>
               <p className="text-sm text-base-content/50 mt-1">Login to check in and earn your {district.name_en} badge!</p>

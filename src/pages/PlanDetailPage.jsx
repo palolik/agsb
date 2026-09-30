@@ -3,7 +3,9 @@ import { useParams, Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { renderRichText } from "../lib/richText";
-import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi } from "react-icons/hi";
+import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiCalendar, HiUserGroup } from "react-icons/hi";
+import { planStatus, isBookable, formatDateRange, seatsLabel } from "../lib/planSchedule";
+import { taka, ADVANCE_RATE } from "../lib/booking";
 
 export default function PlanDetailPage() {
   const { slug } = useParams();
@@ -40,6 +42,7 @@ export default function PlanDetailPage() {
           <div className="flex items-center gap-2 mb-2">
             {plan.duration && <span className="badge badge-primary">{plan.duration}</span>}
             {plan.type && <span className="badge badge-ghost bg-base-200/80">{plan.type}</span>}
+            <span className={`badge ${planStatus(plan).badge}`}>{planStatus(plan).label}</span>
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-base-content">{plan.title_bn}</h1>
           <p className="text-lg text-base-content/60">{plan.title_en}</p>
@@ -85,12 +88,27 @@ export default function PlanDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             <div className="card bg-base-200 p-5 border border-base-300">
-              <h3 className="font-bold text-base-content mb-3">Quick info</h3>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <h3 className="font-bold text-base-content">Quick info</h3>
+                <span className={`badge badge-sm ${planStatus(plan).badge}`}>{planStatus(plan).label}</span>
+              </div>
               <div className="space-y-3 text-sm">
+                {plan.start_date && (
+                  <div className="flex items-center gap-2 text-base-content/70"><HiCalendar className="text-primary" /> {formatDateRange(plan.start_date, plan.end_date)}</div>
+                )}
+                {seatsLabel(plan.seats_available) && (
+                  <div className="flex items-center gap-2 text-base-content/70"><HiUserGroup className="text-primary" /> {seatsLabel(plan.seats_available)}</div>
+                )}
                 {plan.duration && (
                   <div className="flex items-center gap-2 text-base-content/70"><HiClock className="text-primary" /> {plan.duration}</div>
                 )}
-                {plan.cost && (
+                {plan.price > 0 && (
+                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-base-300">
+                    <span className="text-base-content/60">Price per person</span>
+                    <span className="text-lg font-bold text-primary">{taka(plan.price)}</span>
+                  </div>
+                )}
+                {plan.cost && !(plan.price > 0) && (
                   <div className="flex items-center gap-2 text-base-content/70"><HiCurrencyBangladeshi className="text-primary" /> {plan.cost}</div>
                 )}
                 {planDistricts.length > 0 && (
@@ -107,13 +125,16 @@ export default function PlanDetailPage() {
                   </div>
                 )}
               </div>
-              <Link to="/contact" className="btn btn-primary btn-sm w-full mt-5">Get this plan</Link>
-            </div>
-
-            <div className="card bg-primary/10 border border-primary/20 p-5 text-center">
-              <h3 className="font-bold text-base-content mb-1">কাস্টম প্ল্যান দরকার?</h3>
-              <p className="text-sm text-base-content/60 mb-3">We'll build an itinerary around your group, budget and dates.</p>
-              <Link to="/contact" className="btn btn-outline btn-primary btn-sm">Request Custom Plan</Link>
+              {isBookable(plan) && plan.price > 0 ? (
+                <>
+                  <Link to={`/plans/${plan.slug}/book`} className="btn btn-primary w-full mt-5">Book tickets</Link>
+                  <p className="text-xs text-base-content/40 text-center mt-2">Pay {Math.round(ADVANCE_RATE * 100)}% advance now, the rest on arrival</p>
+                </>
+              ) : isBookable(plan) ? (
+                <Link to="/contact" className="btn btn-primary btn-sm w-full mt-5">Ask about this plan</Link>
+              ) : (
+                <button type="button" disabled className="btn btn-sm w-full mt-5">{planStatus(plan).label}</button>
+              )}
             </div>
           </div>
         </div>

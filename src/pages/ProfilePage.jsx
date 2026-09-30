@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useFetch } from "../hooks/useFetch";
+import { formatDateRange } from "../lib/planSchedule";
+import { PAYMENT_STATUS, BOOKING_STATUS, taka, canPay } from "../lib/booking";
 import { stats } from "../data";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { ALL_DISTRICTS } from "../data/allDistricts";
-import { HiMail, HiPhone, HiCalendar } from "react-icons/hi";
-import { FaSignOutAlt } from "react-icons/fa";
+import { HiMail, HiPhone, HiCalendar, HiCamera, HiStar } from "react-icons/hi";
+import { FaSignOutAlt, FaMedal, FaSuitcaseRolling } from "react-icons/fa";
 
-const SELECTED_GREEN = "#4CAF50";
+const SELECTED_COLOR = "#3FA66B";
 
 export default function ProfilePage() {
   const { user, ready, logout, updateUser } = useAuth();
@@ -40,7 +43,7 @@ export default function ProfilePage() {
     svg.querySelectorAll("[data-slug]").forEach((el) => {
       if (visited.includes(el.dataset.slug)) {
         // Use !important to override any inline fill styles baked into the SVG
-        el.style.setProperty("fill", SELECTED_GREEN, "important");
+        el.style.setProperty("fill", SELECTED_COLOR, "important");
         el.style.setProperty("fill-opacity", "0.9", "important");
       } else {
         el.style.removeProperty("fill");
@@ -87,7 +90,7 @@ export default function ProfilePage() {
           {/* Progress */}
           <div className="card bg-primary/10 border border-primary/20 p-5">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="font-bold text-base-content text-sm">🏅 64-District Challenge</h2>
+              <h2 className="font-bold text-base-content text-sm flex items-center gap-2"><FaMedal className="text-primary" /> 64-District Challenge</h2>
               <span className="text-sm text-base-content/60">{visited.length}/{stats.districts}</span>
             </div>
             <progress className="progress progress-primary w-full" value={visited.length} max={stats.districts}></progress>
@@ -114,15 +117,15 @@ export default function ProfilePage() {
           {/* Quick links */}
           <div className="grid grid-cols-3 gap-2">
             <Link to="/frames" className="card bg-base-200 border border-base-300 p-3 text-center card-hover">
-              <div className="text-xl">📸</div>
+              <HiCamera className="w-6 h-6 text-primary mx-auto" />
               <div className="text-xs text-base-content mt-1">Frames</div>
             </Link>
             <Link to="/plans" className="card bg-base-200 border border-base-300 p-3 text-center card-hover">
-              <div className="text-xl">🧳</div>
+              <FaSuitcaseRolling className="w-6 h-6 text-primary mx-auto" />
               <div className="text-xs text-base-content mt-1">Plans</div>
             </Link>
             <Link to="/membership" className="card bg-base-200 border border-base-300 p-3 text-center card-hover">
-              <div className="text-xl">⭐</div>
+              <HiStar className="w-6 h-6 text-primary mx-auto" />
               <div className="text-xs text-base-content mt-1">Upgrade</div>
             </Link>
           </div>
@@ -161,14 +164,14 @@ export default function ProfilePage() {
                       <circle r={22} fill="transparent" />
                       <circle
                         r={isHovered ? 20 : 17}
-                        fill={isVisited ? SELECTED_GREEN : "#ffffff"}
+                        fill={isVisited ? SELECTED_COLOR : "#ffffff"}
                         opacity={isVisited ? 0.3 : isHovered ? 0.1 : 0}
                         style={{ transition: "opacity 0.15s, r 0.15s" }}
                       />
                       <circle
                         r={isHovered ? 7 : 5}
-                        fill={isVisited ? SELECTED_GREEN : "#5b6072"}
-                        stroke={isVisited ? "#1B5E20" : "#22252e"}
+                        fill={isVisited ? SELECTED_COLOR : "#3C5446"}
+                        stroke={isVisited ? "#0F3D24" : "#0C1A12"}
                         strokeWidth="1.5"
                         opacity={isVisited ? 1 : 0.8}
                         style={{ transition: "r 0.15s" }}
@@ -181,10 +184,10 @@ export default function ProfilePage() {
                             width={tooltipWidth}
                             height={20}
                             rx={5}
-                            fill="#181c27"
-                            stroke="#2f333e"
+                            fill="#0A140F"
+                            stroke="#1F3A2B"
                           />
-                          <text textAnchor="middle" y={-4} fontSize="10" fill="#e8e8ec">
+                          <text textAnchor="middle" y={-4} fontSize="10" fill="#E3EDE7">
                             {d.name_en}
                           </text>
                         </g>
@@ -200,6 +203,49 @@ export default function ProfilePage() {
           </p>
         </div>
       </div>
+
+      <MyBookings />
+    </div>
+  );
+}
+
+function MyBookings() {
+  const { data: bookings, loading } = useFetch("/bookings/my");
+  if (loading) return null;
+
+  return (
+    <div id="bookings" className="card bg-base-200 border border-base-300 p-5 mt-6">
+      <h2 className="font-bold text-base-content mb-3">My bookings</h2>
+      {(bookings || []).length === 0 ? (
+        <p className="text-sm text-base-content/40">
+          No bookings yet. <Link to="/plans" className="text-primary hover:underline">Browse trip plans</Link>
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {bookings.map((b) => {
+            const pay = PAYMENT_STATUS[b.paymentStatus] || PAYMENT_STATUS.unpaid;
+            const status = BOOKING_STATUS[b.bookingStatus] || BOOKING_STATUS.pending;
+            return (
+              <div key={b._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-base-300/40 border border-base-300">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-sm font-bold text-base-content">{b.referenceCode}</span>
+                    <span className={`badge badge-sm ${status.badge}`}>{status.label}</span>
+                    <span className={`badge badge-sm ${pay.badge}`}>{pay.label}</span>
+                  </div>
+                  <p className="font-medium text-base-content mt-1 truncate">{b.planTitle_en}</p>
+                  <p className="text-xs text-base-content/50">
+                    {b.start_date && `${formatDateRange(b.start_date, b.end_date)} · `}{b.ticketCount} ticket{b.ticketCount === 1 ? "" : "s"} · {taka(b.totalAmount)} total
+                  </p>
+                </div>
+                <Link to={`/bookings/${b._id}/checkout`} className={`btn btn-sm shrink-0 ${canPay(b) ? "btn-primary" : "btn-ghost"}`}>
+                  {canPay(b) ? `Pay ${taka(b.advanceAmount)}` : "View"}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { HiMail, HiPhone } from "react-icons/hi";
+import { HiMail, HiPhone, HiHeart } from "react-icons/hi";
 import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
 
 export default function Footer() {
@@ -65,7 +65,7 @@ export default function Footer() {
 
         <div className="border-t border-base-300 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-base-content/40">© 2026 AmiGhuriSaraBangladesh. All rights reserved.</p>
-          <p className="text-xs text-base-content/40">Made with ❤️ for Bangladesh</p>
+          <p className="text-xs text-base-content/40"><span className="inline-flex items-center gap-1">Made with <HiHeart className="text-error" /> for Bangladesh</span></p>
         </div>
       </div>
     </footer>

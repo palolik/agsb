@@ -3,7 +3,9 @@ import { stats } from "../data";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { toPlainText } from "../lib/richText";
-import { HiArrowRight, HiLocationMarker, HiMap, HiBookOpen, HiStar, HiClock } from "react-icons/hi";
+import { HiArrowRight, HiLocationMarker, HiMap, HiBookOpen, HiStar, HiClock, HiUserGroup, HiCalendar } from "react-icons/hi";
+import { FaSuitcaseRolling, FaHiking } from "react-icons/fa";
+import { planStatus, formatDateRange } from "../lib/planSchedule";
 
 export default function HomePage() {
   const { data: districts } = useFetch("/districts");
@@ -16,7 +18,7 @@ export default function HomePage() {
     <div>
       {/* Hero */}
       <section className="hero-gradient relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%234CAF50\" fill-opacity=\"0.3\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"}} />
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23F2A93B\" fill-opacity=\"0.3\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"}} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-28 relative">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 text-primary text-sm mb-6">
@@ -49,13 +51,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { label: "Districts", val: stats.districts, icon: "🗺️" },
-              { label: "Attractions", val: stats.attractions + "+", icon: "📍" },
-              { label: "Travel Plans", val: stats.travelPlans + "+", icon: "🧳" },
-              { label: "Community", val: stats.communityMembers, icon: "👥" },
+              { label: "Districts", val: stats.districts, icon: HiMap },
+              { label: "Attractions", val: stats.attractions + "+", icon: HiLocationMarker },
+              { label: "Travel Plans", val: stats.travelPlans + "+", icon: FaSuitcaseRolling },
+              { label: "Community", val: stats.communityMembers, icon: HiUserGroup },
             ].map(s => (
               <div key={s.label}>
-                <div className="text-2xl mb-1">{s.icon}</div>
+                <s.icon className="w-7 h-7 text-primary mx-auto mb-1" />
                 <div className="text-2xl md:text-3xl font-bold text-primary">{s.val}</div>
                 <div className="text-sm text-base-content/50">{s.label}</div>
               </div>
@@ -92,8 +94,8 @@ export default function HomePage() {
                 <p className="text-sm text-base-content/50">{d.name_en} — {d.tagline}</p>
                 <div className="flex items-center gap-4 mt-2 text-xs text-base-content/40">
                   <span>{d.budget}</span>
-                  <span>{"⭐".repeat(Math.min(d.difficulty, 5))} {d.difficulty}/5</span>
-                  <span>{d.family ? "👨‍👩‍👧‍👦 Family" : "🎒 Adventure"}</span>
+                  <span className="flex items-center gap-0.5">{Array.from({ length: Math.min(d.difficulty, 5) }, (_, i) => <HiStar key={i} className="text-warning" />)} <span className="ml-1">{d.difficulty}/5</span></span>
+                  <span className="flex items-center gap-1">{d.family ? <><HiUserGroup /> Family</> : <><FaHiking /> Adventure</>}</span>
                 </div>
               </div>
             </Link>
@@ -140,6 +142,7 @@ export default function HomePage() {
               <figure className="h-40 overflow-hidden relative">
                 <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-3 right-3 badge badge-primary">{p.duration}</div>
+                <span className={`absolute top-3 left-3 badge ${planStatus(p).badge}`}>{planStatus(p).label}</span>
               </figure>
               <div className="card-body p-4">
                 <h3 className="font-bold text-base-content">{p.title_bn}</h3>
@@ -148,6 +151,9 @@ export default function HomePage() {
                   <span className="flex items-center gap-1"><HiLocationMarker /> {p.districts.join(", ")}</span>
                   <span>{p.cost}</span>
                 </div>
+                {p.start_date && (
+                  <div className="flex items-center gap-1 text-xs text-base-content/60"><HiCalendar className="text-primary" /> {formatDateRange(p.start_date, p.end_date)}</div>
+                )}
               </div>
             </Link>
           ))}

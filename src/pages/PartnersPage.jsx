@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
-import { HiStar, HiBadgeCheck, HiLocationMarker } from "react-icons/hi";
+import { HiStar, HiBadgeCheck, HiLocationMarker, HiCheckCircle } from "react-icons/hi";
 
 export default function PartnersPage() {
   const { data: partners } = useFetch("/partners");
@@ -49,11 +49,11 @@ export default function PartnersPage() {
         <div className="card bg-primary/10 border border-primary/20 p-6">
           <h2 className="text-xl font-bold text-base-content mb-2">Partner Benefits</h2>
           <div className="space-y-2 text-sm text-base-content/70">
-            <p>✅ Featured on district pages and map</p>
-            <p>✅ Direct referral tracking dashboard</p>
-            <p>✅ Access to AGSB community travellers</p>
-            <p>✅ Seasonal campaign inclusion</p>
-            <p>✅ Performance analytics</p>
+            <p className="flex items-center gap-2"><HiCheckCircle className="text-success shrink-0" /> Featured on district pages and map</p>
+            <p className="flex items-center gap-2"><HiCheckCircle className="text-success shrink-0" /> Direct referral tracking dashboard</p>
+            <p className="flex items-center gap-2"><HiCheckCircle className="text-success shrink-0" /> Access to AGSB community travellers</p>
+            <p className="flex items-center gap-2"><HiCheckCircle className="text-success shrink-0" /> Seasonal campaign inclusion</p>
+            <p className="flex items-center gap-2"><HiCheckCircle className="text-success shrink-0" /> Performance analytics</p>
           </div>
         </div>
       </div>

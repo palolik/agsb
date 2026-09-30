@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useFetch } from "../hooks/useFetch";
-import { HiUser, HiMail, HiPhone, HiLockClosed } from "react-icons/hi";
+import { HiUser, HiMail, HiPhone, HiLockClosed, HiLocationMarker } from "react-icons/hi";
 
 export default function SignupPage() {
   const { user, signup } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from || "/profile";
   const { data: districts } = useFetch("/districts");
   const [form, setForm] = useState({ name: "", email: "", phone: "", district: "", password: "", confirm: "" });
   const [error, setError] = useState("");
 
-  if (user) return <Navigate to="/profile" replace />;
+  if (user) return <Navigate to={redirectTo} replace />;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -26,7 +28,7 @@ export default function SignupPage() {
     }
     try {
       await signup(form);
-      navigate("/profile");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message);
     }
@@ -45,97 +47,100 @@ export default function SignupPage() {
 
         <div>
           <label className="label"><span className="label-text">আপনার নাম</span></label>
-          <div className="relative">
-            <HiUser className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/30" />
+          <label className="input input-bordered bg-base-300 w-full">
+            <HiUser className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
               type="text"
               required
               placeholder="Full name"
-              className="input input-bordered bg-base-300 w-full pl-10"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="grow"
             />
-          </div>
+          </label>
         </div>
 
         <div>
           <label className="label"><span className="label-text">ইমেইল</span></label>
-          <div className="relative">
-            <HiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/30" />
+          <label className="input input-bordered bg-base-300 w-full">
+            <HiMail className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
               type="email"
               required
               placeholder="you@example.com"
-              className="input input-bordered bg-base-300 w-full pl-10"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="grow"
             />
-          </div>
+          </label>
         </div>
 
         <div>
           <label className="label"><span className="label-text">ফোন / WhatsApp</span></label>
-          <div className="relative">
-            <HiPhone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/30" />
+          <label className="input input-bordered bg-base-300 w-full">
+            <HiPhone className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
               type="tel"
               placeholder="+880 1XXX-XXXXXX"
-              className="input input-bordered bg-base-300 w-full pl-10"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className="grow"
             />
-          </div>
+          </label>
         </div>
 
         <div>
           <label className="label"><span className="label-text">হোম জেলা (optional)</span></label>
-          <select
-            className="select select-bordered bg-base-300 w-full"
-            value={form.district}
-            onChange={(e) => setForm({ ...form, district: e.target.value })}
-          >
-            <option value="">Select district</option>
-            {(districts || []).map((d) => (
-              <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>
-            ))}
-          </select>
+          <div className="relative">
+            <HiLocationMarker className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-5 h-5 text-base-content/40 pointer-events-none" />
+            <select
+              className="select select-bordered bg-base-300 w-full pl-10"
+              value={form.district}
+              onChange={(e) => setForm({ ...form, district: e.target.value })}
+            >
+              <option value="">Select district</option>
+              {(districts || []).map((d) => (
+                <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="label"><span className="label-text">পাসওয়ার্ড</span></label>
-            <div className="relative">
-              <HiLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/30" />
+            <label className="input input-bordered bg-base-300 w-full">
+              <HiLockClosed className="w-5 h-5 shrink-0 text-base-content/40" />
               <input
                 type="password"
                 required
                 placeholder="••••••••"
-                className="input input-bordered bg-base-300 w-full pl-10"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="grow"
               />
-            </div>
+            </label>
           </div>
           <div>
             <label className="label"><span className="label-text">নিশ্চিত করুন</span></label>
-            <div className="relative">
-              <HiLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/30" />
+            <label className="input input-bordered bg-base-300 w-full">
+              <HiLockClosed className="w-5 h-5 shrink-0 text-base-content/40" />
               <input
                 type="password"
                 required
                 placeholder="••••••••"
-                className="input input-bordered bg-base-300 w-full pl-10"
                 value={form.confirm}
                 onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+                className="grow"
               />
-            </div>
+            </label>
           </div>
         </div>
 
         <button type="submit" className="btn btn-primary w-full">Sign Up Free</button>
 
         <p className="text-sm text-center text-base-content/50">
-          Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link>
+          Already have an account? <Link to="/login" state={location.state} className="text-primary hover:underline">Log in</Link>
         </p>
       </form>
     </div>

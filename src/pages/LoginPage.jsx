@@ -1,22 +1,24 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { HiMail, HiLockClosed } from "react-icons/hi";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from || "/profile";
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
-  if (user) return <Navigate to="/profile" replace />;
+  if (user) return <Navigate to={redirectTo} replace />;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     try {
       await login(form);
-      navigate("/profile");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message);
     }
@@ -35,38 +37,38 @@ export default function LoginPage() {
 
         <div>
           <label className="label"><span className="label-text">ইমেইল</span></label>
-          <div className="relative">
-            <HiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/30" />
+          <label className="input input-bordered bg-base-300 w-full">
+            <HiMail className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
               type="email"
               required
               placeholder="you@example.com"
-              className="input input-bordered bg-base-300 w-full pl-10"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="grow"
             />
-          </div>
+          </label>
         </div>
 
         <div>
           <label className="label"><span className="label-text">পাসওয়ার্ড</span></label>
-          <div className="relative">
-            <HiLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/30" />
+          <label className="input input-bordered bg-base-300 w-full">
+            <HiLockClosed className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
               type="password"
               required
               placeholder="••••••••"
-              className="input input-bordered bg-base-300 w-full pl-10"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="grow"
             />
-          </div>
+          </label>
         </div>
 
         <button type="submit" className="btn btn-primary w-full">Log In</button>
 
         <p className="text-sm text-center text-base-content/50">
-          Don't have an account? <Link to="/signup" className="text-primary hover:underline">Sign up</Link>
+          Don't have an account? <Link to="/signup" state={location.state} className="text-primary hover:underline">Sign up</Link>
         </p>
       </form>
     </div>
