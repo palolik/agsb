@@ -9,6 +9,7 @@ import MapPage from "./pages/MapPage";
 import BlogPage from "./pages/BlogPage";
 import BlogDetailPage from "./pages/BlogDetailPage";
 import PlansPage from "./pages/PlansPage";
+import PlanDetailPage from "./pages/PlanDetailPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import FramesPage from "./pages/FramesPage";
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
         <Route path="/blog/:slug" element={<Layout><BlogDetailPage /></Layout>} />
         <Route path="/plans" element={<Layout><PlansPage /></Layout>} />
+        <Route path="/plans/:slug" element={<Layout><PlanDetailPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/frames" element={<Layout><FramesPage /></Layout>} />

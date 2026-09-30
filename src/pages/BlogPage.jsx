@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
+import { toPlainText } from "../lib/richText";
 import { HiClock, HiArrowRight } from "react-icons/hi";
 
 export default function BlogPage() {
@@ -27,7 +28,7 @@ export default function BlogPage() {
               </div>
               <h3 className="text-lg font-bold text-base-content">{b.title_bn}</h3>
               <p className="text-sm text-base-content/60">{b.title_en}</p>
-              <p className="text-sm text-base-content/50 mt-2 line-clamp-2">{b.excerpt}</p>
+              <p className="text-sm text-base-content/50 mt-2 line-clamp-2">{toPlainText(b.excerpt)}</p>
               <div className="mt-3">
                 <span className="text-sm text-primary font-medium flex items-center gap-1">Read more <HiArrowRight /></span>
               </div>

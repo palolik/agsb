@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
+import { renderRichText } from "../lib/richText";
 import { HiArrowLeft, HiClock, HiCalendar } from "react-icons/hi";
 
 export default function BlogDetailPage() {
@@ -12,6 +13,8 @@ export default function BlogDetailPage() {
   if (error || !post) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">Post not found</h1><Link to="/blog" className="btn btn-primary mt-4">Back to Blog</Link></div>;
 
   const district = (districts || []).find(d => d.slug === post.districtSlug);
+  const excerptHtml = renderRichText(post.excerpt);
+  const contentHtml = renderRichText(post.content);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -29,11 +32,13 @@ export default function BlogDetailPage() {
 
       <img src={resolveImage(post.image)} alt={post.title_en} className="w-full h-64 md:h-96 object-cover rounded-xl mb-8" />
 
-      <div className="prose prose-invert max-w-none">
-        <p className="text-lg text-base-content/70 leading-relaxed">{post.excerpt}</p>
-        <div className="bg-base-200 rounded-xl p-6 my-8 border border-base-300">
-          <p className="text-base-content/60 text-sm">This is a preview of the full article. In the live version, the complete guide with detailed itineraries, cost breakdowns, and local tips will be loaded from the backend CMS.</p>
-        </div>
+      <div className="prose prose-theme max-w-none prose-img:rounded-lg">
+        {excerptHtml && (
+          <div className="text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: excerptHtml }} />
+        )}
+        {contentHtml && (
+          <div className="mt-6" dangerouslySetInnerHTML={{ __html: contentHtml }} />
+        )}
         {district && (
           <div className="mt-8">
             <h3 className="text-xl font-bold text-base-content mb-3">Related District</h3>

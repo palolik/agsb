@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { stats } from "../data";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
+import { toPlainText } from "../lib/richText";
 import { HiArrowRight, HiLocationMarker, HiMap, HiBookOpen, HiStar, HiClock } from "react-icons/hi";
 
 export default function HomePage() {
@@ -177,7 +178,7 @@ export default function HomePage() {
                     <span className="text-xs text-base-content/40 flex items-center gap-1"><HiClock /> {b.readTime}</span>
                   </div>
                   <h3 className="font-bold text-base-content">{b.title_bn}</h3>
-                  <p className="text-sm text-base-content/50 line-clamp-2">{b.excerpt}</p>
+                  <p className="text-sm text-base-content/50 line-clamp-2">{toPlainText(b.excerpt)}</p>
                 </div>
               </Link>
             ))}

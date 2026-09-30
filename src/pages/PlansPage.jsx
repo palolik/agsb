@@ -23,7 +23,7 @@ export default function PlansPage() {
               </div>
             </figure>
             <div className="card-body p-4">
-              <h3 className="text-lg font-bold text-base-content">{p.title_bn}</h3>
+              <Link to={`/plans/${p.slug}`} className="text-lg font-bold text-base-content hover:text-primary transition-colors">{p.title_bn}</Link>
               <p className="text-sm text-base-content/60">{p.title_en}</p>
               <div className="flex items-center gap-3 mt-1 text-xs text-base-content/40">
                 <span className="flex items-center gap-1"><HiLocationMarker /> {p.districts.join(", ")}</span>
@@ -38,7 +38,7 @@ export default function PlansPage() {
                 </div>
               </div>
               <div className="mt-4 flex gap-2">
-                <Link to="/contact" className="btn btn-primary btn-sm flex-1">Get this plan</Link>
+                <Link to={`/plans/${p.slug}`} className="btn btn-primary btn-sm flex-1">View plan</Link>
                 <button className="btn btn-ghost btn-sm">Save</button>
               </div>
             </div>
