@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { HiCheck, HiStar, HiDeviceMobile, HiCreditCard, HiLibrary } from "react-icons/hi";
+import { asArray } from "../lib/safe";
 
 export default function MembershipPage() {
   const { data: plans } = useFetch("/membership-plans");
@@ -14,7 +15,7 @@ export default function MembershipPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {(plans || []).map(p => (
+        {asArray(plans).map(p => (
           <div key={p.name} className={`card p-6 border ${p.popular ? "bg-primary/10 border-primary/30 ring-2 ring-primary/20" : "bg-base-200 border-base-300"}`}>
             {p.popular && <span className="badge badge-primary badge-sm mb-2">Most Popular</span>}
             <h3 className="text-xl font-bold text-base-content">{p.name}</h3>
@@ -24,7 +25,7 @@ export default function MembershipPage() {
             </div>
             <p className="text-sm text-base-content/60 mb-5">{p.desc}</p>
             <div className="space-y-2.5 mb-6 flex-1">
-              {p.features.map(f => (
+              {asArray(p.features).map(f => (
                 <div key={f} className="flex items-start gap-2">
                   <HiCheck className="w-4 h-4 text-success mt-0.5 shrink-0" />
                   <span className="text-sm text-base-content/70">{f}</span>

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { HiSearch, HiFilter } from "react-icons/hi";
+import { asArray, asText } from "../lib/safe";
 
 export default function DistrictsPage() {
   const [searchParams] = useSearchParams();
@@ -12,9 +13,9 @@ export default function DistrictsPage() {
   const { data: districts, loading } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
 
-  const filtered = (districts || []).filter(d => {
-    const matchDiv = activeDivision === "all" || (divisions || []).find(dv => dv.id === d.division_id)?.slug === activeDivision;
-    const matchSearch = !search || d.name_en.toLowerCase().includes(search.toLowerCase()) || d.name_bn.includes(search);
+  const filtered = asArray(districts).filter(d => {
+    const matchDiv = activeDivision === "all" || asArray(divisions).find(dv => dv.id === d.division_id)?.slug === activeDivision;
+    const matchSearch = !search || asText(d.name_en).toLowerCase().includes(search.toLowerCase()) || asText(d.name_bn).includes(search);
     return matchDiv && matchSearch;
   });
 
@@ -48,7 +49,7 @@ export default function DistrictsPage() {
         >
           All (64)
         </button>
-        {(divisions || []).map(dv => (
+        {asArray(divisions).map(dv => (
           <button
             key={dv.slug}
             onClick={() => setActiveDivision(dv.slug)}
@@ -74,8 +75,8 @@ export default function DistrictsPage() {
             </figure>
             <div className="p-3">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full" style={{background: (divisions || []).find(dv => dv.id === d.division_id)?.color}} />
-                <span className="text-xs text-base-content/40">{(divisions || []).find(dv => dv.id === d.division_id)?.name_en}</span>
+                <span className="w-2 h-2 rounded-full" style={{background: asArray(divisions).find(dv => dv.id === d.division_id)?.color}} />
+                <span className="text-xs text-base-content/40">{asArray(divisions).find(dv => dv.id === d.division_id)?.name_en}</span>
               </div>
               <h3 className="font-bold text-base-content">{d.name_bn}</h3>
               <p className="text-sm text-base-content/50">{d.name_en}</p>

@@ -24,4 +24,6 @@ dist-ssr
 *.sw?
 .codegpt
 .sf
-.sf/catalog.json
+.sf/catalog.json.env
+.env.*
+!.env.example

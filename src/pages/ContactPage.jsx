@@ -3,6 +3,7 @@ import { HiMail, HiPhone, HiLocationMarker, HiCheckCircle } from "react-icons/hi
 import { FaWhatsapp, FaFacebook, FaInstagram } from "react-icons/fa";
 import { useFetch } from "../hooks/useFetch";
 import { apiSend } from "../lib/api";
+import { asArray } from "../lib/safe";
 
 export default function ContactPage() {
   const { data: districts } = useFetch("/districts");
@@ -53,7 +54,7 @@ export default function ContactPage() {
                   <label className="label"><span className="label-text">জেলা (optional)</span></label>
                   <select className="select select-bordered bg-base-300 w-full" value={form.district} onChange={e => setForm({...form, district: e.target.value})}>
                     <option value="">Select district</option>
-                    {(districts || []).map(d => <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>)}
+                    {asArray(districts).map(d => <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>)}
                   </select>
                 </div>
                 <div>

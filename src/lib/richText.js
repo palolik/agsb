@@ -12,14 +12,14 @@ const plainToHtml = (str) =>
 
 // Admin rich text stores uploaded images as relative /uploads/... paths.
 export function renderRichText(html) {
-  if (!html || !html.trim()) return "";
+  if (typeof html !== "string" || !html.trim()) return "";
   const source = hasTags(html) ? html : plainToHtml(html);
   return DOMPurify.sanitize(source).replace(/(src|href)="\/uploads\//g, `$1="${API_ORIGIN}/uploads/`);
 }
 
 // For card previews: rich text reduced to a single line of text.
 export function toPlainText(html) {
-  if (!html) return "";
+  if (typeof html !== "string" || !html) return "";
   const text = DOMPurify.sanitize(html, { ALLOWED_TAGS: [], KEEP_CONTENT: true });
   const el = document.createElement("textarea");
   el.innerHTML = text;

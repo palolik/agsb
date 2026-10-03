@@ -1,10 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { apiGet, apiSend } from "../lib/api";
+import { apiGet, apiSend, TOKEN_KEY, USER_KEY, AUTH_EXPIRED_EVENT } from "../lib/api";
 
 const AuthContext = createContext(null);
-
-const TOKEN_KEY = "agsb_token";
-const USER_KEY = "agsb_user";
 
 function loadStoredUser() {
   try {
@@ -24,6 +21,10 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    // api.js fires this on any 401 after it has cleared the stored session.
+    const onExpired = () => setUser(null);
+    window.addEventListener(AUTH_EXPIRED_EVENT, onExpired);
+
     const stored = loadStoredUser();
     if (stored) setUser(stored);
     setReady(true);
@@ -31,15 +32,26 @@ export function AuthProvider({ children }) {
     if (stored && localStorage.getItem(TOKEN_KEY)) {
       apiGet("/profile")
         .then((data) => {
+          if (!data?.user) return;
           setUser(data.user);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
         })
-        .catch(() => {
-          // stale/expired token — clear silently, user stays logged out on next reload
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(USER_KEY);
+        .catch((err) => {
+          // Only an auth failure ends the session; a network error or 5xx
+          // (backend briefly down) keeps the stored user logged in.
+          if (err.status === 401) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            setUser(null);
+          }
         });
+    } else if (stored) {
+      // A user without a token can't call member APIs; treat as logged out.
+      localStorage.removeItem(USER_KEY);
+      setUser(null);
     }
+
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onExpired);
   }, []);
 
   async function signup({ name, email, phone, password, district }) {

@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useFetch } from "../hooks/useFetch";
 import { HiUser, HiMail, HiPhone, HiLockClosed, HiLocationMarker } from "react-icons/hi";
+import { asArray } from "../lib/safe";
 
 export default function SignupPage() {
   const { user, signup } = useAuth();
@@ -99,7 +100,7 @@ export default function SignupPage() {
               onChange={(e) => setForm({ ...form, district: e.target.value })}
             >
               <option value="">Select district</option>
-              {(districts || []).map((d) => (
+              {asArray(districts).map((d) => (
                 <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>
               ))}
             </select>

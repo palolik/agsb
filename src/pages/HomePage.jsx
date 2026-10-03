@@ -6,13 +6,14 @@ import { toPlainText } from "../lib/richText";
 import { HiArrowRight, HiLocationMarker, HiMap, HiBookOpen, HiStar, HiClock, HiUserGroup, HiCalendar } from "react-icons/hi";
 import { FaSuitcaseRolling, FaHiking } from "react-icons/fa";
 import { planStatus, formatDateRange } from "../lib/planSchedule";
+import { asArray } from "../lib/safe";
 
 export default function HomePage() {
   const { data: districts } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
   const { data: blogPosts } = useFetch("/blog");
   const { data: travelPlans } = useFetch("/plans");
-  const featured = (districts || []).filter(d => d.status === "complete").slice(0, 6);
+  const featured = asArray(districts).filter(d => d.status === "complete").slice(0, 6);
 
   return (
     <div>
@@ -85,8 +86,8 @@ export default function HomePage() {
               </figure>
               <div className="card-body p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="badge badge-sm" style={{background: (divisions || []).find(dv => dv.id === d.division_id)?.color + "22", color: (divisions || []).find(dv => dv.id === d.division_id)?.color, border: "none"}}>
-                    {(divisions || []).find(dv => dv.id === d.division_id)?.name_en}
+                  <span className="badge badge-sm" style={{background: asArray(divisions).find(dv => dv.id === d.division_id)?.color + "22", color: asArray(divisions).find(dv => dv.id === d.division_id)?.color, border: "none"}}>
+                    {asArray(divisions).find(dv => dv.id === d.division_id)?.name_en}
                   </span>
                   <span className="badge badge-sm badge-ghost">{d.trip_type}</span>
                 </div>
@@ -112,7 +113,7 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-bold text-base-content mb-2">৮ বিভাগ</h2>
           <p className="text-base-content/50 mb-8">Explore Bangladesh division by division</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {(divisions || []).map(dv => (
+            {asArray(divisions).map(dv => (
               <Link key={dv.id} to={`/districts?division=${dv.slug}`} className="card bg-base-200 card-hover p-4 text-center border border-base-300">
                 <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-lg font-bold" style={{background: dv.color + "22", color: dv.color}}>
                   {dv.districtCount}
@@ -137,7 +138,7 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {(travelPlans || []).slice(0, 3).map(p => (
+          {asArray(travelPlans).slice(0, 3).map(p => (
             <Link key={p.id} to={`/plans/${p.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
               <figure className="h-40 overflow-hidden relative">
                 <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -148,7 +149,7 @@ export default function HomePage() {
                 <h3 className="font-bold text-base-content">{p.title_bn}</h3>
                 <p className="text-sm text-base-content/50">{p.title_en}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-base-content/40">
-                  <span className="flex items-center gap-1"><HiLocationMarker /> {p.districts.join(", ")}</span>
+                  <span className="flex items-center gap-1"><HiLocationMarker /> {asArray(p.districts).join(", ")}</span>
                   <span>{p.cost}</span>
                 </div>
                 {p.start_date && (
@@ -173,7 +174,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {(blogPosts || []).slice(0, 3).map(b => (
+            {asArray(blogPosts).slice(0, 3).map(b => (
               <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
                 <figure className="h-40 overflow-hidden">
                   <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

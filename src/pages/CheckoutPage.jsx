@@ -1,8 +1,43 @@
 import { Link, useParams } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { formatDateRange } from "../lib/planSchedule";
-import { GENDERS, RELATIONS, PAYMENT_STATUS, BOOKING_STATUS, ADVANCE_RATE, taka, canPay } from "../lib/booking";
-import { HiCalendar, HiUserGroup, HiLockClosed } from "react-icons/hi";
+import { GENDERS, RELATIONS, PAYMENT_STATUS, BOOKING_STATUS, ADVANCE_RATE, taka, canPay, isHoldExpired, holdDeadline, formatHoldTime } from "../lib/booking";
+import { asArray } from "../lib/safe";
+import { HiCalendar, HiUserGroup, HiLockClosed, HiClock, HiExclamation } from "react-icons/hi";
+
+// Shown instead of the payment form once an unpaid booking's seat hold ran out.
+export function HoldExpired({ booking }) {
+  return (
+    <div className="max-w-lg mx-auto px-4 py-16">
+      <div className="card bg-base-200 border border-base-300 p-8 text-center">
+        <HiExclamation className="w-14 h-14 text-warning mx-auto mb-3" />
+        <h1 className="text-xl font-bold text-base-content">সিট হোল্ডের সময় শেষ</h1>
+        <p className="text-base-content/70 mt-1 font-medium">Your seat hold expired — please book again</p>
+        <p className="text-sm text-base-content/50 mt-2">
+          Booking <span className="font-mono font-bold text-base-content">{booking.referenceCode}</span> wasn't paid in time, so its seats were released.
+        </p>
+        <div className="flex flex-col gap-2 mt-6">
+          {booking.planSlug
+            ? <Link to={`/plans/${booking.planSlug}`} className="btn btn-primary">Book again</Link>
+            : <Link to="/plans" className="btn btn-primary">Browse trip plans</Link>}
+          <Link to="/profile" className="btn btn-ghost btn-sm">My bookings</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// "Complete payment by …" while an unpaid booking still holds its seats.
+export function HoldNotice({ booking }) {
+  const deadline = holdDeadline(booking);
+  if (!deadline) return null;
+  return (
+    <div role="status" className="alert alert-warning text-sm py-2">
+      <HiClock className="w-5 h-5 shrink-0" />
+      <span>Complete payment by <span className="font-bold">{formatHoldTime(deadline)}</span> to keep your seats.</span>
+    </div>
+  );
+}
 
 const labelOf = (list, value) => list.find((x) => x.value === value)?.label || value;
 
@@ -35,6 +70,7 @@ export default function CheckoutPage() {
 
   if (loading) return null;
   if (error || !booking) return <BookingNotFound />;
+  if (isHoldExpired(booking)) return <HoldExpired booking={booking} />;
 
   const payStatus = PAYMENT_STATUS[booking.paymentStatus] || PAYMENT_STATUS.unpaid;
   const bookStatus = BOOKING_STATUS[booking.bookingStatus] || BOOKING_STATUS.pending;
@@ -71,7 +107,7 @@ export default function CheckoutPage() {
                   <tr className="text-base-content/50"><th>#</th><th>Name</th><th>Gender</th><th>Age</th><th>Phone</th><th>Relation</th></tr>
                 </thead>
                 <tbody>
-                  {booking.travellers.map((t, i) => (
+                  {asArray(booking.travellers).map((t, i) => (
                     <tr key={i} className="border-base-300">
                       <td>{i + 1}</td>
                       <td className="font-medium text-base-content">{t.name}</td>
@@ -98,6 +134,7 @@ export default function CheckoutPage() {
             <BookingTotals booking={booking} />
             {canPay(booking) ? (
               <>
+                <HoldNotice booking={booking} />
                 <Link to={`/bookings/${booking._id}/pay`} className="btn btn-primary w-full">
                   <HiLockClosed className="mr-1" /> Pay now · {taka(booking.advanceAmount)}
                 </Link>

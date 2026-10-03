@@ -9,6 +9,7 @@ import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { HiMail, HiPhone, HiCalendar, HiCamera, HiStar } from "react-icons/hi";
 import { FaSignOutAlt, FaMedal, FaSuitcaseRolling } from "react-icons/fa";
+import { asArray } from "../lib/safe";
 
 const SELECTED_COLOR = "#3FA66B";
 
@@ -18,7 +19,7 @@ export default function ProfilePage() {
   const [mapMarkup, setMapMarkup] = useState(null);
   const mapRef = useRef(null);
 
-  const visited = user?.visitedDistricts || [];
+  const visited = asArray(user?.visitedDistricts);
 
   useEffect(() => {
     fetch("/assets/BD_Map_dark.svg")
@@ -56,7 +57,7 @@ export default function ProfilePage() {
   }, [mapMarkup, visited]);
 
   if (!ready) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace state={{ from: "/profile" }} />;
 
   const progress = Math.round((visited.length / stats.districts) * 100);
 
@@ -216,13 +217,13 @@ function MyBookings() {
   return (
     <div id="bookings" className="card bg-base-200 border border-base-300 p-5 mt-6">
       <h2 className="font-bold text-base-content mb-3">My bookings</h2>
-      {(bookings || []).length === 0 ? (
+      {asArray(bookings).length === 0 ? (
         <p className="text-sm text-base-content/40">
           No bookings yet. <Link to="/plans" className="text-primary hover:underline">Browse trip plans</Link>
         </p>
       ) : (
         <div className="space-y-3">
-          {bookings.map((b) => {
+          {asArray(bookings).map((b) => {
             const pay = PAYMENT_STATUS[b.paymentStatus] || PAYMENT_STATUS.unpaid;
             const status = BOOKING_STATUS[b.bookingStatus] || BOOKING_STATUS.pending;
             return (

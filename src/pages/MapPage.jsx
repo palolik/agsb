@@ -5,6 +5,7 @@ import { resolveImage } from "../lib/api";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { HiX, HiExternalLink, HiMap, HiLocationMarker } from "react-icons/hi";
+import { asArray, asText } from "../lib/safe";
 
 const MARKER_COLOR = "#3FA66B";
 
@@ -17,7 +18,7 @@ export default function MapPage() {
 
   // Only the districts with full guides get a marker — positioned using the same
   // pin coordinates the profile page's check-in map uses.
-  const MAP_DISTRICTS = useMemo(() => (districts || [])
+  const MAP_DISTRICTS = useMemo(() => asArray(districts)
     .map((d) => ({ ...d, pin: ALL_DISTRICTS.find((ad) => ad.slug === d.slug)?.pin }))
     .filter((d) => d.pin), [districts]);
 
@@ -46,7 +47,7 @@ export default function MapPage() {
             const [x, y] = d.pin;
             const isHovered = hovered === d.slug;
             const isSelected = selected?.slug === d.slug;
-            const tooltipWidth = Math.max(40, d.name_en.length * 5.6 + 14);
+            const tooltipWidth = Math.max(40, asText(d.name_en).length * 5.6 + 14);
 
             return (
               <g
@@ -107,7 +108,7 @@ export default function MapPage() {
         <div className="bg-base-200/90 backdrop-blur-lg rounded-xl p-3 border border-base-300 shadow-xl">
           <p className="text-xs font-medium text-base-content/70 mb-2">Divisions</p>
           <div className="grid grid-cols-2 gap-1">
-            {(divisions || []).map(dv => (
+            {asArray(divisions).map(dv => (
               <div key={dv.id} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{background: dv.color}} />
                 <span className="text-xs text-base-content/60">{dv.name_en}</span>
@@ -127,8 +128,8 @@ export default function MapPage() {
                 <HiX />
               </button>
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-base-200 p-3">
-                <span className="badge badge-sm" style={{background: (divisions || []).find(dv => dv.id === selected.division_id)?.color + "33", color: (divisions || []).find(dv => dv.id === selected.division_id)?.color, border: "none"}}>
-                  {(divisions || []).find(dv => dv.id === selected.division_id)?.name_en}
+                <span className="badge badge-sm" style={{background: asArray(divisions).find(dv => dv.id === selected.division_id)?.color + "33", color: asArray(divisions).find(dv => dv.id === selected.division_id)?.color, border: "none"}}>
+                  {asArray(divisions).find(dv => dv.id === selected.division_id)?.name_en}
                 </span>
               </div>
             </div>
@@ -150,7 +151,7 @@ export default function MapPage() {
 
               <div className="mt-4">
                 <p className="text-xs font-medium text-base-content/50 mb-2">Top attractions</p>
-                {selected.attractions.slice(0, 3).map((a, i) => (
+                {asArray(selected.attractions).slice(0, 3).map((a, i) => (
                   <div key={i} className="flex items-center gap-2 py-1.5 border-b border-base-300/50 last:border-0">
                     <HiLocationMarker className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span className="text-sm text-base-content/70">{a.name}</span>

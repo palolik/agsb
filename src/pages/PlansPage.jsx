@@ -4,6 +4,7 @@ import { resolveImage } from "../lib/api";
 import { HiLocationMarker, HiClock, HiCalendar, HiUserGroup } from "react-icons/hi";
 import { planStatus, formatDateRange, seatsLabel } from "../lib/planSchedule";
 import { taka } from "../lib/booking";
+import { asArray } from "../lib/safe";
 
 export default function PlansPage() {
   const { data: travelPlans } = useFetch("/plans");
@@ -15,7 +16,7 @@ export default function PlansPage() {
         <p className="text-base-content/50 mt-1">Ready-made itineraries — pick one and go</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {(travelPlans || []).map(p => (
+        {asArray(travelPlans).map(p => (
           <div key={p.id} className="card bg-base-200 card-hover overflow-hidden border border-base-300 group">
             <figure className="h-44 overflow-hidden relative">
               <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -29,7 +30,7 @@ export default function PlansPage() {
               <Link to={`/plans/${p.slug}`} className="text-lg font-bold text-base-content hover:text-primary transition-colors">{p.title_bn}</Link>
               <p className="text-sm text-base-content/60">{p.title_en}</p>
               <div className="flex items-center gap-3 mt-1 text-xs text-base-content/40">
-                <span className="flex items-center gap-1"><HiLocationMarker /> {p.districts.join(", ")}</span>
+                <span className="flex items-center gap-1"><HiLocationMarker /> {asArray(p.districts).join(", ")}</span>
                 <span>{p.price > 0 ? <span className="font-bold text-primary">{taka(p.price)}/person</span> : p.cost}</span>
               </div>
               {(p.start_date || seatsLabel(p.seats_available)) && (
@@ -41,7 +42,7 @@ export default function PlansPage() {
               <div className="mt-3">
                 <p className="text-xs text-base-content/40 mb-2">Highlights:</p>
                 <div className="flex flex-wrap gap-1">
-                  {p.highlights.map((h, i) => (
+                  {asArray(p.highlights).map((h, i) => (
                     <span key={i} className="badge badge-sm badge-ghost border-base-300">{h}</span>
                   ))}
                 </div>

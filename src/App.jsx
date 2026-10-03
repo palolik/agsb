@@ -22,6 +22,7 @@ import BookingPage from "./pages/BookingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import PaymentPage from "./pages/PaymentPage";
 import RequireAuth from "./components/RequireAuth";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,10 +31,13 @@ function ScrollToTop() {
 }
 
 function Layout({ children, noFooter }) {
+  const { pathname } = useLocation();
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <ErrorBoundary key={pathname}>{children}</ErrorBoundary>
+      </main>
       {!noFooter && <Footer />}
     </div>
   );

@@ -3,6 +3,7 @@ import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { toPlainText } from "../lib/richText";
 import { HiClock, HiArrowRight } from "react-icons/hi";
+import { asArray } from "../lib/safe";
 
 export default function BlogPage() {
   const { data: blogPosts } = useFetch("/blog");
@@ -15,7 +16,7 @@ export default function BlogPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {(blogPosts || []).map(b => (
+        {asArray(blogPosts).map(b => (
           <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
             <figure className="h-44 overflow-hidden">
               <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />

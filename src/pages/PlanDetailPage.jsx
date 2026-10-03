@@ -6,6 +6,7 @@ import { renderRichText } from "../lib/richText";
 import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiCalendar, HiUserGroup } from "react-icons/hi";
 import { planStatus, isBookable, formatDateRange, seatsLabel } from "../lib/planSchedule";
 import { taka, ADVANCE_RATE } from "../lib/booking";
+import { asArray } from "../lib/safe";
 
 export default function PlanDetailPage() {
   const { slug } = useParams();
@@ -24,9 +25,9 @@ export default function PlanDetailPage() {
   const hasBn = !!descriptions.bn.trim();
   const hasEn = !!descriptions.en.trim();
   const activeLang = lang === "bn" ? (hasBn ? "bn" : "en") : (hasEn ? "en" : "bn");
-  const planDistricts = (plan.districts || []).map(name => ({
+  const planDistricts = asArray(plan.districts).map(name => ({
     name,
-    slug: (districts || []).find(d => d.name_en === name)?.slug,
+    slug: asArray(districts).find(d => d.name_en === name)?.slug,
   }));
 
   return (
@@ -73,11 +74,11 @@ export default function PlanDetailPage() {
               <p className="text-base-content/50">Details for this plan are coming soon.</p>
             )}
 
-            {plan.highlights?.length > 0 && (
+            {asArray(plan.highlights).length > 0 && (
               <div>
                 <h2 className="text-xl font-bold text-base-content mb-4">হাইলাইটস</h2>
                 <div className="flex flex-wrap gap-2">
-                  {plan.highlights.map((h, i) => (
+                  {asArray(plan.highlights).map((h, i) => (
                     <span key={i} className="badge badge-ghost border-base-300">{h}</span>
                   ))}
                 </div>

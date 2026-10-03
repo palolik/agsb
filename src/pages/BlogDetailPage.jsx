@@ -3,6 +3,7 @@ import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { renderRichText } from "../lib/richText";
 import { HiArrowLeft, HiClock, HiCalendar } from "react-icons/hi";
+import { asArray } from "../lib/safe";
 
 export default function BlogDetailPage() {
   const { slug } = useParams();
@@ -12,7 +13,7 @@ export default function BlogDetailPage() {
   if (loading) return null;
   if (error || !post) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">Post not found</h1><Link to="/blog" className="btn btn-primary mt-4">Back to Blog</Link></div>;
 
-  const district = (districts || []).find(d => d.slug === post.districtSlug);
+  const district = asArray(districts).find(d => d.slug === post.districtSlug);
   const excerptHtml = renderRichText(post.excerpt);
   const contentHtml = renderRichText(post.content);
 

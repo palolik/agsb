@@ -3,6 +3,7 @@ import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload, HiCamera } from "react-icons/hi";
 import { FaWhatsapp, FaMedal } from "react-icons/fa";
+import { asArray } from "../lib/safe";
 
 const typeColors = { nature: "badge-success", historical: "badge-warning", religious: "badge-info", cultural: "badge-secondary", food: "badge-error", market: "badge-accent" };
 
@@ -16,9 +17,9 @@ export default function DistrictDetailPage() {
   if (loading) return null;
   if (error || !district) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">District not found</h1><Link to="/districts" className="btn btn-primary mt-4">Back to Districts</Link></div>;
 
-  const division = (divisions || []).find(dv => dv.id === district.division_id);
-  const relatedPlans = (travelPlans || []).filter(p => p.districts.includes(district.name_en));
-  const nearby = (allDistricts || []).filter(d => d.division_id === district.division_id && d.id !== district.id).slice(0, 3);
+  const division = asArray(divisions).find(dv => dv.id === district.division_id);
+  const relatedPlans = asArray(travelPlans).filter(p => asArray(p.districts).includes(district.name_en));
+  const nearby = asArray(allDistricts).filter(d => d.division_id === district.division_id && d.id !== district.id).slice(0, 3);
 
   return (
     <div>
@@ -63,7 +64,7 @@ export default function DistrictDetailPage() {
             <div>
               <h2 className="text-xl font-bold text-base-content mb-4">আকর্ষণীয় স্থান</h2>
               <div className="space-y-3">
-                {district.attractions.map((a, i) => (
+                {asArray(district.attractions).map((a, i) => (
                   <div key={i} className="card bg-base-200 p-4 border border-base-300 flex flex-row items-start gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center text-primary shrink-0">
                       <HiLocationMarker />
@@ -84,7 +85,7 @@ export default function DistrictDetailPage() {
             <div>
               <h2 className="text-xl font-bold text-base-content mb-4">স্থানীয় খাবার</h2>
               <div className="flex flex-wrap gap-2">
-                {district.food.map((f, i) => (
+                {asArray(district.food).map((f, i) => (
                   <span key={i} className="badge badge-lg badge-ghost border-base-300 py-3">{f}</span>
                 ))}
               </div>

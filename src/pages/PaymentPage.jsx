@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { apiSend } from "../lib/api";
-import { BD_PHONE, taka, canPay } from "../lib/booking";
-import { BookingNotFound, BookingTotals } from "./CheckoutPage";
+import { BD_PHONE, taka, canPay, isHoldExpired } from "../lib/booking";
+import { BookingNotFound, BookingTotals, HoldExpired, HoldNotice } from "./CheckoutPage";
 import { HiArrowLeft, HiClipboardCopy, HiCheck, HiCheckCircle, HiDeviceMobile } from "react-icons/hi";
+import { asArray } from "../lib/safe";
 
 export default function PaymentPage() {
   const { id } = useParams();
@@ -20,9 +21,10 @@ export default function PaymentPage() {
 
   if (loading || methodsLoading) return null;
   if (error || !booking) return <BookingNotFound />;
+  if (!done && isHoldExpired(booking)) return <HoldExpired booking={booking} />;
   if (!done && !canPay(booking)) return <Navigate to={`/bookings/${id}/checkout`} replace />;
 
-  const selected = (methods || []).find((m) => m._id === selectedId);
+  const selected = asArray(methods).find((m) => m._id === selectedId);
 
   async function copyNumber(number) {
     try {
@@ -78,16 +80,17 @@ export default function PaymentPage() {
       <p className="text-base-content/60 mt-1">
         Send <span className="font-bold text-primary">{taka(booking.advanceAmount)}</span> to one of the numbers below, then enter your transaction ID.
       </p>
+      <div className="mt-3 max-w-2xl"><HoldNotice booking={booking} /></div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <div className="lg:col-span-2 space-y-5">
           <div className="card bg-base-200 border border-base-300 p-5">
             <h2 className="font-bold text-base-content mb-3">1. Choose a payment method</h2>
-            {(methods || []).length === 0 ? (
+            {asArray(methods).length === 0 ? (
               <p className="text-sm text-base-content/50">No payment methods are available right now. Please contact us.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {methods.map((m) => (
+                {asArray(methods).map((m) => (
                   <label
                     key={m._id}
                     className={`cursor-pointer rounded-xl border p-4 transition-colors ${selectedId === m._id ? "border-primary bg-primary/10" : "border-base-300 bg-base-300/40 hover:border-primary/40"}`}
@@ -133,7 +136,7 @@ export default function PaymentPage() {
             <h2 className="font-bold text-base-content">{booking.planTitle_en}</h2>
             <BookingTotals booking={booking} />
             {formError && <div className="alert alert-error text-sm py-2">{formError}</div>}
-            <button type="submit" className="btn btn-primary w-full" disabled={submitting || !(methods || []).length}>
+            <button type="submit" className="btn btn-primary w-full" disabled={submitting || !asArray(methods).length}>
               {submitting ? <span className="loading loading-spinner loading-sm" /> : "Payment done"}
             </button>
             <p className="text-xs text-base-content/40 text-center">Payments are checked by our team, usually within 24 hours.</p>

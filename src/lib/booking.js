@@ -41,5 +41,21 @@ export const taka = (n) => `৳${Number(n || 0).toLocaleString("en-IN")}`;
 
 export const advanceFor = (total) => Math.ceil(total * ADVANCE_RATE);
 
+// Unpaid bookings hold their seats only until holdExpiresAt (newer backends);
+// after that the backend cancels them with cancelReason "expired".
+export const isHoldExpired = (booking) =>
+  booking?.bookingStatus === "cancelled" && booking?.cancelReason === "expired";
+
+// Returns a Date while an unpaid booking's seat hold is still running, else null.
+export function holdDeadline(booking) {
+  if (!booking?.holdExpiresAt || !["unpaid", "failed"].includes(booking.paymentStatus)) return null;
+  if (booking.bookingStatus === "cancelled") return null;
+  const d = new Date(booking.holdExpiresAt);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export const formatHoldTime = (date) =>
+  date.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true });
+
 export const canPay = (booking) =>
   booking && booking.bookingStatus !== "cancelled" && ["unpaid", "failed"].includes(booking.paymentStatus);

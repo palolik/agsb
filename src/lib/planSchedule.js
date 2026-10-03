@@ -18,7 +18,8 @@ export const isBookable = (plan) => (plan?.status || "open") === "open" && plan?
 const fmt = (d, opts) => new Date(`${d}T00:00:00`).toLocaleDateString("en-GB", opts);
 
 export function formatDateRange(start, end) {
-  if (!start) return "";
+  if (!start || typeof start !== "string") return "";
+  if (typeof end !== "string") end = "";
   if (!end || end === start) return fmt(start, { day: "numeric", month: "short", year: "numeric" });
   const sameYear = start.slice(0, 4) === end.slice(0, 4);
   return `${fmt(start, sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" })} – ${fmt(end, { day: "numeric", month: "short", year: "numeric" })}`;

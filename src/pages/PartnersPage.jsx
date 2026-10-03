@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { HiStar, HiBadgeCheck, HiLocationMarker, HiCheckCircle } from "react-icons/hi";
+import { asArray } from "../lib/safe";
 
 export default function PartnersPage() {
   const { data: partners } = useFetch("/partners");
@@ -14,7 +15,7 @@ export default function PartnersPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
-        {(partners || []).map(p => (
+        {asArray(partners).map(p => (
           <div key={p.id} className="card bg-base-200 border border-base-300 card-hover overflow-hidden">
             <figure className="h-36 overflow-hidden">
               <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />

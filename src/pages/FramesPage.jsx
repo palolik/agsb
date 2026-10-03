@@ -3,10 +3,11 @@ import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { HiDownload, HiPhotograph, HiStar, HiCamera, HiLocationMarker, HiShare } from "react-icons/hi";
 import { FaMedal } from "react-icons/fa";
+import { asArray } from "../lib/safe";
 
 export default function FramesPage() {
   const { data: districts } = useFetch("/districts");
-  const featured = (districts || []).filter(d => d.status === "complete").slice(0, 8);
+  const featured = asArray(districts).filter(d => d.status === "complete").slice(0, 8);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
