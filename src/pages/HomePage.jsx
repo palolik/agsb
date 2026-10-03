@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { districtCountsByDivision, countAttractions } from "../data";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { toPlainText } from "../lib/richText";
 import { HiArrowRight, HiLocationMarker, HiMap, HiStar, HiClock, HiUserGroup, HiCalendar } from "react-icons/hi";
 import { FaSuitcaseRolling, FaHiking } from "react-icons/fa";
@@ -9,6 +8,7 @@ import { planStatus, formatDateRange } from "../lib/planSchedule";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 export default function HomePage() {
   // Each section handles its own loading/error/empty state, so one failed
@@ -105,7 +105,7 @@ export default function HomePage() {
           {featured.map(d => (
             <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
               <figure className="h-48 overflow-hidden">
-                {resolveImage(d.image) ? <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+                <CoverImage image={d.image} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </figure>
               <div className="card-body p-4">
                 <div className="flex items-center gap-2 mb-1">
@@ -176,7 +176,7 @@ export default function HomePage() {
           {asArray(travelPlans).slice(0, 3).map(p => (
             <Link key={p.id} to={`/plans/${p.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
               <figure className="h-40 overflow-hidden relative">
-                {resolveImage(p.image) ? <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+                <CoverImage image={p.image} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-3 right-3 badge badge-primary">{p.duration}</div>
                 <span className={`absolute top-3 left-3 badge ${planStatus(p).badge}`}>{planStatus(p).label}</span>
               </figure>
@@ -218,7 +218,7 @@ export default function HomePage() {
             {asArray(blogPosts).slice(0, 3).map(b => (
               <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
                 <figure className="h-40 overflow-hidden">
-                  {resolveImage(b.image) ? <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+                  <CoverImage image={b.image} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </figure>
                 <div className="card-body p-4">
                   <div className="flex items-center gap-2 mb-1">

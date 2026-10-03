@@ -238,6 +238,8 @@ export default function ProfilePage() {
               <svg
                 viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
                 className="absolute inset-0 w-full h-full"
+                role="group"
+                aria-label="Districts — select to check in"
               >
                 {ALL_DISTRICTS.map((d) => {
                   const [x, y] = d.pin;
@@ -256,9 +258,19 @@ export default function ProfilePage() {
                       role="button"
                       aria-label={`${label}${isVisited ? " (visited)" : ""}`}
                       aria-pressed={isVisited}
+                      tabIndex={0}
                       onClick={() => onDistrictClick(d.slug)}
+                      onKeyDown={(e) => {
+                        // Enter/Space toggle the district, like a click.
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onDistrictClick(d.slug);
+                        }
+                      }}
                       onMouseEnter={() => setHovered(d.slug)}
                       onMouseLeave={() => setHovered((h) => (h === d.slug ? null : h))}
+                      onFocus={() => setHovered(d.slug)}
+                      onBlur={() => setHovered((h) => (h === d.slug ? null : h))}
                     >
                       <circle r={22} fill="transparent" />
                       <circle

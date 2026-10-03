@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { toPlainText } from "../lib/richText";
 import { HiClock, HiArrowRight } from "react-icons/hi";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 export default function BlogPage() {
   const { data: blogPosts, loading, error, reload } = useFetch("/blog");
@@ -28,7 +28,7 @@ export default function BlogPage() {
         {asArray(blogPosts).map(b => (
           <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
             <figure className="h-44 overflow-hidden">
-              {resolveImage(b.image) ? <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+              <CoverImage image={b.image} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </figure>
             <div className="card-body p-4">
               <div className="flex items-center gap-2 mb-2">

@@ -32,7 +32,7 @@ export default function Footer() {
             {SOCIALS.length > 0 && (
               <div className="flex gap-3">
                 {SOCIALS.map(({ key, label, Icon }) => (
-                  <a key={key} href={site.social[key]} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="btn btn-ghost btn-sm btn-circle text-base-content/50 hover:text-primary"><Icon /></a>
+                  <a key={key} href={site.social[key]} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="btn btn-ghost btn-sm btn-circle text-base-content/50 hover:text-primary"><Icon aria-hidden="true" /></a>
                 ))}
               </div>
             )}

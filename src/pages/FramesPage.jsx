@@ -8,6 +8,7 @@ import { FaMedal } from "react-icons/fa";
 import { asArray, asText } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 // Free plan (or no plan recorded) can't download premium frames.
 function hasPremium(user) {
@@ -74,7 +75,7 @@ function FrameCard({ frame, district, locked }) {
     <div className="card bg-base-200 overflow-hidden border border-base-300 card-hover group" data-testid="frame-card">
       <div className="relative h-40">
         {frame.image ? (
-          <img src={resolveImage(frame.image)} alt={name} className="w-full h-full object-cover" loading="lazy" />
+          <CoverImage image={frame.image} alt={name} />
         ) : (
           <div className="w-full h-full bg-base-300 flex items-center justify-center"><HiPhotograph className="w-10 h-10 text-base-content/30" /></div>
         )}

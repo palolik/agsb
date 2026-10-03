@@ -18,12 +18,12 @@ export const ALL_DISTRICTS = [
   { slug: "shariatpur", name_en: "Shariatpur", name_bn: "শরীয়তপুর", division_id: 1, pin: [734.94, 1191.41] },
   { slug: "tangail", name_en: "Tangail", name_bn: "টাঙ্গাইল", division_id: 1, pin: [621.33, 783.38] },
 
-  // Chittagong division
+  // Chattogram division (the "chittagong"/"comilla" slugs are kept: users' saved check-ins use them)
   { slug: "bandarban", name_en: "Bandarban", name_bn: "বান্দরবান", division_id: 2, pin: [1405.81, 1670.87] },
   { slug: "brahmanbaria", name_en: "Brahmanbaria", name_bn: "ব্রাহ্মণবাড়িয়া", division_id: 2, pin: [932.88, 977.03] },
   { slug: "chandpur", name_en: "Chandpur", name_bn: "চাঁদপুর", division_id: 2, pin: [877.91, 1177.66] },
-  { slug: "chittagong", name_en: "Chittagong", name_bn: "চট্টগ্রাম", division_id: 2, pin: [1227.88, 1506.27] },
-  { slug: "comilla", name_en: "Comilla", name_bn: "কুমিল্লা", division_id: 2, pin: [979.39, 1139.63] },
+  { slug: "chittagong", name_en: "Chattogram", name_bn: "চট্টগ্রাম", division_id: 2, pin: [1227.88, 1506.27] },
+  { slug: "comilla", name_en: "Cumilla", name_bn: "কুমিল্লা", division_id: 2, pin: [979.39, 1139.63] },
   { slug: "coxs-bazar", name_en: "Cox's Bazar", name_bn: "কক্সবাজার", division_id: 2, pin: [1274.77, 1705.38] },
   { slug: "feni", name_en: "Feni", name_bn: "ফেনী", division_id: 2, pin: [1092.96, 1276.58] },
   { slug: "khagrachari", name_en: "Khagrachari", name_bn: "খাগড়াছড়ি", division_id: 2, pin: [1257.14, 1209.76] },

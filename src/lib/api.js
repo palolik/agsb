@@ -2,10 +2,28 @@ import { API_BASE_URL, API_ORIGIN } from "./config";
 
 const TOKEN_KEY = "agsb_token";
 
+// Returns null when there is no image, so callers render a placeholder
+// instead of an <img src=""> (which re-requests the current page).
 export function resolveImage(path) {
-  if (!path) return "";
+  if (!path) return null;
   if (/^https?:\/\//.test(path)) return path;
   return `${API_ORIGIN}${path}`;
+}
+
+// Unsplash resizes on the fly via ?w=, so offer the browser several widths
+// instead of the fixed ?w=600 stored with the record. Other hosts: no srcset.
+const SRCSET_WIDTHS = [400, 600, 800, 1200, 1600, 2000];
+export function imageSrcSet(url) {
+  if (!url || !url.startsWith("https://images.unsplash.com/")) return undefined;
+  try {
+    return SRCSET_WIDTHS.map((w) => {
+      const u = new URL(url);
+      u.searchParams.set("w", String(w));
+      return `${u.href} ${w}w`;
+    }).join(", ");
+  } catch {
+    return undefined;
+  }
 }
 
 function withId(doc) {

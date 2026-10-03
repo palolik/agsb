@@ -1,12 +1,14 @@
-import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload, HiCamera } from "react-icons/hi";
 import { FaWhatsapp, FaMedal } from "react-icons/fa";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import { whatsappUrl } from "../config/site";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 const typeColors = { nature: "badge-success", historical: "badge-warning", religious: "badge-info", cultural: "badge-secondary", food: "badge-error", market: "badge-accent" };
 
@@ -46,7 +48,7 @@ export default function DistrictDetailPage() {
       {meta}
       {/* Hero */}
       <div className="relative h-64 md:h-80 overflow-hidden">
-        {resolveImage(district.image) ? <img src={resolveImage(district.image)} alt={district.name_en} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+        <CoverImage image={district.image} alt={district.name_en} sizes="100vw" width={1600} height={640} priority />
         <div className="absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 max-w-7xl mx-auto">
           <Link to="/districts" className="btn btn-sm btn-ghost text-base-content/70 mb-3">
@@ -54,7 +56,6 @@ export default function DistrictDetailPage() {
           </Link>
           <div className="flex items-center gap-2 mb-2">
             <span className="badge" style={{background: division?.color + "22", color: division?.color, border: "none"}}>{division?.name_en}</span>
-            <span className={`badge badge-sm ${district.status === "complete" ? "badge-success" : "badge-info"}`}>{district.status}</span>
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-base-content">{district.name_bn}</h1>
           <p className="text-lg text-base-content/60">{district.name_en} — {district.tagline}</p>
@@ -170,8 +171,7 @@ export default function DistrictDetailPage() {
                 <FaMedal className="w-7 h-7 text-base-content" />
               </div>
               <h3 className="font-bold text-base-content">District Badge</h3>
-              <p className="text-sm text-base-content/50 mt-1">Login to check in and earn your {district.name_en} badge!</p>
-              <Link to="/membership" className="btn btn-ghost btn-sm mt-3">Create Account</Link>
+              <CheckIn district={district} />
             </div>
 
             {/* Nearby */}
@@ -181,7 +181,7 @@ export default function DistrictDetailPage() {
                 <div className="space-y-2">
                   {nearby.map(d => (
                     <Link key={d.id} to={`/districts/${d.slug}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-base-300/50 transition-colors">
-                      {resolveImage(d.image) ? <img src={resolveImage(d.image)} alt={d.name_en} className="w-12 h-12 rounded-lg object-cover" /> : <div className="w-12 h-12 rounded-lg bg-base-300" aria-hidden="true" />}
+                      <CoverImage image={d.image} alt={d.name_en} className="w-12 h-12 rounded-lg object-cover" placeholderClassName="w-12 h-12 rounded-lg bg-base-300" sizes="48px" width={48} height={48} />
                       <div>
                         <div className="text-sm font-medium text-base-content">{d.name_bn}</div>
                         <div className="text-xs text-base-content/50">{d.name_en}</div>
@@ -195,5 +195,52 @@ export default function DistrictDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Logged in: toggles this district in the user's visited list (the same list
+// the profile map edits). Logged out: sends them to log in and back here.
+function CheckIn({ district }) {
+  const { user, updateUser } = useAuth();
+  const { pathname } = useLocation();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!user) {
+    return (
+      <>
+        <p className="text-sm text-base-content/50 mt-1">Log in to check in and earn your {district.name_en} badge!</p>
+        <Link to="/login" state={{ from: pathname }} className="btn btn-ghost btn-sm mt-3">Log in to check in</Link>
+      </>
+    );
+  }
+
+  const visitedList = asArray(user.visitedDistricts);
+  const visited = visitedList.includes(district.slug);
+
+  async function toggle() {
+    setSaving(true);
+    setError("");
+    try {
+      const next = visited ? visitedList.filter((s) => s !== district.slug) : [...visitedList, district.slug];
+      await updateUser({ visitedDistricts: next });
+    } catch (err) {
+      setError(err?.message || "Couldn't save your check-in.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <p className="text-sm text-base-content/50 mt-1">
+        {visited ? `You've checked in to ${district.name_en}.` : `Been to ${district.name_en}? Check in to earn the badge.`}
+      </p>
+      <button type="button" onClick={toggle} disabled={saving} className={`btn btn-sm mt-3 ${visited ? "btn-ghost" : "btn-primary"}`}>
+        {saving ? <span className="loading loading-spinner loading-xs" /> : null}
+        {visited ? "Undo check-in" : "Check in"}
+      </button>
+      {error && <p role="alert" className="text-xs text-error mt-2">{error}</p>}
+    </>
   );
 }

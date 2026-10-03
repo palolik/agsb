@@ -13,6 +13,13 @@ const nav = [
   { to: "/frames", label: "Frames" },
 ];
 
+// "/" only matches itself; other entries also match their sub-pages
+// (e.g. /districts/sylhet highlights Districts).
+function isActive(pathname, to) {
+  if (to === "/") return pathname === "/";
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
@@ -37,8 +44,9 @@ export default function Navbar() {
               <Link
                 key={n.to}
                 to={n.to}
+                aria-current={isActive(pathname, n.to) ? "page" : undefined}
                 className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                  pathname === n.to
+                  isActive(pathname, n.to)
                     ? "bg-primary/15 text-primary font-medium"
                     : "text-base-content/70 hover:text-base-content hover:bg-base-300/50"
                 }`}
@@ -53,19 +61,25 @@ export default function Navbar() {
             <Link to="/contact" className="btn btn-primary btn-sm hidden md:flex">
               Plan a Trip
             </Link>
-            <Link to={user ? "/profile" : "/login"} className="btn btn-ghost btn-sm">
+            <Link
+              to={user ? "/profile" : "/login"}
+              aria-label={user ? `My profile (${user.name || "account"})` : "Log in"}
+              title={user ? "My profile" : "Log in"}
+              className="btn btn-ghost btn-sm"
+            >
               {user ? (
-                <span className="w-6 h-6 rounded-full bg-primary text-primary-content flex items-center justify-center text-xs font-bold">
+                <span aria-hidden="true" className="w-6 h-6 rounded-full bg-primary text-primary-content flex items-center justify-center text-xs font-bold">
                   {user.name?.[0]?.toUpperCase() || "?"}
                 </span>
               ) : (
-                <HiUser className="w-5 h-5" />
+                <HiUser className="w-5 h-5" aria-hidden="true" />
               )}
             </Link>
             <button
               type="button"
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
+              aria-controls="mobile-menu"
               className="btn btn-ghost btn-sm btn-circle lg:hidden"
               onClick={() => setOpen(!open)}
             >
@@ -77,15 +91,16 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="lg:hidden border-t border-base-300 bg-base-200">
+        <div id="mobile-menu" className="lg:hidden border-t border-base-300 bg-base-200">
           <div className="px-4 py-3 space-y-1">
             {nav.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
                 onClick={() => setOpen(false)}
+                aria-current={isActive(pathname, n.to) ? "page" : undefined}
                 className={`block px-3 py-2.5 rounded-lg text-sm ${
-                  pathname === n.to
+                  isActive(pathname, n.to)
                     ? "bg-primary/15 text-primary font-medium"
                     : "text-base-content/70"
                 }`}

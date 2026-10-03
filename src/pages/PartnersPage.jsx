@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { HiStar, HiBadgeCheck, HiLocationMarker, HiCheckCircle } from "react-icons/hi";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 export default function PartnersPage() {
   const { data: partners, loading, error, reload } = useFetch("/partners");
@@ -27,7 +27,7 @@ export default function PartnersPage() {
         {asArray(partners).map(p => (
           <div key={p.id} className="card bg-base-200 border border-base-300 card-hover overflow-hidden">
             <figure className="h-36 overflow-hidden">
-              {resolveImage(p.image) ? <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+              <CoverImage image={p.image} alt={p.name} />
             </figure>
             <div className="p-4">
               <div className="flex items-center gap-1 mb-1">

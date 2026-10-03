@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { renderRichText } from "../lib/richText";
 import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiCalendar, HiUserGroup } from "react-icons/hi";
 import { planStatus, isBookable, formatDateRange, seatsLabel } from "../lib/planSchedule";
@@ -9,6 +8,7 @@ import { taka, ADVANCE_RATE } from "../lib/booking";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 import { toPlainText } from "../lib/richText";
 
 export default function PlanDetailPage() {
@@ -55,7 +55,7 @@ export default function PlanDetailPage() {
       {meta}
       {/* Hero */}
       <div className="relative h-64 md:h-80 overflow-hidden">
-        {resolveImage(plan.image) ? <img src={resolveImage(plan.image)} alt={plan.title_en} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+        <CoverImage image={plan.image} alt={plan.title_en} sizes="100vw" width={1600} height={640} priority />
         <div className="absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 max-w-7xl mx-auto">
           <Link to="/plans" className="btn btn-sm btn-ghost text-base-content/70 mb-3">

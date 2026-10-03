@@ -1,11 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { renderRichText } from "../lib/richText";
 import { HiArrowLeft, HiClock, HiCalendar } from "react-icons/hi";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 import { toPlainText } from "../lib/richText";
 
 export default function BlogDetailPage() {
@@ -52,7 +52,7 @@ export default function BlogDetailPage() {
         <p className="text-lg text-base-content/60">{post.title_en}</p>
       </div>
 
-      {resolveImage(post.image) && <img src={resolveImage(post.image)} alt={post.title_en} className="w-full h-64 md:h-96 object-cover rounded-xl mb-8" />}
+      {post.image && <CoverImage image={post.image} alt={post.title_en} className="w-full h-64 md:h-96 object-cover rounded-xl mb-8" sizes="(min-width: 896px) 896px, 100vw" width={1200} height={600} priority />}
 
       <div className="prose prose-theme max-w-none prose-img:rounded-lg">
         {excerptHtml && (
@@ -65,7 +65,7 @@ export default function BlogDetailPage() {
           <div className="mt-8">
             <h3 className="text-xl font-bold text-base-content mb-3">Related District</h3>
             <Link to={`/districts/${district.slug}`} className="card bg-base-200 p-4 border border-base-300 card-hover flex flex-row items-center gap-4">
-              {resolveImage(district.image) ? <img src={resolveImage(district.image)} alt={district.name_en} className="w-20 h-20 rounded-lg object-cover" /> : <div className="w-20 h-20 rounded-lg bg-base-300" aria-hidden="true" />}
+              <CoverImage image={district.image} alt={district.name_en} className="w-20 h-20 rounded-lg object-cover" placeholderClassName="w-20 h-20 rounded-lg bg-base-300" sizes="80px" width={80} height={80} />
               <div>
                 <h4 className="font-bold text-base-content">{district.name_bn}</h4>
                 <p className="text-sm text-base-content/50">{district.name_en} — {district.tagline}</p>

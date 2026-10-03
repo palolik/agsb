@@ -1,18 +1,27 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { HiSearch } from "react-icons/hi";
 import { asArray, asText } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import { districtCountsByDivision } from "../data";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 export default function DistrictsPage() {
-  const [searchParams] = useSearchParams();
-  const divFilter = searchParams.get("division");
+  // The division filter lives in the URL (?division=sylhet) so it survives
+  // reloads, back/forward and shared links.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeDivision = searchParams.get("division") || "all";
   const [search, setSearch] = useState("");
-  const [activeDivision, setActiveDivision] = useState(divFilter || "all");
+  const setActiveDivision = (slug) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (slug === "all") next.delete("division");
+      else next.set("division", slug);
+      return next;
+    }, { replace: true });
+  };
   const { data: districts, loading, error, reload } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
 
@@ -87,11 +96,8 @@ export default function DistrictsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filtered.map(d => (
           <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
-            <figure className="h-36 overflow-hidden relative">
-              {resolveImage(d.image) ? <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
-              <div className={`absolute top-2 right-2 badge badge-sm ${d.status === "complete" ? "badge-success" : d.status === "good" ? "badge-info" : "badge-ghost"}`}>
-                {d.status}
-              </div>
+            <figure className="h-36 overflow-hidden">
+              <CoverImage image={d.image} alt={d.name_en} sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </figure>
             <div className="p-3">
               <div className="flex items-center gap-2 mb-1">

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { HiX, HiExternalLink, HiMap, HiLocationMarker } from "react-icons/hi";
@@ -9,8 +8,17 @@ import { asArray, asText } from "../lib/safe";
 import { Spinner, ErrorState } from "../components/StateViews";
 import { districtName } from "../lib/districtNames";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 const MARKER_COLOR = "#3FA66B";
+
+// SVG markers act as buttons: Enter/Space select them like a click.
+function onActivateKey(e, fn) {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    fn();
+  }
+}
 
 // The map is as large as fits both the width and the visible height
 // (dvh tracks the mobile URL bar), always keeping the SVG's aspect ratio,
@@ -81,6 +89,8 @@ function MapView({ onRetry }) {
         <svg
           viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
           className="absolute inset-0 w-full h-full"
+          role="group"
+          aria-label="District markers"
         >
           {MAP_DISTRICTS.map((d) => {
             const [x, y] = d.pin;
@@ -93,9 +103,16 @@ function MapView({ onRetry }) {
                 key={d.slug}
                 transform={`translate(${x},${y})`}
                 className="cursor-pointer"
+                role="button"
+                tabIndex={0}
+                aria-label={`${d.name_en} — show details`}
+                aria-pressed={isSelected}
                 onClick={() => setSelected(d)}
+                onKeyDown={(e) => onActivateKey(e, () => setSelected(d))}
                 onMouseEnter={() => setHovered(d.slug)}
                 onMouseLeave={() => setHovered((h) => (h === d.slug ? null : h))}
+                onFocus={() => setHovered(d.slug)}
+                onBlur={() => setHovered((h) => (h === d.slug ? null : h))}
               >
                 {/* Invisible larger hit-area so the whole district "region" is clickable, not just the pin */}
                 <circle r={22} fill="transparent" />
@@ -139,6 +156,22 @@ function MapView({ onRetry }) {
         <div className="bg-base-200/90 backdrop-blur-lg rounded-xl p-3 border border-base-300 shadow-xl">
           <h1 className="text-lg font-bold text-base-content flex items-center gap-2"><HiMap className="text-primary" /> Bangladesh Map</h1>
           <p className="text-xs text-base-content/50">Click any marker to explore</p>
+          {/* List fallback: the same districts as plain links, for keyboard,
+              screen-reader and small-screen users who'd rather not use the map. */}
+          {MAP_DISTRICTS.length > 0 && (
+            <details className="mt-2 text-xs">
+              <summary className="cursor-pointer text-primary">List all {MAP_DISTRICTS.length} districts</summary>
+              <ul className="mt-2 max-h-48 overflow-y-auto space-y-1 pr-1">
+                {MAP_DISTRICTS.map((d) => (
+                  <li key={d.slug}>
+                    <Link to={`/districts/${d.slug}`} className="text-base-content/70 hover:text-primary">
+                      {d.name_en}{d.name_bn ? ` · ${d.name_bn}` : ""}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
       </div>
 
@@ -162,9 +195,9 @@ function MapView({ onRetry }) {
         <div className="absolute left-4 right-4 bottom-4 max-h-[65%] sm:max-h-none sm:left-auto sm:top-4 z-[1000] sm:w-80 flex flex-col">
           <div className="bg-base-200/95 backdrop-blur-lg rounded-xl border border-base-300 shadow-2xl min-h-0 sm:h-full overflow-y-auto">
             <div className="relative">
-              {resolveImage(selected.image) && <img src={resolveImage(selected.image)} alt={selected.name_en} className="w-full h-36 object-cover rounded-t-xl" />}
-              <button onClick={() => setSelected(null)} className="absolute top-2 right-2 btn btn-circle btn-sm btn-ghost bg-base-200/80">
-                <HiX />
+              <CoverImage image={selected.image} alt={selected.name_en} className="w-full h-36 object-cover rounded-t-xl" placeholderClassName="w-full h-36 bg-base-300 rounded-t-xl" sizes="320px" width={320} height={144} priority />
+              <button type="button" aria-label="Close district details" onClick={() => setSelected(null)} className="absolute top-2 right-2 btn btn-circle btn-sm btn-ghost bg-base-200/80">
+                <HiX aria-hidden="true" />
               </button>
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-base-200 p-3">
                 <span className="badge badge-sm" style={{background: asArray(divisions).find(dv => dv.id === selected.division_id)?.color + "33", color: asArray(divisions).find(dv => dv.id === selected.division_id)?.color, border: "none"}}>

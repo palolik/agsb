@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
 import { HiLocationMarker, HiCalendar, HiUserGroup } from "react-icons/hi";
 import { planStatus, formatDateRange, seatsLabel } from "../lib/planSchedule";
 import { taka } from "../lib/booking";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import CoverImage from "../components/CoverImage";
 
 export default function PlansPage() {
   const { data: travelPlans, loading, error, reload } = useFetch("/plans");
@@ -28,7 +28,7 @@ export default function PlansPage() {
         {asArray(travelPlans).map(p => (
           <div key={p.id} className="card bg-base-200 card-hover overflow-hidden border border-base-300 group">
             <figure className="h-44 overflow-hidden relative">
-              {resolveImage(p.image) ? <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
+              <CoverImage image={p.image} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <span className={`absolute top-3 left-3 badge ${planStatus(p).badge}`}>{planStatus(p).label}</span>
               <div className="absolute top-3 right-3 flex gap-1">
                 <span className="badge badge-primary">{p.duration}</span>
