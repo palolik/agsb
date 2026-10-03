@@ -4,6 +4,8 @@ import { formatDateRange } from "../lib/planSchedule";
 import { GENDERS, RELATIONS, PAYMENT_STATUS, BOOKING_STATUS, ADVANCE_RATE, taka, canPay, isHoldExpired, holdDeadline, formatHoldTime } from "../lib/booking";
 import { asArray } from "../lib/safe";
 import { HiCalendar, HiUserGroup, HiLockClosed, HiClock, HiExclamation } from "react-icons/hi";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
 
 // Shown instead of the payment form once an unpaid booking's seat hold ran out.
 export function HoldExpired({ booking }) {
@@ -43,11 +45,26 @@ const labelOf = (list, value) => list.find((x) => x.value === value)?.label || v
 
 export function BookingNotFound() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-      <h1 className="text-2xl font-bold">Booking not found</h1>
-      <Link to="/profile" className="btn btn-primary mt-4">Go to my bookings</Link>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <EmptyState
+        message="বুকিংটি পাওয়া যায়নি · Booking not found."
+        action={<Link to="/profile" className="btn btn-primary btn-sm">Go to my bookings</Link>}
+      />
     </div>
   );
+}
+
+// Loading / error / not-found handling shared by the checkout and payment
+// pages. Returns an element to render, or null once the booking is ready.
+// 400 (malformed id) and 404 both mean "no such booking"; anything else is
+// a real failure the user can retry.
+export function bookingFetchState({ loading, error, status, reload, booking }) {
+  if (loading) return <Spinner />;
+  if (error && status !== 404 && status !== 400) {
+    return <div className="max-w-3xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div>;
+  }
+  if (!booking) return <BookingNotFound />;
+  return null;
 }
 
 export function BookingTotals({ booking }) {
@@ -66,17 +83,19 @@ export function BookingTotals({ booking }) {
 
 export default function CheckoutPage() {
   const { id } = useParams();
-  const { data: booking, loading, error } = useFetch(`/bookings/${id}`);
+  const { data: booking, loading, error, status, reload } = useFetch(`/bookings/${id}`);
 
-  if (loading) return null;
-  if (error || !booking) return <BookingNotFound />;
-  if (isHoldExpired(booking)) return <HoldExpired booking={booking} />;
+  const pending = bookingFetchState({ loading, error, status, reload, booking });
+  const meta = <PageMeta title="চেকআউট · Checkout" />;
+  if (pending) return <>{meta}{pending}</>;
+  if (isHoldExpired(booking)) return <>{meta}<HoldExpired booking={booking} /></>;
 
   const payStatus = PAYMENT_STATUS[booking.paymentStatus] || PAYMENT_STATUS.unpaid;
   const bookStatus = BOOKING_STATUS[booking.bookingStatus] || BOOKING_STATUS.pending;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-base-content">Checkout</h1>

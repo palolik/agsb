@@ -1,19 +1,46 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { HiCheck, HiStar, HiDeviceMobile, HiCreditCard, HiLibrary } from "react-icons/hi";
-import { asArray } from "../lib/safe";
+import { HiCheck, HiDeviceMobile } from "react-icons/hi";
+import { asArray, asText } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import { useAuth } from "../context/AuthContext";
+import PageMeta from "../components/PageMeta";
+
+// A plan is free when its price is 0/empty or literally "Free" / "ফ্রি".
+const isFreePlan = (p) => {
+  const price = asText(p.price).trim().toLowerCase();
+  return !price || price === "0" || price === "free" || price === "ফ্রি" || /^৳?\s*0+$/.test(price);
+};
 
 export default function MembershipPage() {
-  const { data: plans } = useFetch("/membership-plans");
+  const { data: plans, loading, error, reload } = useFetch("/membership-plans");
+  const { data: paymentMethods } = useFetch("/payment-methods");
+  const { user } = useAuth();
+  const activeMethods = asArray(paymentMethods).filter((pm) => pm && pm.method && pm.active !== false);
 
+  // Free → create an account (or go to the profile when already signed in).
+  // Paid → there is no online checkout for memberships yet, so send the
+  // visitor to the contact form with the plan pre-selected.
+  const ctaFor = (p) =>
+    isFreePlan(p)
+      ? (user ? "/profile" : "/signup")
+      : `/contact?purpose=membership&plan=${encodeURIComponent(asText(p.name))}`;
+
+  const meta = <PageMeta title="মেম্বারশিপ · Membership" description="Track your districts, collect frames, get partner discounts and become a certified 64-district explorer." />;
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <div className="text-center mb-12">
         <span className="badge badge-primary badge-lg mb-3">Membership</span>
         <h1 className="text-3xl md:text-4xl font-bold text-base-content mb-2">আপনার ভ্রমণ যাত্রা আপগ্রেড করুন</h1>
         <p className="text-base-content/50 max-w-xl mx-auto">Track your districts, collect frames, get partner discounts, and become a certified 64-district explorer.</p>
       </div>
 
+      {loading ? <Spinner /> : error ? (
+        <ErrorState message={error} onRetry={reload} />
+      ) : asArray(plans).length === 0 ? (
+        <EmptyState message="মেম্বারশিপ প্ল্যান শীঘ্রই আসছে · Membership plans are coming soon." />
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {asArray(plans).map(p => (
           <div key={p.name} className={`card p-6 border ${p.popular ? "bg-primary/10 border-primary/30 ring-2 ring-primary/20" : "bg-base-200 border-base-300"}`}>
@@ -32,32 +59,30 @@ export default function MembershipPage() {
                 </div>
               ))}
             </div>
-            <button className={`btn w-full ${p.popular ? "btn-primary" : "btn-ghost"}`}>
-              {p.cta}
-            </button>
+            <Link to={ctaFor(p)} className={`btn w-full ${p.popular ? "btn-primary" : "btn-ghost"}`}>
+              {isFreePlan(p) && user ? "Go to my profile" : (p.cta || (isFreePlan(p) ? "Join Free" : "Get in touch"))}
+            </Link>
           </div>
         ))}
       </div>
+      )}
 
-      <div className="mt-12 card bg-base-200 border border-base-300 p-6 md:p-8">
-        <h2 className="text-xl font-bold text-base-content mb-4">Payment Methods</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { name: "bKash", icon: HiDeviceMobile, desc: "Mobile payment" },
-            { name: "Nagad", icon: HiDeviceMobile, desc: "Mobile payment" },
-            { name: "SSLCommerz", icon: HiCreditCard, desc: "Card payment" },
-            { name: "Rocket", icon: HiLibrary, desc: "Mobile banking" },
-          ].map(pm => (
-            <div key={pm.name} className="flex items-center gap-3 p-3 bg-base-300/50 rounded-lg">
-              <pm.icon className="w-7 h-7 text-primary shrink-0" />
-              <div>
-                <div className="text-sm font-medium text-base-content">{pm.name}</div>
-                <div className="text-xs text-base-content/40">{pm.desc}</div>
+      {activeMethods.length > 0 && (
+        <div className="mt-12 card bg-base-200 border border-base-300 p-6 md:p-8">
+          <h2 className="text-xl font-bold text-base-content mb-4">Payment Methods</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {activeMethods.map(pm => (
+              <div key={pm.id || pm._id || pm.method} className="flex items-center gap-3 p-3 bg-base-300/50 rounded-lg">
+                <HiDeviceMobile className="w-7 h-7 text-primary shrink-0" />
+                <div>
+                  <div className="text-sm font-medium text-base-content">{pm.method}</div>
+                  <div className="text-xs text-base-content/40">Mobile payment</div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

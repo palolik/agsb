@@ -3,22 +3,31 @@ import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { HiStar, HiBadgeCheck, HiLocationMarker, HiCheckCircle } from "react-icons/hi";
 import { asArray } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
 
 export default function PartnersPage() {
-  const { data: partners } = useFetch("/partners");
+  const { data: partners, loading, error, reload } = useFetch("/partners");
 
+  const meta = <PageMeta title="পার্টনার · Partners" description="Hotels, transport and guides we work with across Bangladesh." />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-base-content">পার্টনার</h1>
         <p className="text-base-content/50 mt-1">Verified hotels, resorts, and gear providers with exclusive AGSB member discounts</p>
       </div>
 
+      {loading ? <Spinner /> : error ? (
+        <ErrorState message={error} onRetry={reload} />
+      ) : asArray(partners).length === 0 ? (
+        <EmptyState message="এখনো কোনো পার্টনার নেই · No partners listed yet." />
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
         {asArray(partners).map(p => (
           <div key={p.id} className="card bg-base-200 border border-base-300 card-hover overflow-hidden">
             <figure className="h-36 overflow-hidden">
-              <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+              {resolveImage(p.image) ? <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
             </figure>
             <div className="p-4">
               <div className="flex items-center gap-1 mb-1">
@@ -39,6 +48,7 @@ export default function PartnersPage() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Partner CTA */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

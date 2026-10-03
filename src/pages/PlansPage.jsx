@@ -1,25 +1,34 @@
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
-import { HiLocationMarker, HiClock, HiCalendar, HiUserGroup } from "react-icons/hi";
+import { HiLocationMarker, HiCalendar, HiUserGroup } from "react-icons/hi";
 import { planStatus, formatDateRange, seatsLabel } from "../lib/planSchedule";
 import { taka } from "../lib/booking";
 import { asArray } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
 
 export default function PlansPage() {
-  const { data: travelPlans } = useFetch("/plans");
+  const { data: travelPlans, loading, error, reload } = useFetch("/plans");
 
+  const meta = <PageMeta title="ট্রাভেল প্ল্যান · Trip Plans" description="Ready-made itineraries for every budget, from weekend getaways to multi-district tours." />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-base-content">ট্রাভেল প্ল্যান</h1>
         <p className="text-base-content/50 mt-1">Ready-made itineraries — pick one and go</p>
       </div>
+      {loading ? <Spinner /> : error ? (
+        <ErrorState message={error} onRetry={reload} />
+      ) : asArray(travelPlans).length === 0 ? (
+        <EmptyState message="এখনো কোনো ট্রাভেল প্ল্যান নেই · No travel plans yet." />
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {asArray(travelPlans).map(p => (
           <div key={p.id} className="card bg-base-200 card-hover overflow-hidden border border-base-300 group">
             <figure className="h-44 overflow-hidden relative">
-              <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              {resolveImage(p.image) ? <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
               <span className={`absolute top-3 left-3 badge ${planStatus(p).badge}`}>{planStatus(p).label}</span>
               <div className="absolute top-3 right-3 flex gap-1">
                 <span className="badge badge-primary">{p.duration}</span>
@@ -47,14 +56,14 @@ export default function PlansPage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
-                <Link to={`/plans/${p.slug}`} className="btn btn-primary btn-sm flex-1">View plan</Link>
-                <button className="btn btn-ghost btn-sm">Save</button>
+              <div className="mt-4">
+                <Link to={`/plans/${p.slug}`} className="btn btn-primary btn-sm w-full">View plan</Link>
               </div>
             </div>
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

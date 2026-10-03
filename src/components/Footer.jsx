@@ -1,8 +1,20 @@
 import { Link } from "react-router-dom";
 import { HiMail, HiPhone, HiHeart } from "react-icons/hi";
-import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaTiktok, FaYoutube, FaWhatsapp } from "react-icons/fa";
+import { site, whatsappUrl, telUrl, mailtoUrl } from "../config/site";
+
+const SOCIALS = [
+  { key: "facebook", label: "Facebook", Icon: FaFacebook },
+  { key: "instagram", label: "Instagram", Icon: FaInstagram },
+  { key: "tiktok", label: "TikTok", Icon: FaTiktok },
+  { key: "youtube", label: "YouTube", Icon: FaYoutube },
+].filter((s) => site.social[s.key]);
 
 export default function Footer() {
+  const wa = whatsappUrl();
+  const tel = telUrl();
+  const mail = mailtoUrl();
+  const hasContact = Boolean(wa || tel || mail);
   return (
     <footer className="bg-base-200 border-t border-base-300 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -17,12 +29,13 @@ export default function Footer() {
               ৬৪ জেলা, এক দেশ, অসংখ্য গল্প।<br />
               Discover all 64 districts of Bangladesh.
             </p>
-            <div className="flex gap-3">
-              <a href="#" className="btn btn-ghost btn-sm btn-circle text-base-content/50 hover:text-primary"><FaFacebook /></a>
-              <a href="#" className="btn btn-ghost btn-sm btn-circle text-base-content/50 hover:text-primary"><FaInstagram /></a>
-              <a href="#" className="btn btn-ghost btn-sm btn-circle text-base-content/50 hover:text-primary"><FaTiktok /></a>
-              <a href="#" className="btn btn-ghost btn-sm btn-circle text-base-content/50 hover:text-primary"><FaYoutube /></a>
-            </div>
+            {SOCIALS.length > 0 && (
+              <div className="flex gap-3">
+                {SOCIALS.map(({ key, label, Icon }) => (
+                  <a key={key} href={site.social[key]} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="btn btn-ghost btn-sm btn-circle text-base-content/50 hover:text-primary"><Icon /></a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Explore */}
@@ -48,17 +61,28 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Contact — only the channels configured in src/config/site.js */}
           <div>
             <h4 className="text-sm font-semibold text-base-content mb-3">Get in Touch</h4>
             <div className="space-y-2">
-              <a href="mailto:hello@amighuri.com" className="flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors">
-                <HiMail className="w-4 h-4" /> hello@amighuri.com
-              </a>
-              <a href="tel:+8801XXXXXXXXX" className="flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors">
-                <HiPhone className="w-4 h-4" /> +880 1XXX-XXXXXX
-              </a>
-              <a href="#" className="text-sm text-primary hover:underline mt-2 block">WhatsApp →</a>
+              {mail && (
+                <a href={mail} className="flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors">
+                  <HiMail className="w-4 h-4" /> {site.email}
+                </a>
+              )}
+              {tel && (
+                <a href={tel} className="flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors">
+                  <HiPhone className="w-4 h-4" /> {site.phone}
+                </a>
+              )}
+              {wa && (
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary hover:underline">
+                  <FaWhatsapp className="w-4 h-4" /> WhatsApp
+                </a>
+              )}
+              {!hasContact && (
+                <Link to="/contact" className="block text-sm text-base-content/60 hover:text-primary transition-colors">Send us a message</Link>
+              )}
             </div>
           </div>
         </div>

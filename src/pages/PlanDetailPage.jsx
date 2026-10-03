@@ -7,10 +7,13 @@ import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiCalend
 import { planStatus, isBookable, formatDateRange, seatsLabel } from "../lib/planSchedule";
 import { taka, ADVANCE_RATE } from "../lib/booking";
 import { asArray } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
+import { toPlainText } from "../lib/richText";
 
 export default function PlanDetailPage() {
   const { slug } = useParams();
-  const { data: plan, loading, error } = useFetch(`/plans/${slug}`);
+  const { data: plan, loading, error, status, reload } = useFetch(`/plans/${slug}`);
   const { data: districts } = useFetch("/districts");
   const [lang, setLang] = useState("bn");
 
@@ -19,8 +22,25 @@ export default function PlanDetailPage() {
     en: renderRichText(plan?.description_en),
   }), [plan]);
 
-  if (loading) return null;
-  if (error || !plan) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">Plan not found</h1><Link to="/plans" className="btn btn-primary mt-4">Back to Plans</Link></div>;
+  // Only a 404 (or 400 for a malformed slug) means "not found"; network
+  // failures (status null) and 5xx show ErrorState with a retry instead.
+  const notFound = !loading && !plan && (!error || status === 404 || status === 400);
+  const meta = <PageMeta title={plan ? [plan.title_en, plan.title_bn].filter(Boolean).join(" — ") : notFound ? "প্ল্যান পাওয়া যায়নি · Plan not found" : "ট্রাভেল প্ল্যান · Trip Plans"} description={plan ? [plan.duration, plan.cost, toPlainText(plan.description_en || plan.description_bn)].filter(Boolean).join(" · ") : undefined} image={plan?.image} />;
+  if (loading) return <>{meta}<Spinner /></>;
+  if (error && !notFound) {
+    return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
+  }
+  if (!plan) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {meta}
+        <EmptyState
+          message="প্ল্যানটি পাওয়া যায়নি · Travel plan not found. It may have ended or been removed."
+          action={<Link to="/plans" className="btn btn-primary btn-sm"><HiArrowLeft className="mr-1" /> Back to Plans</Link>}
+        />
+      </div>
+    );
+  }
 
   const hasBn = !!descriptions.bn.trim();
   const hasEn = !!descriptions.en.trim();
@@ -32,9 +52,10 @@ export default function PlanDetailPage() {
 
   return (
     <div>
+      {meta}
       {/* Hero */}
       <div className="relative h-64 md:h-80 overflow-hidden">
-        <img src={resolveImage(plan.image)} alt={plan.title_en} className="w-full h-full object-cover" />
+        {resolveImage(plan.image) ? <img src={resolveImage(plan.image)} alt={plan.title_en} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
         <div className="absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 max-w-7xl mx-auto">
           <Link to="/plans" className="btn btn-sm btn-ghost text-base-content/70 mb-3">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { HiMenu, HiX, HiGlobe, HiUser } from "react-icons/hi";
+import { HiMenu, HiX, HiUser } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
 
 const nav = [
@@ -50,9 +50,6 @@ export default function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
-            <button className="btn btn-ghost btn-sm btn-circle hidden sm:flex">
-              <HiGlobe className="w-5 h-5" />
-            </button>
             <Link to="/contact" className="btn btn-primary btn-sm hidden md:flex">
               Plan a Trip
             </Link>
@@ -66,6 +63,9 @@ export default function Navbar() {
               )}
             </Link>
             <button
+              type="button"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
               className="btn btn-ghost btn-sm btn-circle lg:hidden"
               onClick={() => setOpen(!open)}
             >

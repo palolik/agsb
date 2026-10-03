@@ -1,0 +1,6 @@
+# Fallback. The build (scripts/generate-sitemap.mjs) overwrites dist/robots.txt
+# with the same rules plus an absolute "Sitemap:" line when VITE_SITE_URL is set.
+User-agent: *
+Allow: /
+Disallow: /profile
+Disallow: /bookings/

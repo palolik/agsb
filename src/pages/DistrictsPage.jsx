@@ -2,16 +2,24 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
-import { HiSearch, HiFilter } from "react-icons/hi";
+import { HiSearch } from "react-icons/hi";
 import { asArray, asText } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import { districtCountsByDivision } from "../data";
+import PageMeta from "../components/PageMeta";
 
 export default function DistrictsPage() {
   const [searchParams] = useSearchParams();
   const divFilter = searchParams.get("division");
   const [search, setSearch] = useState("");
   const [activeDivision, setActiveDivision] = useState(divFilter || "all");
-  const { data: districts, loading } = useFetch("/districts");
+  const { data: districts, loading, error, reload } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
+
+  // Counts reflect the districts the API actually returned, not a fixed 64.
+  const countsReady = !loading && !error;
+  const countsByDivision = districtCountsByDivision(districts);
+  const withCount = (label, n) => (countsReady ? `${label} (${n})` : label);
 
   const filtered = asArray(districts).filter(d => {
     const matchDiv = activeDivision === "all" || asArray(divisions).find(dv => dv.id === d.division_id)?.slug === activeDivision;
@@ -19,8 +27,10 @@ export default function DistrictsPage() {
     return matchDiv && matchSearch;
   });
 
+  const meta = <PageMeta title="৬৪ জেলা · Districts" description="Explore every district of Bangladesh: attractions, food, transport, budgets and the best time to visit." />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-base-content">৬৪ জেলা</h1>
@@ -47,7 +57,7 @@ export default function DistrictsPage() {
           onClick={() => setActiveDivision("all")}
           className={`btn btn-sm shrink-0 ${activeDivision === "all" ? "btn-primary" : "btn-ghost border-base-300"}`}
         >
-          All (64)
+          {withCount("All", asArray(districts).length)}
         </button>
         {asArray(divisions).map(dv => (
           <button
@@ -55,20 +65,30 @@ export default function DistrictsPage() {
             onClick={() => setActiveDivision(dv.slug)}
             className={`btn btn-sm shrink-0 ${activeDivision === dv.slug ? "btn-primary" : "btn-ghost border-base-300"}`}
           >
-            {dv.name_en} ({dv.districtCount})
+            {withCount(dv.name_en, countsByDivision[dv.id] || 0)}
           </button>
         ))}
       </div>
 
       {/* Results count */}
-      <p className="text-sm text-base-content/40 mb-4">{loading ? "Loading…" : `${filtered.length} districts found`}</p>
+      <p className="text-sm text-base-content/40 mb-4">{loading || error ? "" : `${filtered.length} districts found`}</p>
 
       {/* Grid */}
+      {loading ? <Spinner /> : error ? (
+        <ErrorState message={error} onRetry={reload} />
+      ) : asArray(districts).length === 0 ? (
+        <EmptyState message="এখনো কোনো জেলা যোগ করা হয়নি · No districts yet." />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          message="কোনো জেলা মেলেনি · No districts match your search."
+          action={<button type="button" className="btn btn-ghost btn-sm" onClick={() => { setSearch(""); setActiveDivision("all"); }}>Clear filters</button>}
+        />
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filtered.map(d => (
           <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
             <figure className="h-36 overflow-hidden relative">
-              <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              {resolveImage(d.image) ? <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
               <div className={`absolute top-2 right-2 badge badge-sm ${d.status === "complete" ? "badge-success" : d.status === "good" ? "badge-info" : "badge-ghost"}`}>
                 {d.status}
               </div>
@@ -88,6 +108,7 @@ export default function DistrictsPage() {
           </Link>
         ))}
       </div>
+      )}
     </div>
   );
 }

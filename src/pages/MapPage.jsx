@@ -6,33 +6,72 @@ import { ALL_DISTRICTS } from "../data/allDistricts";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { HiX, HiExternalLink, HiMap, HiLocationMarker } from "react-icons/hi";
 import { asArray, asText } from "../lib/safe";
+import { Spinner, ErrorState } from "../components/StateViews";
+import { districtName } from "../lib/districtNames";
+import PageMeta from "../components/PageMeta";
 
 const MARKER_COLOR = "#3FA66B";
 
+// The map is as large as fits both the width and the visible height
+// (dvh tracks the mobile URL bar), always keeping the SVG's aspect ratio,
+// so no district is ever cut off at narrow widths.
+const MAP_ASPECT = MAP_VIEWBOX.width / MAP_VIEWBOX.height;
+const MAP_SIZE_STYLE = {
+  aspectRatio: `${MAP_VIEWBOX.width} / ${MAP_VIEWBOX.height}`,
+  width: `min(100%, calc((100dvh - 64px) * ${MAP_ASPECT.toFixed(5)}))`,
+  maxWidth: "100%",
+  height: "auto",
+};
+
 export default function MapPage() {
-  const { data: districts } = useFetch("/districts");
+  const [attempt, setAttempt] = useState(0);
+  const meta = <PageMeta title="মানচিত্র · Interactive Map" description="Find districts with travel guides on an interactive map of Bangladesh." />;
+  return <>{meta}<MapView key={attempt} onRetry={() => setAttempt((n) => n + 1)} /></>;
+}
+
+function MapView({ onRetry }) {
+  const { data: districts, loading: districtsLoading, error: districtsError } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
   const [mapMarkup, setMapMarkup] = useState(null);
+  const [mapError, setMapError] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
 
   // Only the districts with full guides get a marker — positioned using the same
   // pin coordinates the profile page's check-in map uses.
   const MAP_DISTRICTS = useMemo(() => asArray(districts)
-    .map((d) => ({ ...d, pin: ALL_DISTRICTS.find((ad) => ad.slug === d.slug)?.pin }))
+    .map((d) => ({
+      ...d,
+      name_en: districtName(d.name_en),
+      pin: ALL_DISTRICTS.find((ad) => ad.slug === d.slug)?.pin,
+    }))
     .filter((d) => d.pin), [districts]);
 
   useEffect(() => {
+    let cancelled = false;
     fetch("/assets/BD_Map_dark.svg")
-      .then((res) => res.text())
-      .then(setMapMarkup)
-      .catch(() => {});
+      .then((res) => {
+        if (!res.ok) throw new Error(`Map image failed to load (${res.status})`);
+        return res.text();
+      })
+      .then((text) => { if (!cancelled) setMapMarkup(text); })
+      .catch(() => { if (!cancelled) setMapError("The map could not be loaded. Check your connection and try again."); });
+    return () => { cancelled = true; };
   }, []);
 
+  const failure = mapError || districtsError;
+  const busy = !failure && (!mapMarkup || districtsLoading);
+
   return (
-    <div className="relative h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden bg-base-100">
+    <div className="relative min-h-[calc(100dvh-64px)] h-[calc(100dvh-64px)] flex items-center justify-center bg-base-100">
+      {(busy || failure) && (
+        <div className="absolute inset-0 z-[900] flex items-center justify-center px-4 bg-base-100/70">
+          {failure ? <ErrorState message={failure} onRetry={onRetry} /> : <Spinner label="Loading map…" />}
+        </div>
+      )}
+
       {/* Map */}
-      <div className="relative h-full" style={{ aspectRatio: `${MAP_VIEWBOX.width} / ${MAP_VIEWBOX.height}` }}>
+      <div className="relative" style={MAP_SIZE_STYLE} data-testid="bd-map">
         <div
           role="img"
           aria-label="Map of Bangladesh"
@@ -111,7 +150,7 @@ export default function MapPage() {
             {asArray(divisions).map(dv => (
               <div key={dv.id} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{background: dv.color}} />
-                <span className="text-xs text-base-content/60">{dv.name_en}</span>
+                <span className="text-xs text-base-content/60">{districtName(dv.name_en)}</span>
               </div>
             ))}
           </div>
@@ -120,16 +159,16 @@ export default function MapPage() {
 
       {/* Selected district panel */}
       {selected && (
-        <div className="absolute top-4 right-4 bottom-4 z-[1000] w-72 sm:w-80">
-          <div className="bg-base-200/95 backdrop-blur-lg rounded-xl border border-base-300 shadow-2xl h-full overflow-y-auto">
+        <div className="absolute left-4 right-4 bottom-4 max-h-[65%] sm:max-h-none sm:left-auto sm:top-4 z-[1000] sm:w-80 flex flex-col">
+          <div className="bg-base-200/95 backdrop-blur-lg rounded-xl border border-base-300 shadow-2xl min-h-0 sm:h-full overflow-y-auto">
             <div className="relative">
-              <img src={resolveImage(selected.image)} alt={selected.name_en} className="w-full h-36 object-cover rounded-t-xl" />
+              {resolveImage(selected.image) && <img src={resolveImage(selected.image)} alt={selected.name_en} className="w-full h-36 object-cover rounded-t-xl" />}
               <button onClick={() => setSelected(null)} className="absolute top-2 right-2 btn btn-circle btn-sm btn-ghost bg-base-200/80">
                 <HiX />
               </button>
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-base-200 p-3">
                 <span className="badge badge-sm" style={{background: asArray(divisions).find(dv => dv.id === selected.division_id)?.color + "33", color: asArray(divisions).find(dv => dv.id === selected.division_id)?.color, border: "none"}}>
-                  {asArray(divisions).find(dv => dv.id === selected.division_id)?.name_en}
+                  {districtName(asArray(divisions).find(dv => dv.id === selected.division_id)?.name_en)}
                 </span>
               </div>
             </div>

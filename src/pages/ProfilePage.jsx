@@ -1,25 +1,68 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useFetch } from "../hooks/useFetch";
 import { formatDateRange } from "../lib/planSchedule";
 import { PAYMENT_STATUS, BOOKING_STATUS, taka, canPay } from "../lib/booking";
-import { stats } from "../data";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { HiMail, HiPhone, HiCalendar, HiCamera, HiStar } from "react-icons/hi";
 import { FaSignOutAlt, FaMedal, FaSuitcaseRolling } from "react-icons/fa";
 import { asArray } from "../lib/safe";
+import { districtName } from "../lib/districtNames";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
 
 const SELECTED_COLOR = "#3FA66B";
+const PENDING_COLOR = "#E0B341";
+
+const EMPTY = [];
+// Bangladesh has 64 districts; the check-in tracker covers all of them.
+const TOTAL_DISTRICTS = ALL_DISTRICTS.length;
+const DISTRICT_BY_SLUG = new Map(ALL_DISTRICTS.map((d) => [d.slug, d]));
+
+// Touch devices and small screens confirm a check-in before saving, so
+// scrolling or panning across the map can't toggle districts by accident.
+const CONFIRM_QUERY = "(hover: none), (pointer: coarse), (max-width: 767px)";
+function subscribeConfirmMode(cb) {
+  const mq = window.matchMedia(CONFIRM_QUERY);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+function useConfirmMode() {
+  return useSyncExternalStore(
+    subscribeConfirmMode,
+    () => window.matchMedia(CONFIRM_QUERY).matches,
+    () => false,
+  );
+}
 
 export default function ProfilePage() {
   const { user, ready, logout, updateUser } = useAuth();
   const [hovered, setHovered] = useState(null);
   const [mapMarkup, setMapMarkup] = useState(null);
   const mapRef = useRef(null);
+  const confirmMode = useConfirmMode();
+  // Check-in saves: `optimistic` is the list shown while saves are in flight;
+  // `desiredRef` always holds the newest wanted list, so every toggle builds on
+  // the latest state (never on a stale render) and saves run one at a time.
+  const [optimistic, setOptimistic] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [pendingSlug, setPendingSlug] = useState(null);
+  const desiredRef = useRef(null);
+  const inFlightRef = useRef(false);
 
-  const visited = asArray(user?.visitedDistricts);
+  const rawVisited = user?.visitedDistricts;
+  const savedVisited = useMemo(() => (Array.isArray(rawVisited) ? rawVisited : EMPTY), [rawVisited]);
+  const visited = optimistic ?? savedVisited;
+  const savedRef = useRef(savedVisited);
+  useEffect(() => { savedRef.current = savedVisited; }, [savedVisited]);
+  const visitedSet = useMemo(() => new Set(visited), [visited]);
+  const visitedDistricts = useMemo(
+    () => visited.map((slug) => DISTRICT_BY_SLUG.get(slug)).filter(Boolean),
+    [visited],
+  );
 
   useEffect(() => {
     fetch("/assets/BD_Map_dark.svg")
@@ -42,7 +85,7 @@ export default function ProfilePage() {
     svg.style.display = "block";
 
     svg.querySelectorAll("[data-slug]").forEach((el) => {
-      if (visited.includes(el.dataset.slug)) {
+      if (visitedSet.has(el.dataset.slug)) {
         // Use !important to override any inline fill styles baked into the SVG
         el.style.setProperty("fill", SELECTED_COLOR, "important");
         el.style.setProperty("fill-opacity", "0.9", "important");
@@ -54,20 +97,66 @@ export default function ProfilePage() {
     });
 
     return svg.outerHTML;
-  }, [mapMarkup, visited]);
+  }, [mapMarkup, visitedSet]);
 
-  if (!ready) return null;
-  if (!user) return <Navigate to="/login" replace state={{ from: "/profile" }} />;
+  const meta = <PageMeta title="আমার প্রোফাইল · My Profile" />;
+  if (!ready) return meta;
+  if (!user) return <>{meta}<Navigate to="/login" replace state={{ from: "/profile" }} /></>;
 
-  const progress = Math.round((visited.length / stats.districts) * 100);
+  const progress = Math.round((visited.length / TOTAL_DISTRICTS) * 100);
+
+  async function flushSaves() {
+    inFlightRef.current = true;
+    setSaving(true);
+    try {
+      // Keep saving until the server has the newest list (clicks made while
+      // a save was in flight are sent by the next pass, not lost).
+      let sent = null;
+      while (desiredRef.current && desiredRef.current !== sent) {
+        sent = desiredRef.current;
+        await updateUser({ visitedDistricts: sent });
+      }
+    } catch (err) {
+      setSaveError(`Couldn't save your check-in${err?.message ? `: ${err.message}` : ""}. Your map was restored — please try again.`);
+    } finally {
+      // Success: the user record now holds the list. Failure: fall back to
+      // the last list the server confirmed.
+      desiredRef.current = null;
+      setOptimistic(null);
+      inFlightRef.current = false;
+      setSaving(false);
+    }
+  }
 
   function toggleDistrict(slug) {
-    const next = visited.includes(slug) ? visited.filter((s) => s !== slug) : [...visited, slug];
-    updateUser({ visitedDistricts: next });
+    const base = desiredRef.current ?? savedRef.current;
+    const next = base.includes(slug) ? base.filter((s) => s !== slug) : [...base, slug];
+    desiredRef.current = next;
+    setOptimistic(next);
+    setSaveError("");
+    if (!inFlightRef.current) flushSaves();
   }
+
+  function onDistrictClick(slug) {
+    if (confirmMode) {
+      setPendingSlug((cur) => (cur === slug ? null : slug));
+    } else {
+      toggleDistrict(slug);
+    }
+  }
+
+  function confirmPending() {
+    if (!pendingSlug) return;
+    toggleDistrict(pendingSlug);
+    setPendingSlug(null);
+  }
+
+  const pendingDistrict = pendingSlug ? DISTRICT_BY_SLUG.get(pendingSlug) : null;
+  const pendingIsVisited = pendingSlug ? visitedSet.has(pendingSlug) : false;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-5">
           <div className="card bg-base-200 border border-base-300 p-6 text-center">
@@ -92,25 +181,22 @@ export default function ProfilePage() {
           <div className="card bg-primary/10 border border-primary/20 p-5">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-bold text-base-content text-sm flex items-center gap-2"><FaMedal className="text-primary" /> 64-District Challenge</h2>
-              <span className="text-sm text-base-content/60">{visited.length}/{stats.districts}</span>
+              <span className="text-sm text-base-content/60">{visited.length}/{TOTAL_DISTRICTS}</span>
             </div>
-            <progress className="progress progress-primary w-full" value={visited.length} max={stats.districts}></progress>
-            <p className="text-xs text-base-content/50 mt-2">{progress}% complete — click a district on the map to check in.</p>
+            <progress className="progress progress-primary w-full" value={visited.length} max={TOTAL_DISTRICTS}></progress>
+            <p className="text-xs text-base-content/50 mt-2">{progress}% complete — {confirmMode ? "tap" : "click"} a district on the map to check in.</p>
           </div>
 
           {/* Visited list */}
           <div className="card bg-base-200 border border-base-300 p-5">
             <h3 className="font-bold text-base-content mb-3 text-sm">Visited Districts</h3>
-            {visited.length === 0 ? (
+            {visitedDistricts.length === 0 ? (
               <p className="text-sm text-base-content/40">No districts checked in yet.</p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
-                {visited.map((slug) => {
-                  const d = ALL_DISTRICTS.find((dd) => dd.slug === slug);
-                  return d ? (
-                    <span key={slug} className="badge badge-success badge-outline">{d.name_en}</span>
-                  ) : null;
-                })}
+                {visitedDistricts.map((d) => (
+                  <span key={d.slug} className="badge badge-success badge-outline">{districtName(d.name_en)}</span>
+                ))}
               </div>
             )}
           </div>
@@ -135,6 +221,12 @@ export default function ProfilePage() {
         {/* Map */}
         <div className="lg:col-span-2">
           <div className="card bg-base-200 border border-base-300 p-4">
+            {saveError && (
+              <div role="alert" className="alert alert-error mb-3 text-sm" data-testid="checkin-error">
+                <span>{saveError}</span>
+                <button type="button" className="btn btn-ghost btn-xs" onClick={() => setSaveError("")}>Dismiss</button>
+              </div>
+            )}
             <div className="relative w-full" style={{ aspectRatio: `${MAP_VIEWBOX.width} / ${MAP_VIEWBOX.height}` }}>
               <div
                 ref={mapRef}
@@ -149,24 +241,30 @@ export default function ProfilePage() {
               >
                 {ALL_DISTRICTS.map((d) => {
                   const [x, y] = d.pin;
-                  const isVisited = visited.includes(d.slug);
-                  const isHovered = hovered === d.slug;
-                  const tooltipWidth = Math.max(40, d.name_en.length * 5.6 + 14);
+                  const isVisited = visitedSet.has(d.slug);
+                  const isPending = pendingSlug === d.slug;
+                  const isHovered = hovered === d.slug || isPending;
+                  const label = districtName(d.name_en);
+                  const tooltipWidth = Math.max(40, label.length * 5.6 + 14);
 
                   return (
                     <g
                       key={d.slug}
                       transform={`translate(${x},${y})`}
                       className="cursor-pointer"
-                      onClick={() => toggleDistrict(d.slug)}
+                      data-slug={d.slug}
+                      role="button"
+                      aria-label={`${label}${isVisited ? " (visited)" : ""}`}
+                      aria-pressed={isVisited}
+                      onClick={() => onDistrictClick(d.slug)}
                       onMouseEnter={() => setHovered(d.slug)}
                       onMouseLeave={() => setHovered((h) => (h === d.slug ? null : h))}
                     >
                       <circle r={22} fill="transparent" />
                       <circle
                         r={isHovered ? 20 : 17}
-                        fill={isVisited ? SELECTED_COLOR : "#ffffff"}
-                        opacity={isVisited ? 0.3 : isHovered ? 0.1 : 0}
+                        fill={isPending ? PENDING_COLOR : isVisited ? SELECTED_COLOR : "#ffffff"}
+                        opacity={isPending ? 0.45 : isVisited ? 0.3 : isHovered ? 0.1 : 0}
                         style={{ transition: "opacity 0.15s, r 0.15s" }}
                       />
                       <circle
@@ -189,7 +287,7 @@ export default function ProfilePage() {
                             stroke="#1F3A2B"
                           />
                           <text textAnchor="middle" y={-4} fontSize="10" fill="#E3EDE7">
-                            {d.name_en}
+                            {label}
                           </text>
                         </g>
                       )}
@@ -199,28 +297,63 @@ export default function ProfilePage() {
               </svg>
             </div>
           </div>
-          <p className="text-xs text-base-content/40 mt-2 text-center">
-            Click any district to mark it as visited or unvisited.
+          <p className="text-xs text-base-content/40 mt-2 text-center" aria-live="polite">
+            {saving
+              ? "Saving your check-ins…"
+              : confirmMode
+                ? "Tap a district, then confirm to mark it as visited or unvisited."
+                : "Click any district to mark it as visited or unvisited."}
           </p>
         </div>
       </div>
 
-      <MyBookings />
+      <BookingsSection />
+
+      {confirmMode && pendingDistrict && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-[1100] px-4 pt-3 bg-base-200/95 backdrop-blur border-t border-base-300 shadow-2xl"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+          role="dialog"
+          aria-label="Confirm check-in"
+          data-testid="checkin-confirm"
+        >
+          <div className="max-w-xl mx-auto flex items-center gap-3">
+            <p className="flex-1 text-sm text-base-content">
+              {pendingIsVisited
+                ? `Remove ${districtName(pendingDistrict.name_en)} from your visited districts?`
+                : `Mark ${districtName(pendingDistrict.name_en)} as visited?`}
+            </p>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPendingSlug(null)}>Cancel</button>
+            <button type="button" className={`btn btn-sm ${pendingIsVisited ? "btn-error" : "btn-primary"}`} onClick={confirmPending}>
+              {pendingIsVisited ? "Remove" : "Mark visited"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function MyBookings() {
-  const { data: bookings, loading } = useFetch("/bookings/my");
-  if (loading) return null;
+function BookingsSection() {
+  const [attempt, setAttempt] = useState(0);
+  return <MyBookings key={attempt} onRetry={() => setAttempt((n) => n + 1)} />;
+}
+
+function MyBookings({ onRetry }) {
+  const { data: bookings, loading, error } = useFetch("/bookings/my");
 
   return (
     <div id="bookings" className="card bg-base-200 border border-base-300 p-5 mt-6">
       <h2 className="font-bold text-base-content mb-3">My bookings</h2>
-      {asArray(bookings).length === 0 ? (
-        <p className="text-sm text-base-content/40">
-          No bookings yet. <Link to="/plans" className="text-primary hover:underline">Browse trip plans</Link>
-        </p>
+      {loading ? (
+        <Spinner label="Loading your bookings…" />
+      ) : error ? (
+        <ErrorState message={error} onRetry={onRetry} />
+      ) : asArray(bookings).length === 0 ? (
+        <EmptyState
+          message="No bookings yet."
+          action={<Link to="/plans" className="btn btn-primary btn-sm">Browse trip plans</Link>}
+        />
       ) : (
         <div className="space-y-3">
           {asArray(bookings).map((b) => {

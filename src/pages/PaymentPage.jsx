@@ -3,14 +3,16 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { apiSend } from "../lib/api";
 import { BD_PHONE, taka, canPay, isHoldExpired } from "../lib/booking";
-import { BookingNotFound, BookingTotals, HoldExpired, HoldNotice } from "./CheckoutPage";
+import { BookingTotals, HoldExpired, HoldNotice, bookingFetchState } from "./CheckoutPage";
+import { Spinner, ErrorState } from "../components/StateViews";
 import { HiArrowLeft, HiClipboardCopy, HiCheck, HiCheckCircle, HiDeviceMobile } from "react-icons/hi";
 import { asArray } from "../lib/safe";
+import PageMeta from "../components/PageMeta";
 
 export default function PaymentPage() {
   const { id } = useParams();
-  const { data: booking, loading, error } = useFetch(`/bookings/${id}`);
-  const { data: methods, loading: methodsLoading } = useFetch("/payment-methods");
+  const { data: booking, loading, error, status, reload } = useFetch(`/bookings/${id}`);
+  const { data: methods, loading: methodsLoading, error: methodsError, reload: reloadMethods } = useFetch("/payment-methods");
   const [selectedId, setSelectedId] = useState("");
   const [senderNumber, setSenderNumber] = useState("");
   const [transactionId, setTransactionId] = useState("");
@@ -19,10 +21,11 @@ export default function PaymentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
-  if (loading || methodsLoading) return null;
-  if (error || !booking) return <BookingNotFound />;
-  if (!done && isHoldExpired(booking)) return <HoldExpired booking={booking} />;
-  if (!done && !canPay(booking)) return <Navigate to={`/bookings/${id}/checkout`} replace />;
+  const pending = bookingFetchState({ loading, error, status, reload, booking });
+  const meta = <PageMeta title="পেমেন্ট · Payment" />;
+  if (pending) return <>{meta}{pending}</>;
+  if (!done && isHoldExpired(booking)) return <>{meta}<HoldExpired booking={booking} /></>;
+  if (!done && !canPay(booking)) return <>{meta}<Navigate to={`/bookings/${id}/checkout`} replace /></>;
 
   const selected = asArray(methods).find((m) => m._id === selectedId);
 
@@ -56,6 +59,7 @@ export default function PaymentPage() {
   if (done) {
     return (
       <div className="max-w-lg mx-auto px-4 py-16">
+        {meta}
         <div className="card bg-base-200 border border-base-300 p-8 text-center">
           <HiCheckCircle className="w-14 h-14 text-success mx-auto mb-3" />
           <h1 className="text-xl font-bold text-base-content">Payment submitted</h1>
@@ -73,6 +77,7 @@ export default function PaymentPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <Link to={`/bookings/${id}/checkout`} className="btn btn-sm btn-ghost text-base-content/70 mb-4">
         <HiArrowLeft className="mr-1" /> Back to checkout
       </Link>
@@ -86,7 +91,11 @@ export default function PaymentPage() {
         <div className="lg:col-span-2 space-y-5">
           <div className="card bg-base-200 border border-base-300 p-5">
             <h2 className="font-bold text-base-content mb-3">1. Choose a payment method</h2>
-            {asArray(methods).length === 0 ? (
+            {methodsLoading ? (
+              <Spinner label="পেমেন্ট মেথড লোড হচ্ছে… Loading payment methods…" />
+            ) : methodsError ? (
+              <ErrorState message={methodsError} onRetry={reloadMethods} />
+            ) : asArray(methods).length === 0 ? (
               <p className="text-sm text-base-content/50">No payment methods are available right now. Please contact us.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -121,7 +130,7 @@ export default function PaymentPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label"><span className="label-text">Sent from number</span></label>
-                <input type="tel" required placeholder="01XXXXXXXXX" className="input input-bordered bg-base-300 w-full" value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} />
+                <input type="tel" required placeholder="01712345678" className="input input-bordered bg-base-300 w-full" value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} />
               </div>
               <div>
                 <label className="label"><span className="label-text">Transaction ID (TrxID)</span></label>
@@ -136,7 +145,7 @@ export default function PaymentPage() {
             <h2 className="font-bold text-base-content">{booking.planTitle_en}</h2>
             <BookingTotals booking={booking} />
             {formError && <div className="alert alert-error text-sm py-2">{formError}</div>}
-            <button type="submit" className="btn btn-primary w-full" disabled={submitting || !asArray(methods).length}>
+            <button type="submit" className="btn btn-primary w-full" disabled={submitting || methodsLoading || !asArray(methods).length}>
               {submitting ? <span className="loading loading-spinner loading-sm" /> : "Payment done"}
             </button>
             <p className="text-xs text-base-content/40 text-center">Payments are checked by our team, usually within 24 hours.</p>

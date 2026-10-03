@@ -4,22 +4,31 @@ import { resolveImage } from "../lib/api";
 import { toPlainText } from "../lib/richText";
 import { HiClock, HiArrowRight } from "react-icons/hi";
 import { asArray } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
 
 export default function BlogPage() {
-  const { data: blogPosts } = useFetch("/blog");
+  const { data: blogPosts, loading, error, reload } = useFetch("/blog");
 
+  const meta = <PageMeta title="ট্রাভেল ব্লগ · Travel Blog" description="Guides, stories and local insights from across Bangladesh." />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-base-content">ট্রাভেল ব্লগ</h1>
         <p className="text-base-content/50 mt-1">Guides, tips, food stories, and local insights from across Bangladesh</p>
       </div>
 
+      {loading ? <Spinner /> : error ? (
+        <ErrorState message={error} onRetry={reload} />
+      ) : asArray(blogPosts).length === 0 ? (
+        <EmptyState message="এখনো কোনো ব্লগ পোস্ট নেই · No blog posts yet." />
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {asArray(blogPosts).map(b => (
           <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
             <figure className="h-44 overflow-hidden">
-              <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              {resolveImage(b.image) ? <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
             </figure>
             <div className="card-body p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -37,6 +46,7 @@ export default function BlogPage() {
           </Link>
         ))}
       </div>
+      )}
     </div>
   );
 }

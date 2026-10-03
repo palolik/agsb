@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { HiMail, HiLockClosed } from "react-icons/hi";
+import { normalizeEmail } from "../lib/validation";
+import PageMeta from "../components/PageMeta";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
@@ -10,22 +12,32 @@ export default function LoginPage() {
   const redirectTo = location.state?.from || "/profile";
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
-  if (user) return <Navigate to={redirectTo} replace />;
+  const meta = <PageMeta title="লগইন · Log in" />;
+  if (user) return <>{meta}<Navigate to={redirectTo} replace /></>;
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError("");
+    submittingRef.current = true;
+    setSubmitting(true);
     try {
-      await login(form);
+      await login({ email: normalizeEmail(form.email), password: form.password });
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message);
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   }
 
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 py-16">
+      {meta}
       <div className="text-center mb-8">
         <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-content font-bold text-xl mx-auto mb-4">ঘ</div>
         <h1 className="text-2xl md:text-3xl font-bold text-base-content">আবার স্বাগতম</h1>
@@ -65,7 +77,9 @@ export default function LoginPage() {
           </label>
         </div>
 
-        <button type="submit" className="btn btn-primary w-full">Log In</button>
+        <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
+          {submitting ? <><span className="loading loading-spinner loading-sm" /> Logging in…</> : "Log In"}
+        </button>
 
         <p className="text-sm text-center text-base-content/50">
           Don't have an account? <Link to="/signup" state={location.state} className="text-primary hover:underline">Sign up</Link>

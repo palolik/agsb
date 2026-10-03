@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
 import { HiMap, HiTranslate } from "react-icons/hi";
 import { FaFlag, FaMedal } from "react-icons/fa";
+import PageMeta from "../components/PageMeta";
 
 export default function AboutPage() {
+  const meta = <PageMeta title="আমাদের সম্পর্কে · About" description="Why we are building the definitive Bangla-first travel companion for all 64 districts of Bangladesh." />;
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <h1 className="text-3xl md:text-4xl font-bold text-base-content mb-6">আমাদের সম্পর্কে</h1>
 
       <div className="card bg-base-200 p-6 md:p-8 border border-base-300 mb-8">

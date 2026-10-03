@@ -1,22 +1,41 @@
 import { Link } from "react-router-dom";
-import { stats } from "../data";
+import { districtCountsByDivision, countAttractions } from "../data";
 import { useFetch } from "../hooks/useFetch";
 import { resolveImage } from "../lib/api";
 import { toPlainText } from "../lib/richText";
-import { HiArrowRight, HiLocationMarker, HiMap, HiBookOpen, HiStar, HiClock, HiUserGroup, HiCalendar } from "react-icons/hi";
+import { HiArrowRight, HiLocationMarker, HiMap, HiStar, HiClock, HiUserGroup, HiCalendar } from "react-icons/hi";
 import { FaSuitcaseRolling, FaHiking } from "react-icons/fa";
 import { planStatus, formatDateRange } from "../lib/planSchedule";
 import { asArray } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
 
 export default function HomePage() {
-  const { data: districts } = useFetch("/districts");
-  const { data: divisions } = useFetch("/divisions");
-  const { data: blogPosts } = useFetch("/blog");
-  const { data: travelPlans } = useFetch("/plans");
+  // Each section handles its own loading/error/empty state, so one failed
+  // request never blanks the rest of the page.
+  const districtsQ = useFetch("/districts");
+  const divisionsQ = useFetch("/divisions");
+  const blogQ = useFetch("/blog");
+  const plansQ = useFetch("/plans");
+  const districts = districtsQ.data;
+  const divisions = divisionsQ.data;
+  const blogPosts = blogQ.data;
+  const travelPlans = plansQ.data;
   const featured = asArray(districts).filter(d => d.status === "complete").slice(0, 6);
+  const countsByDivision = districtCountsByDivision(districts);
 
+  // Stats come straight from the API responses; a stat whose request failed
+  // is left out instead of showing a made-up number.
+  const statItems = [
+    !districtsQ.error && { label: "Districts", val: districtsQ.loading ? null : asArray(districts).length, icon: HiMap },
+    !districtsQ.error && { label: "Attractions", val: districtsQ.loading ? null : countAttractions(districts), icon: HiLocationMarker },
+    !plansQ.error && { label: "Travel Plans", val: plansQ.loading ? null : asArray(travelPlans).length, icon: FaSuitcaseRolling },
+  ].filter(Boolean);
+
+  const meta = <PageMeta description="Plan trips, discover hidden gems, collect district badges, and become a true explorer of Bangladesh — district by district." />;
   return (
     <div>
+      {meta}
       {/* Hero */}
       <section className="hero-gradient relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23F2A93B\" fill-opacity=\"0.3\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"}} />
@@ -48,24 +67,23 @@ export default function HomePage() {
       </section>
 
       {/* Stats */}
+      {statItems.length > 0 && (
       <section className="bg-base-200 border-y border-base-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              { label: "Districts", val: stats.districts, icon: HiMap },
-              { label: "Attractions", val: stats.attractions + "+", icon: HiLocationMarker },
-              { label: "Travel Plans", val: stats.travelPlans + "+", icon: FaSuitcaseRolling },
-              { label: "Community", val: stats.communityMembers, icon: HiUserGroup },
-            ].map(s => (
-              <div key={s.label}>
+          <div className="flex flex-wrap justify-center gap-x-16 gap-y-6 text-center" data-testid="home-stats">
+            {statItems.map(s => (
+              <div key={s.label} data-stat={s.label}>
                 <s.icon className="w-7 h-7 text-primary mx-auto mb-1" />
-                <div className="text-2xl md:text-3xl font-bold text-primary">{s.val}</div>
+                <div className="text-2xl md:text-3xl font-bold text-primary" data-stat-value>
+                  {s.val === null ? <span className="loading loading-dots loading-sm" aria-label="Loading" /> : s.val.toLocaleString("en-US")}
+                </div>
                 <div className="text-sm text-base-content/50">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
+      )}
 
       {/* Featured Districts */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
@@ -75,14 +93,19 @@ export default function HomePage() {
             <p className="text-base-content/50 mt-1">Start your journey with these popular districts</p>
           </div>
           <Link to="/districts" className="btn btn-ghost btn-sm text-primary hidden sm:flex">
-            View all 64 <HiArrowRight className="ml-1" />
+            View all <HiArrowRight className="ml-1" />
           </Link>
         </div>
+        {districtsQ.loading ? <Spinner /> : districtsQ.error ? (
+          <ErrorState message={districtsQ.error} onRetry={districtsQ.reload} />
+        ) : featured.length === 0 ? (
+          <EmptyState message="জনপ্রিয় জেলার তথ্য শীঘ্রই আসছে · Featured districts are coming soon." action={<Link to="/districts" className="btn btn-primary btn-sm">Browse all districts</Link>} />
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {featured.map(d => (
             <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
               <figure className="h-48 overflow-hidden">
-                <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                {resolveImage(d.image) ? <img src={resolveImage(d.image)} alt={d.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
               </figure>
               <div className="card-body p-4">
                 <div className="flex items-center gap-2 mb-1">
@@ -102,8 +125,9 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+        )}
         <div className="sm:hidden mt-4 text-center">
-          <Link to="/districts" className="btn btn-primary btn-sm">View all 64 districts</Link>
+          <Link to="/districts" className="btn btn-primary btn-sm">View all districts</Link>
         </div>
       </section>
 
@@ -112,17 +136,23 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl md:text-3xl font-bold text-base-content mb-2">৮ বিভাগ</h2>
           <p className="text-base-content/50 mb-8">Explore Bangladesh division by division</p>
+          {divisionsQ.loading ? <Spinner /> : divisionsQ.error ? (
+            <ErrorState message={divisionsQ.error} onRetry={divisionsQ.reload} />
+          ) : asArray(divisions).length === 0 ? (
+            <EmptyState message="কোনো বিভাগ পাওয়া যায়নি · No divisions yet." />
+          ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {asArray(divisions).map(dv => (
               <Link key={dv.id} to={`/districts?division=${dv.slug}`} className="card bg-base-200 card-hover p-4 text-center border border-base-300">
                 <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-lg font-bold" style={{background: dv.color + "22", color: dv.color}}>
-                  {dv.districtCount}
+                  {districtsQ.loading || districtsQ.error ? "–" : (countsByDivision[dv.id] || 0)}
                 </div>
                 <h3 className="font-bold text-base-content text-sm">{dv.name_bn}</h3>
                 <p className="text-xs text-base-content/50">{dv.name_en}</p>
               </Link>
             ))}
           </div>
+          )}
         </div>
       </section>
 
@@ -137,11 +167,16 @@ export default function HomePage() {
             All plans <HiArrowRight className="ml-1" />
           </Link>
         </div>
+        {plansQ.loading ? <Spinner /> : plansQ.error ? (
+          <ErrorState message={plansQ.error} onRetry={plansQ.reload} />
+        ) : asArray(travelPlans).length === 0 ? (
+          <EmptyState message="এখনো কোনো ট্রাভেল প্ল্যান নেই · No travel plans yet." />
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {asArray(travelPlans).slice(0, 3).map(p => (
             <Link key={p.id} to={`/plans/${p.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
               <figure className="h-40 overflow-hidden relative">
-                <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                {resolveImage(p.image) ? <img src={resolveImage(p.image)} alt={p.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
                 <div className="absolute top-3 right-3 badge badge-primary">{p.duration}</div>
                 <span className={`absolute top-3 left-3 badge ${planStatus(p).badge}`}>{planStatus(p).label}</span>
               </figure>
@@ -159,6 +194,7 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+        )}
       </section>
 
       {/* Blog */}
@@ -173,11 +209,16 @@ export default function HomePage() {
               All posts <HiArrowRight className="ml-1" />
             </Link>
           </div>
+          {blogQ.loading ? <Spinner /> : blogQ.error ? (
+            <ErrorState message={blogQ.error} onRetry={blogQ.reload} />
+          ) : asArray(blogPosts).length === 0 ? (
+            <EmptyState message="এখনো কোনো ব্লগ পোস্ট নেই · No blog posts yet." />
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {asArray(blogPosts).slice(0, 3).map(b => (
               <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
                 <figure className="h-40 overflow-hidden">
-                  <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  {resolveImage(b.image) ? <img src={resolveImage(b.image)} alt={b.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
                 </figure>
                 <div className="card-body p-4">
                   <div className="flex items-center gap-2 mb-1">
@@ -190,6 +231,7 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+          )}
         </div>
       </section>
 

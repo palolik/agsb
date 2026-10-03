@@ -1,11 +1,19 @@
 // Divisions, districts, blog posts, travel plans, partners, and membership plans
-// are now served live by agsb-backend (see src/hooks/useFetch.js) — this file only
-// keeps site-wide constants that aren't backend content.
+// are served live by agsb-backend (see src/hooks/useFetch.js). Site statistics
+// are computed from that data rather than hard-coded, so they always match
+// what the site actually shows.
+import { asArray } from "../lib/safe";
 
-// ── Stats ──
-export const stats = {
-  districts: 64,
-  attractions: 640,
-  travelPlans: 120,
-  communityMembers: "10,000+",
-};
+// { [division_id]: number of districts the API returned for that division }
+export function districtCountsByDivision(districts) {
+  const counts = {};
+  for (const d of asArray(districts)) {
+    if (d && d.division_id != null) counts[d.division_id] = (counts[d.division_id] || 0) + 1;
+  }
+  return counts;
+}
+
+// Total number of attractions listed across the given districts.
+export function countAttractions(districts) {
+  return asArray(districts).reduce((sum, d) => sum + asArray(d?.attractions).length, 0);
+}

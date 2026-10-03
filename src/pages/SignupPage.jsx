@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useFetch } from "../hooks/useFetch";
 import { HiUser, HiMail, HiPhone, HiLockClosed, HiLocationMarker } from "react-icons/hi";
 import { asArray } from "../lib/safe";
+import { isValidBdPhone, normalizeEmail, normalizePhone, PHONE_ERROR } from "../lib/validation";
+import PageMeta from "../components/PageMeta";
 
 export default function SignupPage() {
   const { user, signup } = useAuth();
@@ -13,12 +15,23 @@ export default function SignupPage() {
   const { data: districts } = useFetch("/districts");
   const [form, setForm] = useState({ name: "", email: "", phone: "", district: "", password: "", confirm: "" });
   const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
-  if (user) return <Navigate to={redirectTo} replace />;
+  const meta = <PageMeta title="সাইন আপ · Sign up" description="Create a free account to track the districts you have visited and collect badges." />;
+  if (user) return <>{meta}<Navigate to={redirectTo} replace /></>;
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError("");
+    setPhoneError("");
+    const phone = normalizePhone(form.phone.trim());
+    if (phone && !isValidBdPhone(phone)) {
+      setPhoneError(PHONE_ERROR);
+      return;
+    }
     if (form.password !== form.confirm) {
       setError("Passwords do not match.");
       return;
@@ -27,16 +40,28 @@ export default function SignupPage() {
       setError("Password must be at least 6 characters.");
       return;
     }
+    submittingRef.current = true;
+    setSubmitting(true);
     try {
-      await signup(form);
+      await signup({
+        name: form.name.trim(),
+        email: normalizeEmail(form.email),
+        phone,
+        district: form.district,
+        password: form.password,
+      });
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message);
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   }
 
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 py-16">
+      {meta}
       <div className="text-center mb-8">
         <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-content font-bold text-xl mx-auto mb-4">ঘ</div>
         <h1 className="text-2xl md:text-3xl font-bold text-base-content">অ্যাকাউন্ট তৈরি করুন</h1>
@@ -54,6 +79,7 @@ export default function SignupPage() {
               type="text"
               required
               placeholder="Full name"
+              maxLength={100}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="grow"
@@ -78,16 +104,22 @@ export default function SignupPage() {
 
         <div>
           <label className="label"><span className="label-text">ফোন / WhatsApp</span></label>
-          <label className="input input-bordered bg-base-300 w-full">
+          <label className={`input input-bordered bg-base-300 w-full ${phoneError ? "input-error" : ""}`}>
             <HiPhone className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
               type="tel"
-              placeholder="+880 1XXX-XXXXXX"
+              placeholder="01712-345678"
+              maxLength={20}
               value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onChange={(e) => {
+                setForm({ ...form, phone: e.target.value });
+                if (phoneError) setPhoneError("");
+              }}
+              aria-invalid={phoneError ? "true" : undefined}
               className="grow"
             />
           </label>
+          {phoneError && <p className="text-error text-xs mt-1" data-testid="phone-error">{phoneError}</p>}
         </div>
 
         <div>
@@ -138,7 +170,9 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary w-full">Sign Up Free</button>
+        <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
+          {submitting ? <><span className="loading loading-spinner loading-sm" /> Signing up…</> : "Sign Up Free"}
+        </button>
 
         <p className="text-sm text-center text-base-content/50">
           Already have an account? <Link to="/login" state={location.state} className="text-primary hover:underline">Log in</Link>

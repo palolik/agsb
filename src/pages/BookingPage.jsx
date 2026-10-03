@@ -5,7 +5,9 @@ import { useFetch } from "../hooks/useFetch";
 import { apiSend } from "../lib/api";
 import { isBookable, formatDateRange, seatsLabel } from "../lib/planSchedule";
 import { GENDERS, RELATIONS, MAX_TICKETS, BD_PHONE, taka, advanceFor, ADVANCE_RATE } from "../lib/booking";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import { HiArrowLeft, HiCalendar, HiUserGroup, HiMinus, HiPlus, HiUser, HiPhone } from "react-icons/hi";
+import PageMeta from "../components/PageMeta";
 
 const blankTraveller = { name: "", gender: "", phone: "", age: "", relation: "" };
 
@@ -13,7 +15,7 @@ export default function BookingPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: plan, loading, error } = useFetch(`/plans/${slug}`);
+  const { data: plan, loading, error, status, reload } = useFetch(`/plans/${slug}`);
   const [count, setCount] = useState(1);
   const [travellers, setTravellers] = useState([
     { ...blankTraveller, name: user?.name || "", phone: user?.phone || "", relation: "self" },
@@ -31,12 +33,19 @@ export default function BookingPage() {
     );
   }, [count]);
 
-  if (loading) return null;
-  if (error || !plan) {
+  const meta = <PageMeta title={plan ? `বুকিং · Book: ${plan.title_en || plan.title_bn}` : "বুকিং · Book a trip"} description={plan ? `Book seats on ${plan.title_en || plan.title_bn}.` : undefined} image={plan?.image} />;
+  if (loading) return <>{meta}<Spinner /></>;
+  if (error && status !== 404) {
+    return <>{meta}<div className="max-w-3xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
+  }
+  if (!plan) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold">Plan not found</h1>
-        <Link to="/plans" className="btn btn-primary mt-4">Back to Plans</Link>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        {meta}
+        <EmptyState
+          message="প্ল্যানটি পাওয়া যায়নি · Travel plan not found. It may have ended or been removed."
+          action={<Link to="/plans" className="btn btn-primary btn-sm"><HiArrowLeft className="mr-1" /> Back to Plans</Link>}
+        />
       </div>
     );
   }
@@ -56,7 +65,7 @@ export default function BookingPage() {
       const label = `Traveller ${i + 1}`;
       if (!t.name.trim()) return `${label}: enter a name`;
       if (!t.gender) return `${label}: select a gender`;
-      if (!BD_PHONE.test(t.phone.replace(/[\s-]/g, ""))) return `${label}: enter a valid phone number (01XXXXXXXXX)`;
+      if (!BD_PHONE.test(t.phone.replace(/[\s-]/g, ""))) return `${label}: enter a valid 11-digit phone number starting with 01`;
       const age = Number(t.age);
       if (t.age === "" || !Number.isInteger(age) || age < 0 || age > 120) return `${label}: enter a valid age`;
       if (!t.relation) return `${label}: select a relation`;
@@ -89,6 +98,7 @@ export default function BookingPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <Link to={`/plans/${plan.slug}`} className="btn btn-sm btn-ghost text-base-content/70 mb-4">
         <HiArrowLeft className="mr-1" /> Back to plan
       </Link>
@@ -142,7 +152,7 @@ export default function BookingPage() {
                     <label className="label"><span className="label-text">Phone</span></label>
                     <label className="input input-bordered bg-base-300 w-full">
                       <HiPhone className="w-5 h-5 shrink-0 text-base-content/40" />
-                      <input type="tel" required placeholder="01XXXXXXXXX" value={t.phone} onChange={(e) => updateTraveller(i, "phone", e.target.value)} className="grow" />
+                      <input type="tel" required placeholder="01712345678" value={t.phone} onChange={(e) => updateTraveller(i, "phone", e.target.value)} className="grow" />
                     </label>
                   </div>
                   <div>

@@ -4,18 +4,38 @@ import { resolveImage } from "../lib/api";
 import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload, HiCamera } from "react-icons/hi";
 import { FaWhatsapp, FaMedal } from "react-icons/fa";
 import { asArray } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import { whatsappUrl } from "../config/site";
+import PageMeta from "../components/PageMeta";
 
 const typeColors = { nature: "badge-success", historical: "badge-warning", religious: "badge-info", cultural: "badge-secondary", food: "badge-error", market: "badge-accent" };
 
 export default function DistrictDetailPage() {
   const { slug } = useParams();
-  const { data: district, loading, error } = useFetch(`/districts/${slug}`);
+  const { data: district, loading, error, status, reload } = useFetch(`/districts/${slug}`);
   const { data: allDistricts } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
   const { data: travelPlans } = useFetch("/plans");
 
-  if (loading) return null;
-  if (error || !district) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">District not found</h1><Link to="/districts" className="btn btn-primary mt-4">Back to Districts</Link></div>;
+  // Only a 404 (or 400 for a malformed slug) means "not found"; network
+  // failures (status null) and 5xx show ErrorState with a retry instead.
+  const notFound = !loading && !district && (!error || status === 404 || status === 400);
+  const meta = <PageMeta title={district ? [district.name_en, district.name_bn].filter(Boolean).join(" — ") : notFound ? "জেলা পাওয়া যায়নি · District not found" : "জেলা · Districts"} description={district ? district.tagline : undefined} image={district?.image} />;
+  if (loading) return <>{meta}<Spinner /></>;
+  if (error && !notFound) {
+    return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
+  }
+  if (!district) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {meta}
+        <EmptyState
+          message="জেলাটি পাওয়া যায়নি · District not found. Check the link or browse all districts."
+          action={<Link to="/districts" className="btn btn-primary btn-sm"><HiArrowLeft className="mr-1" /> Back to Districts</Link>}
+        />
+      </div>
+    );
+  }
 
   const division = asArray(divisions).find(dv => dv.id === district.division_id);
   const relatedPlans = asArray(travelPlans).filter(p => asArray(p.districts).includes(district.name_en));
@@ -23,9 +43,10 @@ export default function DistrictDetailPage() {
 
   return (
     <div>
+      {meta}
       {/* Hero */}
       <div className="relative h-64 md:h-80 overflow-hidden">
-        <img src={resolveImage(district.image)} alt={district.name_en} className="w-full h-full object-cover" />
+        {resolveImage(district.image) ? <img src={resolveImage(district.image)} alt={district.name_en} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-base-300" aria-hidden="true" />}
         <div className="absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 max-w-7xl mx-auto">
           <Link to="/districts" className="btn btn-sm btn-ghost text-base-content/70 mb-3">
@@ -121,10 +142,17 @@ export default function DistrictDetailPage() {
             <div className="card bg-primary/10 border border-primary/20 p-5">
               <h3 className="font-bold text-base-content mb-2">এই জেলা ভ্রমণের পরিকল্পনা করুন</h3>
               <p className="text-sm text-base-content/60 mb-4">Questions about hotels, food or transport here? Get in touch.</p>
-              <a href="#" className="btn btn-primary w-full mb-2">
-                <FaWhatsapp className="mr-1" /> WhatsApp us
-              </a>
-              <Link to="/contact" className="btn btn-outline btn-sm w-full">Send a message</Link>
+              {whatsappUrl() && (
+                <a href={whatsappUrl(`Hi! I'd like to plan a trip to ${district.name_en}.`)} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full mb-2">
+                  <FaWhatsapp className="mr-1" /> WhatsApp us
+                </a>
+              )}
+              <Link
+                to={`/contact?purpose=plan&district=${encodeURIComponent(district.slug || "")}`}
+                className={`btn w-full ${whatsappUrl() ? "btn-outline btn-sm" : "btn-primary"}`}
+              >
+                Send a message
+              </Link>
             </div>
 
             {/* Frame CTA */}
@@ -153,7 +181,7 @@ export default function DistrictDetailPage() {
                 <div className="space-y-2">
                   {nearby.map(d => (
                     <Link key={d.id} to={`/districts/${d.slug}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-base-300/50 transition-colors">
-                      <img src={resolveImage(d.image)} alt={d.name_en} className="w-12 h-12 rounded-lg object-cover" />
+                      {resolveImage(d.image) ? <img src={resolveImage(d.image)} alt={d.name_en} className="w-12 h-12 rounded-lg object-cover" /> : <div className="w-12 h-12 rounded-lg bg-base-300" aria-hidden="true" />}
                       <div>
                         <div className="text-sm font-medium text-base-content">{d.name_bn}</div>
                         <div className="text-xs text-base-content/50">{d.name_en}</div>

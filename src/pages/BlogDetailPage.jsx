@@ -4,14 +4,34 @@ import { resolveImage } from "../lib/api";
 import { renderRichText } from "../lib/richText";
 import { HiArrowLeft, HiClock, HiCalendar } from "react-icons/hi";
 import { asArray } from "../lib/safe";
+import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
+import PageMeta from "../components/PageMeta";
+import { toPlainText } from "../lib/richText";
 
 export default function BlogDetailPage() {
   const { slug } = useParams();
-  const { data: post, loading, error } = useFetch(`/blog/${slug}`);
+  const { data: post, loading, error, status, reload } = useFetch(`/blog/${slug}`);
   const { data: districts } = useFetch("/districts");
 
-  if (loading) return null;
-  if (error || !post) return <div className="max-w-7xl mx-auto px-4 py-16 text-center"><h1 className="text-2xl font-bold">Post not found</h1><Link to="/blog" className="btn btn-primary mt-4">Back to Blog</Link></div>;
+  // Only a 404 (or 400 for a malformed slug) means "not found"; network
+  // failures (status null) and 5xx show ErrorState with a retry instead.
+  const notFound = !loading && !post && (!error || status === 404 || status === 400);
+  const meta = <PageMeta title={post ? [post.title_bn, post.title_en].filter(Boolean).join(" — ") : notFound ? "পোস্ট পাওয়া যায়নি · Post not found" : "ট্রাভেল ব্লগ · Travel Blog"} description={post ? toPlainText(post.excerpt) : undefined} image={post?.image} type={post ? "article" : "website"} />;
+  if (loading) return <>{meta}<Spinner /></>;
+  if (error && !notFound) {
+    return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
+  }
+  if (!post) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {meta}
+        <EmptyState
+          message="পোস্টটি পাওয়া যায়নি · Post not found. It may have been moved or removed."
+          action={<Link to="/blog" className="btn btn-primary btn-sm"><HiArrowLeft className="mr-1" /> Back to Blog</Link>}
+        />
+      </div>
+    );
+  }
 
   const district = asArray(districts).find(d => d.slug === post.districtSlug);
   const excerptHtml = renderRichText(post.excerpt);
@@ -19,6 +39,7 @@ export default function BlogDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      {meta}
       <Link to="/blog" className="btn btn-ghost btn-sm mb-6"><HiArrowLeft className="mr-1" /> Back to Blog</Link>
 
       <div className="mb-6">
@@ -31,7 +52,7 @@ export default function BlogDetailPage() {
         <p className="text-lg text-base-content/60">{post.title_en}</p>
       </div>
 
-      <img src={resolveImage(post.image)} alt={post.title_en} className="w-full h-64 md:h-96 object-cover rounded-xl mb-8" />
+      {resolveImage(post.image) && <img src={resolveImage(post.image)} alt={post.title_en} className="w-full h-64 md:h-96 object-cover rounded-xl mb-8" />}
 
       <div className="prose prose-theme max-w-none prose-img:rounded-lg">
         {excerptHtml && (
@@ -44,7 +65,7 @@ export default function BlogDetailPage() {
           <div className="mt-8">
             <h3 className="text-xl font-bold text-base-content mb-3">Related District</h3>
             <Link to={`/districts/${district.slug}`} className="card bg-base-200 p-4 border border-base-300 card-hover flex flex-row items-center gap-4">
-              <img src={resolveImage(district.image)} alt={district.name_en} className="w-20 h-20 rounded-lg object-cover" />
+              {resolveImage(district.image) ? <img src={resolveImage(district.image)} alt={district.name_en} className="w-20 h-20 rounded-lg object-cover" /> : <div className="w-20 h-20 rounded-lg bg-base-300" aria-hidden="true" />}
               <div>
                 <h4 className="font-bold text-base-content">{district.name_bn}</h4>
                 <p className="text-sm text-base-content/50">{district.name_en} — {district.tagline}</p>
