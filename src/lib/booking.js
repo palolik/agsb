@@ -41,21 +41,38 @@ export const taka = (n) => `৳${Number(n || 0).toLocaleString("en-IN")}`;
 
 export const advanceFor = (total) => Math.ceil(total * ADVANCE_RATE);
 
-// Unpaid bookings hold their seats only until holdExpiresAt (newer backends);
-// after that the backend cancels them with cancelReason "expired".
-export const isHoldExpired = (booking) =>
-  booking?.bookingStatus === "cancelled" && booking?.cancelReason === "expired";
+// Unpaid bookings hold their seats only until holdExpiresAt (newer backends;
+// it is removed once payment is submitted). The backend sweep that cancels
+// them with cancelReason "expired" only runs every few minutes, so a passed
+// holdExpiresAt counts as expired here too.
+const awaitingPayment = (booking) =>
+  booking?.bookingStatus !== "cancelled" && ["unpaid", "failed"].includes(booking?.paymentStatus);
 
-// Returns a Date while an unpaid booking's seat hold is still running, else null.
+// Returns a Date while an unpaid booking has a seat hold, else null. The
+// date may already be in the past; see isHoldExpired.
 export function holdDeadline(booking) {
-  if (!booking?.holdExpiresAt || !["unpaid", "failed"].includes(booking.paymentStatus)) return null;
-  if (booking.bookingStatus === "cancelled") return null;
+  if (!booking?.holdExpiresAt || !awaitingPayment(booking)) return null;
   const d = new Date(booking.holdExpiresAt);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export function isHoldExpired(booking, now = Date.now()) {
+  if (booking?.bookingStatus === "cancelled") return booking.cancelReason === "expired";
+  const deadline = holdDeadline(booking);
+  return !!deadline && deadline.getTime() <= now;
 }
 
 export const formatHoldTime = (date) =>
   date.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true });
 
-export const canPay = (booking) =>
-  booking && booking.bookingStatus !== "cancelled" && ["unpaid", "failed"].includes(booking.paymentStatus);
+// "mm:ss" (or "h:mm:ss") left until the deadline.
+export function formatCountdown(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const mm = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+  const ss = String(total % 60).padStart(2, "0");
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+export const canPay = (booking, now = Date.now()) =>
+  !!booking && awaitingPayment(booking) && !isHoldExpired(booking, now);

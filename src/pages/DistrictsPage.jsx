@@ -22,8 +22,17 @@ export default function DistrictsPage() {
       return next;
     }, { replace: true });
   };
-  const { data: districts, loading, error, reload } = useFetch("/districts");
-  const { data: divisions } = useFetch("/divisions");
+  const { data: districts, loading: districtsLoading, error: districtsError, reload: reloadDistricts } = useFetch("/districts");
+  const { data: divisions, loading: divisionsLoading, error: divisionsError, reload: reloadDivisions } = useFetch("/divisions");
+  // A division filter can only be applied once the divisions list is in, so
+  // wait on (and surface errors from) that request too while one is active.
+  const needsDivisions = activeDivision !== "all";
+  const loading = districtsLoading || (needsDivisions && divisionsLoading);
+  const error = districtsError || (needsDivisions ? divisionsError : null);
+  const reload = () => {
+    if (districtsError) reloadDistricts();
+    if (needsDivisions && divisionsError) reloadDivisions();
+  };
 
   // Counts reflect the districts the API actually returned, not a fixed 64.
   const countsReady = !loading && !error;

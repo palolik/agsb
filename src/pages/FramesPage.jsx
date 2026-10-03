@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
-import { resolveImage } from "../lib/api";
+import { apiDownload } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { HiDownload, HiPhotograph, HiCamera, HiLocationMarker, HiShare, HiLockClosed } from "react-icons/hi";
 import { FaMedal } from "react-icons/fa";
@@ -23,20 +23,16 @@ function extensionFor(blob, url) {
   return m ? m[1].toLowerCase().replace("jpeg", "jpg") : "jpg";
 }
 
-// The image lives on the API origin, where <a download> is ignored for
-// cross-origin URLs, so fetch it as a blob and save it via an object URL.
+// The card only shows a watermarked preview for premium frames; the real file
+// comes from the API, which checks the membership for premium ones. <a download>
+// is ignored for cross-origin URLs, so fetch it as a blob and save it via an
+// object URL.
 async function downloadFrame(frame) {
-  const url = resolveImage(frame.image);
-  if (!url) throw new Error("This frame has no image yet.");
-  let res;
-  try {
-    res = await fetch(url);
-  } catch {
-    throw new Error("Could not reach the server. Try again.");
-  }
-  if (!res.ok) throw new Error(`Download failed (${res.status})`);
-  const blob = await res.blob();
+  const id = asText(frame._id || frame.id);
+  if (!id) throw new Error("This frame has no image yet.");
+  const blob = await apiDownload(`/frames/${encodeURIComponent(id)}/download`);
   if (!blob.size) throw new Error("Download failed (empty file)");
+  const url = asText(frame.image);
   const objectUrl = URL.createObjectURL(blob);
   const slug = asText(frame.districtSlug) || asText(frame._id) || "frame";
   const a = document.createElement("a");

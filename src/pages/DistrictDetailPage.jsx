@@ -9,6 +9,10 @@ import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import { whatsappUrl } from "../config/site";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
+import { ALL_DISTRICTS } from "../data/allDistricts";
+
+// Only the 64 districts on the profile map can be checked in to.
+const MAP_SLUGS = new Set(ALL_DISTRICTS.map((d) => d.slug));
 
 const typeColors = { nature: "badge-success", historical: "badge-warning", religious: "badge-info", cultural: "badge-secondary", food: "badge-error", market: "badge-accent" };
 
@@ -206,6 +210,10 @@ function CheckIn({ district }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  if (!MAP_SLUGS.has(district.slug)) {
+    return <p className="text-sm text-base-content/50 mt-1">Check-ins aren't available for this district yet.</p>;
+  }
+
   if (!user) {
     return (
       <>
@@ -222,7 +230,10 @@ function CheckIn({ district }) {
     setSaving(true);
     setError("");
     try {
-      const next = visited ? visitedList.filter((s) => s !== district.slug) : [...visitedList, district.slug];
+      // Rebuild from map slugs only so stale unknown entries don't count
+      // against the server's 64-district cap.
+      const known = visitedList.filter((s) => MAP_SLUGS.has(s) && s !== district.slug);
+      const next = visited ? known : [...known, district.slug];
       await updateUser({ visitedDistricts: next });
     } catch (err) {
       setError(err?.message || "Couldn't save your check-in.");

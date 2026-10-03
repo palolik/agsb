@@ -8,10 +8,11 @@ import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 
 // Shown instead of the payment form once an unpaid booking's seat hold ran out.
-export function HoldExpired({ booking }) {
+export function HoldExpired({ booking, message }) {
   return (
     <div className="max-w-lg mx-auto px-4 py-16">
       <div className="card bg-base-200 border border-base-300 p-8 text-center">
+        {message && <div role="alert" className="alert alert-error text-sm py-2 mb-4">{message}</div>}
         <HiExclamation className="w-14 h-14 text-warning mx-auto mb-3" />
         <h1 className="text-xl font-bold text-base-content">সিট হোল্ডের সময় শেষ</h1>
         <p className="text-base-content/70 mt-1 font-medium">Your seat hold expired — please book again</p>

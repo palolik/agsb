@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useFetch } from "../hooks/useFetch";
 import { apiSend } from "../lib/api";
-import { isBookable, formatDateRange, seatsLabel } from "../lib/planSchedule";
+import { isBookable, hasStarted, formatDateRange, seatsLabel } from "../lib/planSchedule";
 import { GENDERS, RELATIONS, MAX_TICKETS, BD_PHONE, taka, advanceFor, ADVANCE_RATE } from "../lib/booking";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import { HiArrowLeft, HiCalendar, HiUserGroup, HiMinus, HiPlus, HiUser, HiPhone } from "react-icons/hi";
@@ -108,7 +108,9 @@ export default function BookingPage() {
       {!bookable ? (
         <div className="card bg-base-200 border border-base-300 p-8 mt-6 text-center">
           <h2 className="text-lg font-bold text-base-content">Booking is not available for this plan right now</h2>
-          <p className="text-base-content/60 mt-1">It may be full, closed, or not yet priced for online booking.</p>
+          <p className="text-base-content/60 mt-1">
+            {hasStarted(plan) ? "This trip has already started." : "It may be full, closed, or not yet priced for online booking."}
+          </p>
           <Link to="/contact" className="btn btn-primary btn-sm mt-4 mx-auto">Contact us</Link>
         </div>
       ) : (

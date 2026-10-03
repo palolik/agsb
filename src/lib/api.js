@@ -104,4 +104,22 @@ export async function apiSend(path, method, body) {
   return data;
 }
 
+// Fetches a file (sent with the session token when there is one) as a Blob.
+// Errors carry the server's message and status, like apiGet.
+export async function apiDownload(path) {
+  const headers = authHeaders();
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, { headers });
+  } catch {
+    throw new Error("Could not reach the server. Check your connection and try again.");
+  }
+  if (!res.ok) {
+    const data = await readBody(res);
+    if (res.status === 401 && headers.Authorization) handleUnauthorized();
+    throw requestError(res, data);
+  }
+  return res.blob();
+}
+
 export { TOKEN_KEY };

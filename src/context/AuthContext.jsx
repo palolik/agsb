@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { apiGet, apiSend, TOKEN_KEY, USER_KEY, AUTH_EXPIRED_EVENT } from "../lib/api";
 
 const AuthContext = createContext(null);
@@ -19,6 +19,9 @@ function persist(token, user) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
+  // Bumped by updateUser so a slower startup /profile response can't
+  // overwrite a newer user (e.g. a check-in saved while it was loading).
+  const updateCount = useRef(0);
 
   useEffect(() => {
     // api.js fires this on any 401 after it has cleared the stored session.
@@ -30,9 +33,10 @@ export function AuthProvider({ children }) {
     setReady(true);
 
     if (stored && localStorage.getItem(TOKEN_KEY)) {
+      const sentAt = updateCount.current;
       apiGet("/profile")
         .then((data) => {
-          if (!data?.user) return;
+          if (!data?.user || updateCount.current !== sentAt) return;
           setUser(data.user);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
         })
@@ -74,6 +78,7 @@ export function AuthProvider({ children }) {
 
   async function updateUser(patch) {
     const data = await apiSend("/profile", "PATCH", patch);
+    updateCount.current += 1;
     setUser(data.user);
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
   }

@@ -59,10 +59,13 @@ export default function ProfilePage() {
   const savedRef = useRef(savedVisited);
   useEffect(() => { savedRef.current = savedVisited; }, [savedVisited]);
   const visitedSet = useMemo(() => new Set(visited), [visited]);
+  // Only slugs on the map count; anything else (old or renamed districts)
+  // would push the tally past 64 with no badge to show for it.
   const visitedDistricts = useMemo(
     () => visited.map((slug) => DISTRICT_BY_SLUG.get(slug)).filter(Boolean),
     [visited],
   );
+  const visitedCount = visitedDistricts.length;
 
   useEffect(() => {
     fetch("/assets/BD_Map_dark.svg")
@@ -103,7 +106,7 @@ export default function ProfilePage() {
   if (!ready) return meta;
   if (!user) return <>{meta}<Navigate to="/login" replace state={{ from: "/profile" }} /></>;
 
-  const progress = Math.round((visited.length / TOTAL_DISTRICTS) * 100);
+  const progress = Math.round((visitedCount / TOTAL_DISTRICTS) * 100);
 
   async function flushSaves() {
     inFlightRef.current = true;
@@ -129,7 +132,8 @@ export default function ProfilePage() {
   }
 
   function toggleDistrict(slug) {
-    const base = desiredRef.current ?? savedRef.current;
+    // Drop unknown slugs so stale entries don't count against the 64 cap.
+    const base = (desiredRef.current ?? savedRef.current).filter((s) => DISTRICT_BY_SLUG.has(s));
     const next = base.includes(slug) ? base.filter((s) => s !== slug) : [...base, slug];
     desiredRef.current = next;
     setOptimistic(next);
@@ -181,9 +185,9 @@ export default function ProfilePage() {
           <div className="card bg-primary/10 border border-primary/20 p-5">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-bold text-base-content text-sm flex items-center gap-2"><FaMedal className="text-primary" /> 64-District Challenge</h2>
-              <span className="text-sm text-base-content/60">{visited.length}/{TOTAL_DISTRICTS}</span>
+              <span className="text-sm text-base-content/60">{visitedCount}/{TOTAL_DISTRICTS}</span>
             </div>
-            <progress className="progress progress-primary w-full" value={visited.length} max={TOTAL_DISTRICTS}></progress>
+            <progress className="progress progress-primary w-full" value={visitedCount} max={TOTAL_DISTRICTS}></progress>
             <p className="text-xs text-base-content/50 mt-2">{progress}% complete — {confirmMode ? "tap" : "click"} a district on the map to check in.</p>
           </div>
 

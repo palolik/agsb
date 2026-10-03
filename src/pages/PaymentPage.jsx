@@ -1,13 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
+import { useNow } from "../hooks/useNow";
 import { apiSend } from "../lib/api";
-import { BD_PHONE, taka, canPay, isHoldExpired } from "../lib/booking";
-import { BookingTotals, HoldExpired, HoldNotice, bookingFetchState } from "./CheckoutPage";
+import { BD_PHONE, taka, canPay, isHoldExpired, holdDeadline, formatHoldTime, formatCountdown } from "../lib/booking";
+import { BookingTotals, HoldExpired, bookingFetchState } from "./CheckoutPage";
 import { Spinner, ErrorState } from "../components/StateViews";
-import { HiArrowLeft, HiClipboardCopy, HiCheck, HiCheckCircle, HiDeviceMobile } from "react-icons/hi";
+import { HiArrowLeft, HiClipboardCopy, HiCheck, HiCheckCircle, HiClock, HiDeviceMobile, HiExclamation } from "react-icons/hi";
 import { asArray } from "../lib/safe";
 import PageMeta from "../components/PageMeta";
+
+// Warn harder in the last few minutes so nobody sends money just before the
+// hold runs out.
+const HOLD_WARN_MS = 5 * 60_000;
+
+// Live "mm:ss left" for the seat hold.
+function HoldCountdown({ deadline, now }) {
+  const left = deadline.getTime() - now;
+  const urgent = left < HOLD_WARN_MS;
+  return (
+    <div role="status" className={`alert text-sm py-2 ${urgent ? "alert-error" : "alert-warning"}`}>
+      {urgent ? <HiExclamation className="w-5 h-5 shrink-0" /> : <HiClock className="w-5 h-5 shrink-0" />}
+      <span>
+        <span className="font-mono font-bold">{formatCountdown(left)}</span> left to pay (until {formatHoldTime(deadline)}).
+        {urgent ? " Your seat hold is almost over; if you can't finish in time, don't send money — book again instead." : " Your seats are released after that."}
+      </span>
+    </div>
+  );
+}
 
 export default function PaymentPage() {
   const { id } = useParams();
@@ -20,12 +40,51 @@ export default function PaymentPage() {
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [conflict, setConflict] = useState(""); // server message from a 409
+  const deadline = done ? null : holdDeadline(booking);
+  const now = useNow(1000, !!deadline);
 
-  const pending = bookingFetchState({ loading, error, status, reload, booking });
+  // The hold may have run out, or payment been submitted elsewhere, while
+  // the tab was in the background: refetch when the user comes back.
+  useEffect(() => {
+    if (done) return undefined;
+    let last = 0;
+    const refresh = () => {
+      // focus and visibilitychange usually fire together; refetch once.
+      if (document.visibilityState !== "visible" || Date.now() - last < 2000) return;
+      last = Date.now();
+      reload();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [done, reload]);
+
+  // Background refetches keep the current booking on screen (and the form
+  // filled in) instead of flashing the spinner.
+  const pending = bookingFetchState({ loading: loading && !booking, error, status, reload, booking });
   const meta = <PageMeta title="পেমেন্ট · Payment" />;
   if (pending) return <>{meta}{pending}</>;
-  if (!done && isHoldExpired(booking)) return <>{meta}<HoldExpired booking={booking} /></>;
-  if (!done && !canPay(booking)) return <>{meta}<Navigate to={`/bookings/${id}/checkout`} replace /></>;
+  if (!done && isHoldExpired(booking, now)) return <>{meta}<HoldExpired booking={booking} message={conflict} /></>;
+  if (!done && !canPay(booking, now)) {
+    // A 409 (e.g. payment already submitted) reloaded the booking: keep the
+    // server's message visible instead of silently redirecting.
+    if (conflict) {
+      return (
+        <div className="max-w-lg mx-auto px-4 py-16">
+          {meta}
+          <div className="card bg-base-200 border border-base-300 p-8 text-center">
+            <div role="alert" className="alert alert-error text-sm py-2">{conflict}</div>
+            <Link to={`/bookings/${id}/checkout`} className="btn btn-primary mt-6">View booking</Link>
+          </div>
+        </div>
+      );
+    }
+    return <>{meta}<Navigate to={`/bookings/${id}/checkout`} replace /></>;
+  }
 
   const selected = asArray(methods).find((m) => m._id === selectedId);
 
@@ -51,6 +110,12 @@ export default function PaymentPage() {
       setDone(true);
     } catch (err) {
       setFormError(err.message);
+      // 409: hold expired or payment already submitted; reload so the page
+      // shows the booking's real state.
+      if (err.status === 409) {
+        setConflict(err.message);
+        reload();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +150,7 @@ export default function PaymentPage() {
       <p className="text-base-content/60 mt-1">
         Send <span className="font-bold text-primary">{taka(booking.advanceAmount)}</span> to one of the numbers below, then enter your transaction ID.
       </p>
-      <div className="mt-3 max-w-2xl"><HoldNotice booking={booking} /></div>
+      {deadline && <div className="mt-3 max-w-2xl"><HoldCountdown deadline={deadline} now={now} /></div>}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <div className="lg:col-span-2 space-y-5">
