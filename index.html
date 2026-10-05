@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="bn" data-theme="agsb">
   <head>
+    <!-- Apply the saved theme (or the OS setting) before first paint. Keep in
+         sync with src/context/ThemeContext.jsx. -->
+    <script>
+      (function () {
+        var mode = null;
+        try { mode = localStorage.getItem("agsb_theme"); } catch (e) {}
+        if (mode !== "light" && mode !== "dark") {
+          mode = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.setAttribute("data-theme", mode === "light" ? "agsb-light" : "agsb");
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

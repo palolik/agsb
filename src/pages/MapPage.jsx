@@ -9,8 +9,11 @@ import { Spinner, ErrorState } from "../components/StateViews";
 import { districtName } from "../lib/districtNames";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
+import { centerMapLabels } from "../lib/mapMarkup";
 
-const MARKER_COLOR = "#3FA66B";
+// Theme colours (src/index.css). SVG presentation attributes can't use
+// var(), so they are applied through `style`.
+const MARKER_COLOR = "var(--map-visited)";
 
 // SVG markers act as buttons: Enter/Space select them like a click.
 function onActivateKey(e, fn) {
@@ -62,7 +65,7 @@ function MapView({ onRetry }) {
         if (!res.ok) throw new Error(`Map image failed to load (${res.status})`);
         return res.text();
       })
-      .then((text) => { if (!cancelled) setMapMarkup(text); })
+      .then((text) => { if (!cancelled) setMapMarkup(centerMapLabels(text)); })
       .catch(() => { if (!cancelled) setMapError("The map could not be loaded. Check your connection and try again."); });
     return () => { cancelled = true; };
   }, []);
@@ -83,7 +86,7 @@ function MapView({ onRetry }) {
         <div
           role="img"
           aria-label="Map of Bangladesh"
-          className="absolute inset-0 w-full h-full"
+          className="bd-map absolute inset-0 w-full h-full"
           dangerouslySetInnerHTML={{ __html: mapMarkup || "" }}
         />
         <svg
@@ -118,16 +121,13 @@ function MapView({ onRetry }) {
                 <circle r={22} fill="transparent" />
                 <circle
                   r={isHovered || isSelected ? 20 : 17}
-                  fill={MARKER_COLOR}
                   opacity={isSelected ? 0.35 : isHovered ? 0.15 : 0}
-                  style={{ transition: "opacity 0.15s, r 0.15s" }}
+                  style={{ fill: MARKER_COLOR, transition: "opacity 0.15s, r 0.15s" }}
                 />
                 <circle
                   r={isHovered ? 7 : 5.5}
-                  fill={MARKER_COLOR}
-                  stroke="#0F3D24"
                   strokeWidth="1.5"
-                  style={{ transition: "r 0.15s" }}
+                  style={{ fill: MARKER_COLOR, stroke: "var(--map-visited-stroke)", transition: "r 0.15s" }}
                 />
                 {isHovered && (
                   <g transform="translate(0,-14)" pointerEvents="none">
@@ -137,10 +137,9 @@ function MapView({ onRetry }) {
                       width={tooltipWidth}
                       height={20}
                       rx={5}
-                      fill="#0A140F"
-                      stroke="#1F3A2B"
+                      style={{ fill: "var(--map-tip-bg)", stroke: "var(--map-tip-border)" }}
                     />
-                    <text textAnchor="middle" y={-4} fontSize="10" fill="#E3EDE7">
+                    <text textAnchor="middle" y={-4} fontSize="10" style={{ fill: "var(--map-tip-text)" }}>
                       {d.name_en}
                     </text>
                   </g>

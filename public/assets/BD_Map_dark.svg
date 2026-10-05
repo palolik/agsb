@@ -440,7 +440,7 @@
 <text id="text450" transform="matrix(0.9299 0 0 1 1283.3408 626.2111)" class="st6 st7 st8">Sylhet</text>
 <text id="text452" transform="matrix(0.9299 0 0 1 1257.1357 1231.7638)" class="st6 st7 st8">Khagrachari</text>
 <text id="text454" transform="matrix(0.9299 0 0 1 873.6406 1491.2531)" class="st6 st7 st8">Bhola</text>
-<text id="text456" transform="matrix(0.9299 0 0 1 652.1934 1602.5206)" class="st6 st7 st8">Borguna</text>
+<text id="text456" transform="matrix(0.9299 0 0 1 652.1934 1602.5206)" class="st6 st7 st8">Barguna</text>
 <text id="text458" transform="matrix(0.9299 0 0 1 320.7656 1391.379)" class="st6 st7 st8">Satkhira</text>
 <text id="text460" transform="matrix(0.9299 0 0 1 571.0713 1274.9747)" class="st6 st7 st8">Gopalganj</text>
 <text id="text462" transform="matrix(0.9299 0 0 1 421.6396 1145.2599)" class="st6 st7 st8">Magura</text>
@@ -448,7 +448,7 @@
 <text id="text466" transform="matrix(0.9299 0 0 1 423.623 925.3781)" class="st6 st7 st8">Pabna</text>
 <text id="text468" transform="matrix(0.9299 0 0 1 155.0513 763.6642)" class="st6 st7 st8">Rajshahi</text>
 <text id="text470" transform="matrix(0.9299 0 0 1 443.0508 485.3781)" class="st6 st7 st8">Gaibandha</text>
-<text id="text472" transform="matrix(0.9299 0 0 1 369.0508 237.0919)" class="st6 st7 st8">Lalmonirhat</text>
+<text id="text472" transform="matrix(0.9299 0 0 1 393.0508 237.0919)" class="st6 st7 st8">Lalmonirhat</text>
 <text id="text474" transform="matrix(0.9299 0 0 1 1355.0518 1399.6642)" class="st6 st7 st8">Rangamati</text>
 <g id="g4653">
 	<path id="path5364" class="st4" data-slug="coxs-bazar" d="M1275.5,1699.2l28-15l12.7-10l12.7-2.5l17.8,30l20.3,10l7.6-2.5l5.1-12.5l12.7,17.5v7.5h-12.7
@@ -471,10 +471,10 @@
 <text id="text498" transform="matrix(0.9299 0 0 1 600.5684 997.8448)" class="st6 st7 st8">Manikganj</text>
 <text id="text500" transform="matrix(0.9299 0 0 1 772.1934 902.5206)" class="st6 st7 st8">Gazipur</text>
 <text id="text502" transform="matrix(0.9299 0 0 1 932.8789 999.0284)" class="st6 st7 st8">Brahmanbaria</text>
-<text id="text504" transform="matrix(0.9299 0 0 1 325.1113 801.0382)" class="st6 st7 st8">Nator</text>
+<text id="text504" transform="matrix(0.9299 0 0 1 320.7858 801.0382)" class="st6 st7 st8">Natore</text>
 <text id="text506" transform="matrix(0.9299 0 0 1 1086.4805 619.6642)" class="st6 st7 st8">Sunamganj</text>
 <text id="text508" transform="matrix(0.9299 0 0 1 566.4805 636.8068)" class="st6 st7 st8">Jamalpur</text>
-<text id="text510" transform="matrix(0.9299 0 0 1 316.4795 552.8068)" class="st6 st7 st8">Jaipurhat</text>
+<text id="text510" transform="matrix(0.9299 0 0 1 316.4795 552.8068)" class="st6 st7 st8">Joypurhat</text>
 <text id="text512" transform="matrix(0.9299 0 0 1 263.6226 242.5206)" class="st6 st7 st8">Nilfamari</text>
 <text id="text514" transform="matrix(0.9299 0 0 1 46.4795 239.6642)" class="st6 st7 st8">Thakurgaon</text>
 <text id="text516" transform="matrix(0.9299 0 0 1 1092.1934 812.5197)" class="st6 st7 st8">Habiganj</text>
@@ -500,7 +500,7 @@
 <text id="text556" transform="matrix(0.9299 0 0 1 305.918 976.5626)" class="st6 st7 st8">Kushtia</text>
 <text id="text558" transform="matrix(0.9299 0 0 1 734.9395 1213.4113)" class="st6 st7 st8">Shariatpur</text>
 <text id="text560" transform="matrix(0.9299 0 0 1 572.5986 1126.0646)" class="st6 st7 st8">Faridpur</text>
-<text id="text562" transform="matrix(0.9299 0 0 1 796.9873 1019.6222)" class="st6 st7 st8">Narayanganj</text>
+<text id="text562" transform="matrix(0.9299 0 0 1 822.9873 1019.6222)" class="st6 st7 st8">Narayanganj</text>
 <text id="text564" transform="matrix(0.9299 0 0 1 925.8135 801.4415)" class="st6 st7 st8">Kishoreganj</text>
 <text id="text566" transform="matrix(0.9299 0 0 1 462.957 801.4415)" class="st6 st7 st8">Sirajganj</text>
 <text id="text568" transform="matrix(0.9299 0 0 1 188.6709 624.299)" class="st6 st7 st8">Naogaon</text>

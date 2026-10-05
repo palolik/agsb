@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { HiMenu, HiX, HiUser } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
+import ThemeToggle from "./ThemeToggle";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -61,6 +62,7 @@ export default function Navbar() {
             <Link to="/contact" className="btn btn-primary btn-sm hidden md:flex">
               Plan a Trip
             </Link>
+            <ThemeToggle />
             <Link
               to={user ? "/profile" : "/login"}
               aria-label={user ? `My profile (${user.name || "account"})` : "Log in"}

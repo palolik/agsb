@@ -1,8 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+/* Two themes: "agsb" (dark) and "agsb-light". index.html sets data-theme
+   before first paint from the saved choice or the OS setting; the navbar
+   toggle (src/context/ThemeContext.jsx) switches it. */
 @plugin "daisyui" {
-  themes: agsb --default,
-    light --prefersdark;
+  themes: agsb --default --prefersdark, agsb-light;
 }
 
 @plugin "daisyui/theme" {
@@ -40,6 +42,112 @@
   --noise: 0;
 }
 
+@plugin "daisyui/theme" {
+  name: "agsb-light";
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: oklch(0.995 0.003 160);
+  --color-base-200: oklch(0.97 0.009 160);
+  --color-base-300: oklch(0.92 0.016 160);
+  --color-base-content: oklch(0.24 0.03 160);
+  --color-primary: oklch(0.5 0.11 158);
+  --color-primary-content: oklch(0.98 0.01 158);
+  --color-secondary: oklch(0.42 0.07 160);
+  --color-secondary-content: oklch(0.97 0.01 160);
+  --color-accent: oklch(0.6 0.12 155);
+  --color-accent-content: oklch(0.15 0.02 160);
+  --color-neutral: oklch(0.3 0.03 160);
+  --color-neutral-content: oklch(0.95 0.01 160);
+  --color-info: oklch(0.55 0.12 230);
+  --color-success: oklch(0.55 0.14 150);
+  --color-warning: oklch(0.66 0.15 70);
+  --color-error: oklch(0.55 0.2 25);
+  --color-info-content: oklch(0.98 0.01 230);
+  --color-success-content: oklch(0.98 0.01 150);
+  --color-warning-content: oklch(0.16 0.03 70);
+  --color-error-content: oklch(0.98 0.01 25);
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* Colours the daisyUI palette doesn't cover: page background, decorative
+   gradients, scrollbar and the district map (the inline BD map SVG and the
+   marker layers drawn over it). */
+[data-theme="agsb"] {
+  --page-bg: oklch(0.06 0.004 160);
+  --hero-from: oklch(0.2 0.05 160 / 0.55);
+  --hero-to: oklch(0.06 0.004 160);
+  --card-shadow: oklch(0 0 0 / 0.5);
+  --medal-from: oklch(0.25 0.06 160);
+  --medal-to: oklch(0.36 0.08 158);
+  --scroll-track: oklch(0.08 0.008 160);
+  --scroll-thumb: oklch(0.25 0.03 160);
+  --map-land: #0E1611;
+  --map-border: #646464;
+  --map-outline: #000000;
+  --map-label: #FFFFFF;
+  --map-label-halo: #0E1611;
+  --map-visited: #3FA66B;
+  --map-visited-stroke: #0F3D24;
+  --map-pending: #E0B341;
+  --map-halo: #FFFFFF;
+  --map-unvisited: #3C5446;
+  --map-unvisited-stroke: #0C1A12;
+  --map-tip-bg: #0A140F;
+  --map-tip-border: #1F3A2B;
+  --map-tip-text: #E3EDE7;
+}
+[data-theme="agsb-light"] {
+  --page-bg: oklch(0.975 0.006 160);
+  --hero-from: oklch(0.88 0.06 160 / 0.7);
+  --hero-to: oklch(0.975 0.006 160);
+  --card-shadow: oklch(0.3 0.03 160 / 0.15);
+  --medal-from: oklch(0.86 0.06 160);
+  --medal-to: oklch(0.78 0.09 158);
+  --scroll-track: oklch(0.94 0.01 160);
+  --scroll-thumb: oklch(0.75 0.03 160);
+  --map-land: #D5E5DA;
+  --map-border: #7E978A;
+  --map-outline: #5E7468;
+  --map-label: #1B2E23;
+  --map-label-halo: #D5E5DA;
+  --map-visited: #2E8B57;
+  --map-visited-stroke: #145A32;
+  --map-pending: #C9921A;
+  --map-halo: #1E3A2A;
+  --map-unvisited: #7F978A;
+  --map-unvisited-stroke: #3F5548;
+  --map-tip-bg: #FFFFFF;
+  --map-tip-border: #B9CCC0;
+  --map-tip-text: #1B2E23;
+}
+
+/* The map SVG ships with fixed dark colours in its own <style> (.st0-.st10);
+   these selectors are more specific, so the active theme wins. */
+.bd-map svg .st0, .bd-map svg .st1, .bd-map svg .st10 { stroke: var(--map-outline); }
+.bd-map svg .st2, .bd-map svg .st3, .bd-map svg .st4 { fill: var(--map-land); stroke: var(--map-border); }
+.bd-map svg .st9 { fill: var(--map-land); }
+.bd-map svg .st6 { fill: var(--map-label); }
+/* District labels: larger and bolder than the SVG's 17.9px, with a halo in the
+   land colour so they stay readable over borders. Labels are re-anchored at
+   their centre when the map loads (src/lib/mapMarkup.js). */
+.bd-map svg text.st8 {
+  font-family: 'Inter', 'Noto Sans Bengali', system-ui, sans-serif;
+  font-size: 25px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--map-label-halo);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
 @theme {
   --font-sans: 'Inter', 'Noto Sans Bengali', system-ui, sans-serif;
 }
@@ -49,12 +157,12 @@ html { scroll-behavior: smooth; }
 .btn { border-width: 0; }
 
 body {
-  background: oklch(0.06 0.004 160);
+  background: var(--page-bg);
   min-height: 100vh;
 }
 
 .hero-gradient {
-  background: linear-gradient(135deg, oklch(0.2 0.05 160 / 0.55), oklch(0.06 0.004 160) 60%);
+  background: linear-gradient(135deg, var(--hero-from), var(--hero-to) 60%);
 }
 
 /* Chips: soft tinted pills, consistent across the site */
@@ -79,11 +187,11 @@ body {
 }
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px oklch(0 0 0 / 0.5);
+  box-shadow: 0 12px 32px var(--card-shadow);
 }
 
 .district-badge {
-  background: linear-gradient(135deg, oklch(0.25 0.06 160), oklch(0.36 0.08 158));
+  background: linear-gradient(135deg, var(--medal-from), var(--medal-to));
 }
 
 /* Keep browser autofill from painting its own background on inputs */
@@ -98,8 +206,8 @@ select:-webkit-autofill {
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: oklch(0.08 0.008 160); }
-::-webkit-scrollbar-thumb { background: oklch(0.25 0.03 160); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--scroll-track); }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
 
 /* Typography colors follow the active daisyUI theme (used for admin rich text) */
 .prose-theme {

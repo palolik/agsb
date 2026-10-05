@@ -4,17 +4,74 @@ import { useFetch } from "../hooks/useFetch";
 import { useAuth } from "../context/AuthContext";
 import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload, HiCamera } from "react-icons/hi";
 import { FaWhatsapp, FaMedal } from "react-icons/fa";
-import { asArray } from "../lib/safe";
+import { asArray, asText } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import { whatsappUrl } from "../config/site";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import { ALL_DISTRICTS } from "../data/allDistricts";
+import { renderRichText } from "../lib/richText";
 
 // Only the 64 districts on the profile map can be checked in to.
 const MAP_SLUGS = new Set(ALL_DISTRICTS.map((d) => d.slug));
 
 const typeColors = { nature: "badge-success", historical: "badge-warning", religious: "badge-info", cultural: "badge-secondary", food: "badge-error", market: "badge-accent" };
+
+// One attraction: name, type and one-line summary, plus the admin-written
+// rich-text details (if any) behind a "read more" toggle.
+function AttractionCard({ attraction: a, id }) {
+  const [open, setOpen] = useState(false);
+  const detailsHtml = renderRichText(a.details);
+  return (
+    <div className="card bg-base-200 p-4 border border-base-300 flex flex-row items-start gap-3" data-testid="attraction">
+      <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center text-primary shrink-0">
+        <HiLocationMarker />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-base-content">{a.name}</h3>
+          <span className={`badge badge-xs ${typeColors[a.type] || "badge-ghost"}`}>{a.type}</span>
+        </div>
+        {a.desc && <p className="text-sm text-base-content/50 mt-0.5">{a.desc}</p>}
+        {detailsHtml && (
+          <>
+            <button
+              type="button"
+              className="btn btn-link btn-xs px-0 mt-1 text-primary no-underline"
+              aria-expanded={open}
+              aria-controls={id}
+              onClick={() => setOpen((o) => !o)}
+            >
+              {open ? "সংক্ষেপে দেখুন · Show less" : "বিস্তারিত পড়ুন · Read more"}
+            </button>
+            {open && (
+              <div
+                id={id}
+                className="prose prose-sm prose-theme max-w-none mt-2 prose-img:rounded-lg"
+                dangerouslySetInnerHTML={{ __html: detailsHtml }}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Imported Commons photos (CC BY / BY-SA) must credit the author and licence.
+function PhotoCredit({ credit }) {
+  if (!credit || typeof credit !== "object") return null;
+  const author = asText(credit.author).slice(0, 80);
+  const license = asText(credit.license);
+  const source = asText(credit.source_url).startsWith("https://") ? credit.source_url : null;
+  if (!author && !license) return null;
+  const text = `Photo: ${author || "Unknown"}${license ? ` · ${license}` : ""}`;
+  return (
+    <p className="absolute top-2 right-3 max-w-[70%] truncate text-[10px] leading-tight px-1.5 py-0.5 rounded bg-base-100/70 text-base-content/70" data-testid="photo-credit">
+      {source ? <a href={source} target="_blank" rel="noopener noreferrer" className="hover:underline" title={`${text} — Wikimedia Commons`}>{text}</a> : text}
+    </p>
+  );
+}
 
 export default function DistrictDetailPage() {
   const { slug } = useParams();
@@ -64,6 +121,7 @@ export default function DistrictDetailPage() {
           <h1 className="text-3xl md:text-5xl font-bold text-base-content">{district.name_bn}</h1>
           <p className="text-lg text-base-content/60">{district.name_en} — {district.tagline}</p>
         </div>
+        <PhotoCredit credit={district.image_credit} />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -91,18 +149,7 @@ export default function DistrictDetailPage() {
               <h2 className="text-xl font-bold text-base-content mb-4">আকর্ষণীয় স্থান</h2>
               <div className="space-y-3">
                 {asArray(district.attractions).map((a, i) => (
-                  <div key={i} className="card bg-base-200 p-4 border border-base-300 flex flex-row items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center text-primary shrink-0">
-                      <HiLocationMarker />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-base-content">{a.name}</h3>
-                        <span className={`badge badge-xs ${typeColors[a.type] || "badge-ghost"}`}>{a.type}</span>
-                      </div>
-                      <p className="text-sm text-base-content/50 mt-0.5">{a.desc}</p>
-                    </div>
-                  </div>
+                  <AttractionCard key={i} attraction={a} id={`attraction-${i}`} />
                 ))}
               </div>
             </div>

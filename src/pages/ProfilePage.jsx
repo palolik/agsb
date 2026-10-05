@@ -12,9 +12,12 @@ import { asArray } from "../lib/safe";
 import { districtName } from "../lib/districtNames";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
+import { centerMapLabels } from "../lib/mapMarkup";
 
-const SELECTED_COLOR = "#3FA66B";
-const PENDING_COLOR = "#E0B341";
+// Theme colours (src/index.css). SVG presentation attributes can't use
+// var(), so marker colours are applied through `style`.
+const SELECTED_COLOR = "var(--map-visited)";
+const PENDING_COLOR = "var(--map-pending)";
 
 const EMPTY = [];
 // Bangladesh has 64 districts; the check-in tracker covers all of them.
@@ -70,7 +73,7 @@ export default function ProfilePage() {
   useEffect(() => {
     fetch("/assets/BD_Map_dark.svg")
       .then((res) => res.text())
-      .then(setMapMarkup)
+      .then((text) => setMapMarkup(centerMapLabels(text)))
       .catch(() => {});
   }, []);
 
@@ -236,7 +239,7 @@ export default function ProfilePage() {
                 ref={mapRef}
                 role="img"
                 aria-label="Map of Bangladesh"
-                className="absolute inset-0 w-full h-full"
+                className="bd-map absolute inset-0 w-full h-full"
                 dangerouslySetInnerHTML={{ __html: coloredMarkup }}
               />
               <svg
@@ -279,17 +282,18 @@ export default function ProfilePage() {
                       <circle r={22} fill="transparent" />
                       <circle
                         r={isHovered ? 20 : 17}
-                        fill={isPending ? PENDING_COLOR : isVisited ? SELECTED_COLOR : "#ffffff"}
                         opacity={isPending ? 0.45 : isVisited ? 0.3 : isHovered ? 0.1 : 0}
-                        style={{ transition: "opacity 0.15s, r 0.15s" }}
+                        style={{ fill: isPending ? PENDING_COLOR : isVisited ? SELECTED_COLOR : "var(--map-halo)", transition: "opacity 0.15s, r 0.15s" }}
                       />
                       <circle
                         r={isHovered ? 7 : 5}
-                        fill={isVisited ? SELECTED_COLOR : "#3C5446"}
-                        stroke={isVisited ? "#0F3D24" : "#0C1A12"}
                         strokeWidth="1.5"
                         opacity={isVisited ? 1 : 0.8}
-                        style={{ transition: "r 0.15s" }}
+                        style={{
+                          fill: isVisited ? SELECTED_COLOR : "var(--map-unvisited)",
+                          stroke: isVisited ? "var(--map-visited-stroke)" : "var(--map-unvisited-stroke)",
+                          transition: "r 0.15s",
+                        }}
                       />
                       {isHovered && (
                         <g transform="translate(0,-14)" pointerEvents="none">
@@ -299,10 +303,9 @@ export default function ProfilePage() {
                             width={tooltipWidth}
                             height={20}
                             rx={5}
-                            fill="#0A140F"
-                            stroke="#1F3A2B"
+                            style={{ fill: "var(--map-tip-bg)", stroke: "var(--map-tip-border)" }}
                           />
-                          <text textAnchor="middle" y={-4} fontSize="10" fill="#E3EDE7">
+                          <text textAnchor="middle" y={-4} fontSize="10" style={{ fill: "var(--map-tip-text)" }}>
                             {label}
                           </text>
                         </g>
