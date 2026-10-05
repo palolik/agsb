@@ -11,6 +11,7 @@ import { apiGet } from "../lib/api";
 const CACHE_TTL = 60_000;
 const CACHEABLE = new Set([
   "/districts",
+  "/attractions",
   "/divisions",
   "/plans",
   "/blog",

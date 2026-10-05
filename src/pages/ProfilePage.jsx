@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, useSyncExternalStore } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useFetch } from "../hooks/useFetch";
@@ -12,12 +12,7 @@ import { asArray } from "../lib/safe";
 import { districtName } from "../lib/districtNames";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
-import { centerMapLabels } from "../lib/mapMarkup";
-
-// Theme colours (src/index.css). SVG presentation attributes can't use
-// var(), so marker colours are applied through `style`.
-const SELECTED_COLOR = "var(--map-visited)";
-const PENDING_COLOR = "var(--map-pending)";
+import BangladeshMap from "../components/BangladeshMap";
 
 const EMPTY = [];
 // Bangladesh has 64 districts; the check-in tracker covers all of them.
@@ -43,8 +38,6 @@ function useConfirmMode() {
 export default function ProfilePage() {
   const { user, ready, logout, updateUser } = useAuth();
   const [hovered, setHovered] = useState(null);
-  const [mapMarkup, setMapMarkup] = useState(null);
-  const mapRef = useRef(null);
   const confirmMode = useConfirmMode();
   // Check-in saves: `optimistic` is the list shown while saves are in flight;
   // `desiredRef` always holds the newest wanted list, so every toggle builds on
@@ -70,40 +63,15 @@ export default function ProfilePage() {
   );
   const visitedCount = visitedDistricts.length;
 
-  useEffect(() => {
-    fetch("/assets/BD_Map_dark.svg")
-      .then((res) => res.text())
-      .then((text) => setMapMarkup(centerMapLabels(text)))
-      .catch(() => {});
-  }, []);
-
-  // Bake visited-district colors directly into the SVG markup so they
-  // survive every React re-render without imperative DOM patching.
-  const coloredMarkup = useMemo(() => {
-    if (!mapMarkup) return "";
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(mapMarkup, "image/svg+xml");
-    const svg = doc.querySelector("svg");
-    if (!svg) return mapMarkup;
-
-    svg.setAttribute("width", "100%");
-    svg.setAttribute("height", "100%");
-    svg.style.display = "block";
-
-    svg.querySelectorAll("[data-slug]").forEach((el) => {
-      if (visitedSet.has(el.dataset.slug)) {
-        // Use !important to override any inline fill styles baked into the SVG
-        el.style.setProperty("fill", SELECTED_COLOR, "important");
-        el.style.setProperty("fill-opacity", "0.9", "important");
-      } else {
-        el.style.removeProperty("fill");
-        el.style.removeProperty("fill-opacity");
-      }
-      el.style.setProperty("transition", "fill-opacity 0.15s");
-    });
-
-    return svg.outerHTML;
-  }, [mapMarkup, visitedSet]);
+  // District shading (CSS .bd-district.is-*): awaiting confirmation, visited, hovered.
+  const districtClass = useCallback(
+    (slug) => (slug === pendingSlug ? "is-pending" : visitedSet.has(slug) ? "is-visited" : slug === hovered ? "is-hovered" : ""),
+    [pendingSlug, visitedSet, hovered],
+  );
+  const districtAriaLabel = useCallback(
+    (slug) => `${districtName(DISTRICT_BY_SLUG.get(slug)?.name_en || slug)}${visitedSet.has(slug) ? " (visited)" : ""} — check in`,
+    [visitedSet],
+  );
 
   const meta = <PageMeta title="আমার প্রোফাইল · My Profile" />;
   if (!ready) return meta;
@@ -235,85 +203,14 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="relative w-full" style={{ aspectRatio: `${MAP_VIEWBOX.width} / ${MAP_VIEWBOX.height}` }}>
-              <div
-                ref={mapRef}
-                role="img"
-                aria-label="Map of Bangladesh"
-                className="bd-map absolute inset-0 w-full h-full"
-                dangerouslySetInnerHTML={{ __html: coloredMarkup }}
+              {/* Click/tap a district (or Tab + Enter) to check in or out. */}
+              <BangladeshMap
+                districtClass={districtClass}
+                className="absolute inset-0"
+                onSelect={onDistrictClick}
+                ariaLabel={districtAriaLabel}
+                onHover={setHovered}
               />
-              <svg
-                viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
-                className="absolute inset-0 w-full h-full"
-                role="group"
-                aria-label="Districts — select to check in"
-              >
-                {ALL_DISTRICTS.map((d) => {
-                  const [x, y] = d.pin;
-                  const isVisited = visitedSet.has(d.slug);
-                  const isPending = pendingSlug === d.slug;
-                  const isHovered = hovered === d.slug || isPending;
-                  const label = districtName(d.name_en);
-                  const tooltipWidth = Math.max(40, label.length * 5.6 + 14);
-
-                  return (
-                    <g
-                      key={d.slug}
-                      transform={`translate(${x},${y})`}
-                      className="cursor-pointer"
-                      data-slug={d.slug}
-                      role="button"
-                      aria-label={`${label}${isVisited ? " (visited)" : ""}`}
-                      aria-pressed={isVisited}
-                      tabIndex={0}
-                      onClick={() => onDistrictClick(d.slug)}
-                      onKeyDown={(e) => {
-                        // Enter/Space toggle the district, like a click.
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onDistrictClick(d.slug);
-                        }
-                      }}
-                      onMouseEnter={() => setHovered(d.slug)}
-                      onMouseLeave={() => setHovered((h) => (h === d.slug ? null : h))}
-                      onFocus={() => setHovered(d.slug)}
-                      onBlur={() => setHovered((h) => (h === d.slug ? null : h))}
-                    >
-                      <circle r={22} fill="transparent" />
-                      <circle
-                        r={isHovered ? 20 : 17}
-                        opacity={isPending ? 0.45 : isVisited ? 0.3 : isHovered ? 0.1 : 0}
-                        style={{ fill: isPending ? PENDING_COLOR : isVisited ? SELECTED_COLOR : "var(--map-halo)", transition: "opacity 0.15s, r 0.15s" }}
-                      />
-                      <circle
-                        r={isHovered ? 7 : 5}
-                        strokeWidth="1.5"
-                        opacity={isVisited ? 1 : 0.8}
-                        style={{
-                          fill: isVisited ? SELECTED_COLOR : "var(--map-unvisited)",
-                          stroke: isVisited ? "var(--map-visited-stroke)" : "var(--map-unvisited-stroke)",
-                          transition: "r 0.15s",
-                        }}
-                      />
-                      {isHovered && (
-                        <g transform="translate(0,-14)" pointerEvents="none">
-                          <rect
-                            x={-tooltipWidth / 2}
-                            y={-18}
-                            width={tooltipWidth}
-                            height={20}
-                            rx={5}
-                            style={{ fill: "var(--map-tip-bg)", stroke: "var(--map-tip-border)" }}
-                          />
-                          <text textAnchor="middle" y={-4} fontSize="10" style={{ fill: "var(--map-tip-text)" }}>
-                            {label}
-                          </text>
-                        </g>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
             </div>
           </div>
           <p className="text-xs text-base-content/40 mt-2 text-center" aria-live="polite">

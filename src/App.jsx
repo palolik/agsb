@@ -44,6 +44,7 @@ function page(load) {
 
 const DistrictsPage = page(() => import("./pages/DistrictsPage"));
 const DistrictDetailPage = page(() => import("./pages/DistrictDetailPage"));
+const AttractionDetailPage = page(() => import("./pages/AttractionDetailPage"));
 const MapPage = page(() => import("./pages/MapPage"));
 const BlogPage = page(() => import("./pages/BlogPage"));
 const BlogDetailPage = page(() => import("./pages/BlogDetailPage"));
@@ -102,6 +103,7 @@ export default function App() {
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/districts" element={<Layout><DistrictsPage /></Layout>} />
         <Route path="/districts/:slug" element={<Layout><DistrictDetailPage /></Layout>} />
+        <Route path="/attractions/:slug" element={<Layout><AttractionDetailPage /></Layout>} />
         <Route path="/map" element={<Layout noFooter><MapPage /></Layout>} />
         <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
         <Route path="/blog/:slug" element={<Layout><BlogDetailPage /></Layout>} />

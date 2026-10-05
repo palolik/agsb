@@ -1,27 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
 import { HiX, HiExternalLink, HiMap, HiLocationMarker } from "react-icons/hi";
-import { asArray, asText } from "../lib/safe";
+import { asArray } from "../lib/safe";
 import { Spinner, ErrorState } from "../components/StateViews";
 import { districtName } from "../lib/districtNames";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
-import { centerMapLabels } from "../lib/mapMarkup";
-
-// Theme colours (src/index.css). SVG presentation attributes can't use
-// var(), so they are applied through `style`.
-const MARKER_COLOR = "var(--map-visited)";
-
-// SVG markers act as buttons: Enter/Space select them like a click.
-function onActivateKey(e, fn) {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    fn();
-  }
-}
+import BangladeshMap from "../components/BangladeshMap";
+import { attractionsByDistrict } from "../data";
 
 // The map is as large as fits both the width and the visible height
 // (dvh tracks the mobile URL bar), always keeping the SVG's aspect ratio,
@@ -43,13 +32,14 @@ export default function MapPage() {
 function MapView({ onRetry }) {
   const { data: districts, loading: districtsLoading, error: districtsError } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
-  const [mapMarkup, setMapMarkup] = useState(null);
-  const [mapError, setMapError] = useState(null);
+  // Attractions live in their own collection; if this fails the panel just
+  // leaves out the "Top attractions" list.
+  const { data: attractions } = useFetch("/attractions");
+  const attractionsBySlug = useMemo(() => attractionsByDistrict(attractions), [attractions]);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
 
-  // Only the districts with full guides get a marker — positioned using the same
-  // pin coordinates the profile page's check-in map uses.
+  // Districts that exist in the API (and on the map) can be opened.
   const MAP_DISTRICTS = useMemo(() => asArray(districts)
     .map((d) => ({
       ...d,
@@ -58,20 +48,19 @@ function MapView({ onRetry }) {
     }))
     .filter((d) => d.pin), [districts]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/assets/BD_Map_dark.svg")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Map image failed to load (${res.status})`);
-        return res.text();
-      })
-      .then((text) => { if (!cancelled) setMapMarkup(centerMapLabels(text)); })
-      .catch(() => { if (!cancelled) setMapError("The map could not be loaded. Check your connection and try again."); });
-    return () => { cancelled = true; };
-  }, []);
+  const bySlug = useMemo(() => new Map(MAP_DISTRICTS.map((d) => [d.slug, d])), [MAP_DISTRICTS]);
+  const hasGuide = useCallback((slug) => bySlug.has(slug), [bySlug]);
+  const selectDistrict = useCallback((slug) => setSelected(bySlug.get(slug) || null), [bySlug]);
+  const districtAriaLabel = useCallback((slug) => `${bySlug.get(slug)?.name_en || slug} — show details`, [bySlug]);
 
-  const failure = mapError || districtsError;
-  const busy = !failure && (!mapMarkup || districtsLoading);
+  // The hovered/selected district is also shaded on the base map.
+  const districtClass = useCallback(
+    (slug) => (slug === selected?.slug ? "is-selected" : slug === hovered ? "is-hovered" : ""),
+    [selected, hovered],
+  );
+
+  const failure = districtsError;
+  const busy = !failure && districtsLoading;
 
   return (
     <div className="relative min-h-[calc(100dvh-64px)] h-[calc(100dvh-64px)] flex items-center justify-center bg-base-100">
@@ -83,78 +72,22 @@ function MapView({ onRetry }) {
 
       {/* Map */}
       <div className="relative" style={MAP_SIZE_STYLE} data-testid="bd-map">
-        <div
-          role="img"
-          aria-label="Map of Bangladesh"
-          className="bd-map absolute inset-0 w-full h-full"
-          dangerouslySetInnerHTML={{ __html: mapMarkup || "" }}
+        {/* Districts with a guide are the controls: click/tap or Enter to open. */}
+        <BangladeshMap
+          districtClass={districtClass}
+          className="absolute inset-0"
+          onSelect={selectDistrict}
+          isInteractive={hasGuide}
+          ariaLabel={districtAriaLabel}
+          onHover={setHovered}
         />
-        <svg
-          viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
-          className="absolute inset-0 w-full h-full"
-          role="group"
-          aria-label="District markers"
-        >
-          {MAP_DISTRICTS.map((d) => {
-            const [x, y] = d.pin;
-            const isHovered = hovered === d.slug;
-            const isSelected = selected?.slug === d.slug;
-            const tooltipWidth = Math.max(40, asText(d.name_en).length * 5.6 + 14);
-
-            return (
-              <g
-                key={d.slug}
-                transform={`translate(${x},${y})`}
-                className="cursor-pointer"
-                role="button"
-                tabIndex={0}
-                aria-label={`${d.name_en} — show details`}
-                aria-pressed={isSelected}
-                onClick={() => setSelected(d)}
-                onKeyDown={(e) => onActivateKey(e, () => setSelected(d))}
-                onMouseEnter={() => setHovered(d.slug)}
-                onMouseLeave={() => setHovered((h) => (h === d.slug ? null : h))}
-                onFocus={() => setHovered(d.slug)}
-                onBlur={() => setHovered((h) => (h === d.slug ? null : h))}
-              >
-                {/* Invisible larger hit-area so the whole district "region" is clickable, not just the pin */}
-                <circle r={22} fill="transparent" />
-                <circle
-                  r={isHovered || isSelected ? 20 : 17}
-                  opacity={isSelected ? 0.35 : isHovered ? 0.15 : 0}
-                  style={{ fill: MARKER_COLOR, transition: "opacity 0.15s, r 0.15s" }}
-                />
-                <circle
-                  r={isHovered ? 7 : 5.5}
-                  strokeWidth="1.5"
-                  style={{ fill: MARKER_COLOR, stroke: "var(--map-visited-stroke)", transition: "r 0.15s" }}
-                />
-                {isHovered && (
-                  <g transform="translate(0,-14)" pointerEvents="none">
-                    <rect
-                      x={-tooltipWidth / 2}
-                      y={-18}
-                      width={tooltipWidth}
-                      height={20}
-                      rx={5}
-                      style={{ fill: "var(--map-tip-bg)", stroke: "var(--map-tip-border)" }}
-                    />
-                    <text textAnchor="middle" y={-4} fontSize="10" style={{ fill: "var(--map-tip-text)" }}>
-                      {d.name_en}
-                    </text>
-                  </g>
-                )}
-              </g>
-            );
-          })}
-        </svg>
       </div>
 
       {/* Header overlay */}
       <div className="absolute top-4 left-4 z-[1000]">
         <div className="bg-base-200/90 backdrop-blur-lg rounded-xl p-3 border border-base-300 shadow-xl">
           <h1 className="text-lg font-bold text-base-content flex items-center gap-2"><HiMap className="text-primary" /> Bangladesh Map</h1>
-          <p className="text-xs text-base-content/50">Click any marker to explore</p>
+          <p className="text-xs text-base-content/50">Click any district to explore</p>
           {/* List fallback: the same districts as plain links, for keyboard,
               screen-reader and small-screen users who'd rather not use the map. */}
           {MAP_DISTRICTS.length > 0 && (
@@ -220,15 +153,17 @@ function MapView({ onRetry }) {
                 </div>
               </div>
 
-              <div className="mt-4">
-                <p className="text-xs font-medium text-base-content/50 mb-2">Top attractions</p>
-                {asArray(selected.attractions).slice(0, 3).map((a, i) => (
-                  <div key={i} className="flex items-center gap-2 py-1.5 border-b border-base-300/50 last:border-0">
-                    <HiLocationMarker className="w-3.5 h-3.5 text-primary shrink-0" />
-                    <span className="text-sm text-base-content/70">{a.name}</span>
-                  </div>
-                ))}
-              </div>
+              {asArray(attractionsBySlug[selected.slug]).length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-base-content/50 mb-2">Top attractions</p>
+                  {attractionsBySlug[selected.slug].slice(0, 3).map((a) => (
+                    <Link key={a._id || a.slug} to={`/attractions/${a.slug}`} className="flex items-center gap-2 py-1.5 border-b border-base-300/50 last:border-0 hover:text-primary">
+                      <HiLocationMarker className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span className="text-sm text-base-content/70">{a.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               <Link to={`/districts/${selected.slug}`} className="btn btn-primary btn-sm w-full mt-4">
                 View full guide <HiExternalLink className="ml-1" />

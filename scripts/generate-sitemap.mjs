@@ -5,7 +5,7 @@
 //
 // Reads VITE_SITE_URL and VITE_API_BASE_URL from the environment, falling
 // back to .env.[mode].local, .env.[mode], .env.local and .env (Vite's order).
-// Detail URLs come from the live API (/districts, /plans, /blog). This script
+// Detail URLs come from the live API (/districts, /attractions, /plans, /blog). This script
 // never fails the build: if the site URL is missing it skips the sitemap, and
 // if the API can't be reached it writes the static routes only. Both cases
 // print a warning and exit 0.
@@ -28,6 +28,7 @@ const STATIC_ROUTES = [
 
 const COLLECTIONS = [
   { endpoint: "/districts", prefix: "/districts", priority: "0.8", changefreq: "monthly" },
+  { endpoint: "/attractions", prefix: "/attractions", priority: "0.6", changefreq: "monthly" },
   { endpoint: "/plans", prefix: "/plans", priority: "0.7", changefreq: "weekly" },
   { endpoint: "/blog", prefix: "/blog", priority: "0.7", changefreq: "monthly" },
 ];

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
 import { useAuth } from "../context/AuthContext";
-import { HiArrowLeft, HiLocationMarker, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload, HiCamera } from "react-icons/hi";
+import { HiArrowLeft, HiClock, HiCurrencyBangladeshi, HiStar, HiUsers, HiDownload, HiCamera } from "react-icons/hi";
 import { FaWhatsapp, FaMedal } from "react-icons/fa";
 import { asArray, asText } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
@@ -10,53 +10,10 @@ import { whatsappUrl } from "../config/site";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import { ALL_DISTRICTS } from "../data/allDistricts";
-import { renderRichText } from "../lib/richText";
+import AttractionCard from "../components/AttractionCard";
 
 // Only the 64 districts on the profile map can be checked in to.
 const MAP_SLUGS = new Set(ALL_DISTRICTS.map((d) => d.slug));
-
-const typeColors = { nature: "badge-success", historical: "badge-warning", religious: "badge-info", cultural: "badge-secondary", food: "badge-error", market: "badge-accent" };
-
-// One attraction: name, type and one-line summary, plus the admin-written
-// rich-text details (if any) behind a "read more" toggle.
-function AttractionCard({ attraction: a, id }) {
-  const [open, setOpen] = useState(false);
-  const detailsHtml = renderRichText(a.details);
-  return (
-    <div className="card bg-base-200 p-4 border border-base-300 flex flex-row items-start gap-3" data-testid="attraction">
-      <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center text-primary shrink-0">
-        <HiLocationMarker />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium text-base-content">{a.name}</h3>
-          <span className={`badge badge-xs ${typeColors[a.type] || "badge-ghost"}`}>{a.type}</span>
-        </div>
-        {a.desc && <p className="text-sm text-base-content/50 mt-0.5">{a.desc}</p>}
-        {detailsHtml && (
-          <>
-            <button
-              type="button"
-              className="btn btn-link btn-xs px-0 mt-1 text-primary no-underline"
-              aria-expanded={open}
-              aria-controls={id}
-              onClick={() => setOpen((o) => !o)}
-            >
-              {open ? "সংক্ষেপে দেখুন · Show less" : "বিস্তারিত পড়ুন · Read more"}
-            </button>
-            {open && (
-              <div
-                id={id}
-                className="prose prose-sm prose-theme max-w-none mt-2 prose-img:rounded-lg"
-                dangerouslySetInnerHTML={{ __html: detailsHtml }}
-              />
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // Imported Commons photos (CC BY / BY-SA) must credit the author and licence.
 function PhotoCredit({ credit }) {
@@ -79,6 +36,7 @@ export default function DistrictDetailPage() {
   const { data: allDistricts } = useFetch("/districts");
   const { data: divisions } = useFetch("/divisions");
   const { data: travelPlans } = useFetch("/plans");
+  const attractionsQ = useFetch(`/attractions?district=${encodeURIComponent(slug)}`);
 
   // Only a 404 (or 400 for a malformed slug) means "not found"; network
   // failures (status null) and 5xx show ErrorState with a retry instead.
@@ -147,11 +105,7 @@ export default function DistrictDetailPage() {
             {/* Attractions */}
             <div>
               <h2 className="text-xl font-bold text-base-content mb-4">আকর্ষণীয় স্থান</h2>
-              <div className="space-y-3">
-                {asArray(district.attractions).map((a, i) => (
-                  <AttractionCard key={i} attraction={a} id={`attraction-${i}`} />
-                ))}
-              </div>
+              <DistrictAttractions query={attractionsQ} />
             </div>
 
             {/* Food */}
@@ -245,6 +199,32 @@ export default function DistrictDetailPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// The district's attractions (own collection, fetched separately), so a
+// failed request only affects this section.
+function DistrictAttractions({ query }) {
+  const { data, loading, error, reload } = query;
+  if (loading) {
+    return <div role="status" aria-live="polite" className="py-6 text-center"><span className="loading loading-spinner loading-md text-primary" aria-label="Loading attractions" /></div>;
+  }
+  if (error) {
+    return (
+      <div role="alert" className="card bg-base-200 border border-base-300 p-4 text-sm text-base-content/60 flex flex-row items-center justify-between gap-3">
+        <span>Couldn't load attractions.</span>
+        <button type="button" className="btn btn-ghost btn-xs" onClick={reload}>Try again</button>
+      </div>
+    );
+  }
+  const list = asArray(data);
+  if (list.length === 0) {
+    return <p className="card bg-base-200 border border-base-300 border-dashed p-4 text-sm text-base-content/50">No attractions listed yet</p>;
+  }
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {list.map((a) => <AttractionCard key={a._id || a.slug} attraction={a} />)}
     </div>
   );
 }

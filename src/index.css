@@ -89,20 +89,17 @@
   --medal-to: oklch(0.36 0.08 158);
   --scroll-track: oklch(0.08 0.008 160);
   --scroll-thumb: oklch(0.25 0.03 160);
-  --map-land: #0E1611;
-  --map-border: #646464;
-  --map-outline: #000000;
-  --map-label: #FFFFFF;
-  --map-label-halo: #0E1611;
+  --map-land: #17271E;
+  --map-border: #34503F;
+  --map-label: #CFDDD4;
+  --map-label-halo: #17271E;
+  --map-label-weight: 500;
+  --map-hover: #22392C;
+  --map-selected: #2C5A41;
+  --map-selected-border: #5FC08A;
+  --map-glow: drop-shadow(0 0 28px oklch(0.55 0.11 158 / 0.18));
   --map-visited: #3FA66B;
-  --map-visited-stroke: #0F3D24;
   --map-pending: #E0B341;
-  --map-halo: #FFFFFF;
-  --map-unvisited: #3C5446;
-  --map-unvisited-stroke: #0C1A12;
-  --map-tip-bg: #0A140F;
-  --map-tip-border: #1F3A2B;
-  --map-tip-text: #E3EDE7;
 }
 [data-theme="agsb-light"] {
   --page-bg: oklch(0.975 0.006 160);
@@ -115,37 +112,49 @@
   --scroll-thumb: oklch(0.75 0.03 160);
   --map-land: #D5E5DA;
   --map-border: #7E978A;
-  --map-outline: #5E7468;
   --map-label: #1B2E23;
   --map-label-halo: #D5E5DA;
+  --map-label-weight: 600;
+  --map-hover: #C3DACB;
+  --map-selected: #A9CDB6;
+  --map-selected-border: #2E8B57;
+  --map-glow: none;
   --map-visited: #2E8B57;
-  --map-visited-stroke: #145A32;
   --map-pending: #C9921A;
-  --map-halo: #1E3A2A;
-  --map-unvisited: #7F978A;
-  --map-unvisited-stroke: #3F5548;
-  --map-tip-bg: #FFFFFF;
-  --map-tip-border: #B9CCC0;
-  --map-tip-text: #1B2E23;
 }
 
-/* The map SVG ships with fixed dark colours in its own <style> (.st0-.st10);
-   these selectors are more specific, so the active theme wins. */
-.bd-map svg .st0, .bd-map svg .st1, .bd-map svg .st10 { stroke: var(--map-outline); }
-.bd-map svg .st2, .bd-map svg .st3, .bd-map svg .st4 { fill: var(--map-land); stroke: var(--map-border); }
-.bd-map svg .st9 { fill: var(--map-land); }
-.bd-map svg .st6 { fill: var(--map-label); }
-/* District labels: larger and bolder than the SVG's 17.9px, with a halo in the
-   land colour so they stay readable over borders. Labels are re-anchored at
-   their centre when the map loads (src/lib/mapMarkup.js). */
-.bd-map svg text.st8 {
+/* District map (src/components/BangladeshMap.jsx). Shapes come from
+   src/data/bdMapShapes.js; everything visual lives here. Borders use
+   non-scaling strokes, so they stay a crisp 1px at any map size. */
+.bd-map { display: block; width: 100%; height: 100%; }
+.bd-districts { filter: var(--map-glow); }
+.bd-district path {
+  fill: var(--map-land);
+  stroke: var(--map-border);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+  transition: fill 0.15s;
+}
+.bd-district.is-interactive { cursor: pointer; outline: none; }
+.bd-district.is-interactive:hover path { fill: var(--map-hover); }
+/* Keyboard focus: highlight the district's own border. */
+.bd-district.is-interactive:focus-visible path { stroke: var(--color-primary); stroke-width: 2.5px; }
+.bd-district.is-hovered path { fill: var(--map-hover); }
+.bd-district.is-selected path { fill: var(--map-selected); stroke: var(--map-selected-border); stroke-width: 2px; }
+.bd-district.is-visited path { fill: var(--map-visited); fill-opacity: 0.9; }
+.bd-district.is-pending path { fill: var(--map-pending); fill-opacity: 0.7; }
+.bd-label {
   font-family: 'Inter', 'Noto Sans Bengali', system-ui, sans-serif;
   font-size: 25px;
-  font-weight: 600;
+  font-weight: var(--map-label-weight);
+  fill: var(--map-label);
   paint-order: stroke;
   stroke: var(--map-label-halo);
   stroke-width: 5px;
   stroke-linejoin: round;
+  pointer-events: none;
 }
 
 @theme {

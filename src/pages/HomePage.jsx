@@ -17,6 +17,7 @@ export default function HomePage() {
   const divisionsQ = useFetch("/divisions");
   const blogQ = useFetch("/blog");
   const plansQ = useFetch("/plans");
+  const attractionsQ = useFetch("/attractions");
   const districts = districtsQ.data;
   const divisions = divisionsQ.data;
   const blogPosts = blogQ.data;
@@ -28,7 +29,7 @@ export default function HomePage() {
   // is left out instead of showing a made-up number.
   const statItems = [
     !districtsQ.error && { label: "Districts", val: districtsQ.loading ? null : asArray(districts).length, icon: HiMap },
-    !districtsQ.error && { label: "Attractions", val: districtsQ.loading ? null : countAttractions(districts), icon: HiLocationMarker },
+    !attractionsQ.error && { label: "Attractions", val: attractionsQ.loading ? null : countAttractions(attractionsQ.data), icon: HiLocationMarker },
     !plansQ.error && { label: "Travel Plans", val: plansQ.loading ? null : asArray(travelPlans).length, icon: FaSuitcaseRolling },
   ].filter(Boolean);
 

@@ -13,7 +13,16 @@ export function districtCountsByDivision(districts) {
   return counts;
 }
 
-// Total number of attractions listed across the given districts.
-export function countAttractions(districts) {
-  return asArray(districts).reduce((sum, d) => sum + asArray(d?.attractions).length, 0);
+// Total number of attractions in the /attractions list.
+export function countAttractions(attractions) {
+  return asArray(attractions).length;
+}
+
+// { [district_slug]: attractions of that district, in API order }
+export function attractionsByDistrict(attractions) {
+  const groups = {};
+  for (const a of asArray(attractions)) {
+    if (a && a.district_slug) (groups[a.district_slug] ||= []).push(a);
+  }
+  return groups;
 }

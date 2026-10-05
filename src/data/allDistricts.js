@@ -1,9 +1,9 @@
 // All 64 districts of Bangladesh, for the profile map's check-in tracker.
 // Only 16 of these have full guides in `districts` (src/data/index.js) — this list
 // exists purely so every district can be marked visited, not just the ones with content.
-// Pin positions were read off public/assets/BD_Map_dark.svg's own district labels:
-// horizontally at the label's centre, 22 units above its baseline. The label
-// itself is redrawn centred just above the pin (src/lib/mapMarkup.js).
+// `pin` is the district's marker position in the map's viewBox
+// (districtMapPositions.js); its name is drawn centred on it
+// (src/components/BangladeshMap.jsx), using `map_label` when set.
 export const ALL_DISTRICTS = [
   // Dhaka division
   { slug: "dhaka", name_en: "Dhaka", name_bn: "ঢাকা", division_id: 1, pin: [751.27, 1000.93] },
@@ -47,7 +47,7 @@ export const ALL_DISTRICTS = [
 
   // Rajshahi division
   { slug: "bogura", name_en: "Bogura", name_bn: "বগুড়া", division_id: 4, pin: [452.99, 617.66] },
-  { slug: "chapainawabganj", name_en: "Chapainawabganj", name_bn: "চাঁপাইনবাবগঞ্জ", division_id: 4, pin: [63.11, 663.38] },
+  { slug: "chapainawabganj", name_en: "Chapainawabganj", name_bn: "চাঁপাইনবাবগঞ্জ", division_id: 4, pin: [63.11, 663.38], map_label: "Nawabganj" },
   { slug: "joypurhat", name_en: "Joypurhat", name_bn: "জয়পুরহাট", division_id: 4, pin: [355.41, 530.81] },
   { slug: "naogaon", name_en: "Naogaon", name_bn: "নওগাঁ", division_id: 4, pin: [218.95, 602.30] },
   { slug: "natore", name_en: "Natore", name_bn: "নাটোর", division_id: 4, pin: [346.74, 779.04] },
