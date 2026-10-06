@@ -1,14 +1,18 @@
 import { useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useLang } from "../context/LanguageContext";
 import { useFetch } from "../hooks/useFetch";
 import { HiUser, HiMail, HiPhone, HiLockClosed, HiLocationMarker } from "react-icons/hi";
 import { asArray } from "../lib/safe";
-import { isValidBdPhone, normalizeEmail, normalizePhone, PHONE_ERROR } from "../lib/validation";
+import { isValidBdPhone, normalizeEmail, normalizePhone, phoneError as phoneErrorText } from "../lib/validation";
 import PageMeta from "../components/PageMeta";
+import LogoMark from "../components/LogoMark";
+import { districtName } from "../lib/districtNames";
 
 export default function SignupPage() {
   const { user, signup } = useAuth();
+  const { lang, t } = useLang();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/profile";
@@ -19,7 +23,7 @@ export default function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
 
-  const meta = <PageMeta title="সাইন আপ · Sign up" description="Create a free account to track the districts you have visited and collect badges." />;
+  const meta = <PageMeta title={t("সাইন আপ", "Sign up")} description={t("ঘোরা জেলাগুলোর হিসাব রাখতে আর ব্যাজ সংগ্রহ করতে বিনামূল্যে অ্যাকাউন্ট খুলুন।", "Create a free account to track the districts you have visited and collect badges.")} />;
   if (user) return <>{meta}<Navigate to={redirectTo} replace /></>;
 
   async function handleSubmit(e) {
@@ -29,15 +33,15 @@ export default function SignupPage() {
     setPhoneError("");
     const phone = normalizePhone(form.phone.trim());
     if (phone && !isValidBdPhone(phone)) {
-      setPhoneError(PHONE_ERROR);
+      setPhoneError(phoneErrorText(lang));
       return;
     }
     if (form.password !== form.confirm) {
-      setError("Passwords do not match.");
+      setError(t("পাসওয়ার্ড দুটো মেলেনি।", "Passwords do not match."));
       return;
     }
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।", "Password must be at least 8 characters."));
       return;
     }
     submittingRef.current = true;
@@ -63,22 +67,22 @@ export default function SignupPage() {
     <div className="max-w-md mx-auto px-4 sm:px-6 py-16">
       {meta}
       <div className="text-center mb-8">
-        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-content font-bold text-xl mx-auto mb-4">ঘ</div>
-        <h1 className="text-2xl md:text-3xl font-bold text-base-content">অ্যাকাউন্ট তৈরি করুন</h1>
-        <p className="text-base-content/50 mt-1">Join and start your 64-district challenge — free</p>
+        <LogoMark className="w-12 h-12 mx-auto mb-4 block" />
+        <h1 className="text-2xl md:text-3xl font-bold text-base-content">{t("অ্যাকাউন্ট তৈরি করুন", "Create an account")}</h1>
+        <p className="text-base-content/50 mt-1">{t("যোগ দিন আর শুরু করুন আপনার ৬৪ জেলা চ্যালেঞ্জ — একদম ফ্রি", "Join and start your 64-district challenge — free")}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="card bg-base-200 p-6 border border-base-300 space-y-4">
         {error && <div className="alert alert-error text-sm py-2">{error}</div>}
 
         <div>
-          <label className="label"><span className="label-text">আপনার নাম</span></label>
+          <label className="label"><span className="label-text">{t("আপনার নাম", "Your name")}</span></label>
           <label className="input input-bordered bg-base-300 w-full">
             <HiUser className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
               type="text"
               required
-              placeholder="Full name"
+              placeholder={t("পুরো নাম", "Full name")}
               maxLength={100}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -88,7 +92,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label className="label"><span className="label-text">ইমেইল</span></label>
+          <label className="label"><span className="label-text">{t("ইমেইল", "Email")}</span></label>
           <label className="input input-bordered bg-base-300 w-full">
             <HiMail className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
@@ -103,7 +107,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label className="label"><span className="label-text">ফোন / WhatsApp</span></label>
+          <label className="label"><span className="label-text">{t("ফোন / WhatsApp", "Phone / WhatsApp")}</span></label>
           <label className={`input input-bordered bg-base-300 w-full ${phoneError ? "input-error" : ""}`}>
             <HiPhone className="w-5 h-5 shrink-0 text-base-content/40" />
             <input
@@ -123,7 +127,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label className="label"><span className="label-text">হোম জেলা (optional)</span></label>
+          <label className="label"><span className="label-text">{t("নিজ জেলা (ঐচ্ছিক)", "Home district (optional)")}</span></label>
           <div className="relative">
             <HiLocationMarker className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-5 h-5 text-base-content/40 pointer-events-none" />
             <select
@@ -131,9 +135,9 @@ export default function SignupPage() {
               value={form.district}
               onChange={(e) => setForm({ ...form, district: e.target.value })}
             >
-              <option value="">Select district</option>
+              <option value="">{t("জেলা বেছে নিন", "Select district")}</option>
               {asArray(districts).map((d) => (
-                <option key={d.id} value={d.slug}>{d.name_bn} ({d.name_en})</option>
+                <option key={d.id} value={d.slug}>{lang === "bn" ? d.name_bn || districtName(d.name_en) : districtName(d.name_en)}</option>
               ))}
             </select>
           </div>
@@ -141,7 +145,7 @@ export default function SignupPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="label"><span className="label-text">পাসওয়ার্ড</span></label>
+            <label className="label"><span className="label-text">{t("পাসওয়ার্ড", "Password")}</span></label>
             <label className="input input-bordered bg-base-300 w-full">
               <HiLockClosed className="w-5 h-5 shrink-0 text-base-content/40" />
               <input
@@ -155,7 +159,7 @@ export default function SignupPage() {
             </label>
           </div>
           <div>
-            <label className="label"><span className="label-text">নিশ্চিত করুন</span></label>
+            <label className="label"><span className="label-text">{t("নিশ্চিত করুন", "Confirm")}</span></label>
             <label className="input input-bordered bg-base-300 w-full">
               <HiLockClosed className="w-5 h-5 shrink-0 text-base-content/40" />
               <input
@@ -171,11 +175,11 @@ export default function SignupPage() {
         </div>
 
         <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
-          {submitting ? <><span className="loading loading-spinner loading-sm" /> Signing up…</> : "Sign Up Free"}
+          {submitting ? <><span className="loading loading-spinner loading-sm" /> {t("সাইন আপ হচ্ছে…", "Signing up…")}</> : t("ফ্রি সাইন আপ করুন", "Sign Up Free")}
         </button>
 
         <p className="text-sm text-center text-base-content/50">
-          Already have an account? <Link to="/login" state={location.state} className="text-primary hover:underline">Log in</Link>
+          {t("আগে থেকেই অ্যাকাউন্ট আছে?", "Already have an account?")} <Link to="/login" state={location.state} className="text-primary hover:underline">{t("লগইন করুন", "Log in")}</Link>
         </p>
       </form>
     </div>

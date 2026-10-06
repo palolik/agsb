@@ -5,7 +5,7 @@
 //
 // Reads VITE_SITE_URL and VITE_API_BASE_URL from the environment, falling
 // back to .env.[mode].local, .env.[mode], .env.local and .env (Vite's order).
-// Detail URLs come from the live API (/districts, /attractions, /plans, /blog). This script
+// Detail URLs come from the live API (/districts, /attractions, /plans, /blog, /products). This script
 // never fails the build: if the site URL is missing it skips the sitemap, and
 // if the API can't be reached it writes the static routes only. Both cases
 // print a warning and exit 0.
@@ -18,6 +18,7 @@ const STATIC_ROUTES = [
   { path: "/districts", priority: "0.9", changefreq: "weekly" },
   { path: "/map", priority: "0.7", changefreq: "monthly" },
   { path: "/plans", priority: "0.8", changefreq: "weekly" },
+  { path: "/shop", priority: "0.7", changefreq: "weekly" },
   { path: "/blog", priority: "0.8", changefreq: "daily" },
   { path: "/frames", priority: "0.6", changefreq: "monthly" },
   { path: "/membership", priority: "0.5", changefreq: "monthly" },
@@ -31,6 +32,7 @@ const COLLECTIONS = [
   { endpoint: "/attractions", prefix: "/attractions", priority: "0.6", changefreq: "monthly" },
   { endpoint: "/plans", prefix: "/plans", priority: "0.7", changefreq: "weekly" },
   { endpoint: "/blog", prefix: "/blog", priority: "0.7", changefreq: "monthly" },
+  { endpoint: "/products", prefix: "/shop", priority: "0.6", changefreq: "weekly" },
 ];
 
 const warn = (msg) => console.warn(`[sitemap] warning: ${msg}`);
@@ -120,6 +122,8 @@ function robotsTxt(siteUrl) {
     "Allow: /",
     "Disallow: /profile",
     "Disallow: /bookings/",
+    "Disallow: /cart",
+    "Disallow: /orders/",
     "",
     `Sitemap: ${siteUrl}/sitemap.xml`,
     "",

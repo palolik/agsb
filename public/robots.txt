@@ -4,3 +4,5 @@ User-agent: *
 Allow: /
 Disallow: /profile
 Disallow: /bookings/
+Disallow: /cart
+Disallow: /orders/

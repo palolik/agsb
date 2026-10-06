@@ -19,6 +19,9 @@ const CACHEABLE = new Set([
   "/partners",
   "/frames",
   "/payment-methods",
+  "/socials",
+  "/products",
+  "/product-categories",
 ]);
 const cache = new Map(); // path -> { data, at }
 const inflight = new Map(); // path -> Promise

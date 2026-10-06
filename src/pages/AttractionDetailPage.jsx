@@ -7,15 +7,17 @@ import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import AttractionCard, { TypeBadge } from "../components/AttractionCard";
+import { useLang } from "../context/LanguageContext";
 
 export default function AttractionDetailPage() {
   const { slug } = useParams();
+  const { lang, t, pick } = useLang();
   const { data: attraction, loading, error, status, reload } = useFetch(`/attractions/${slug}`);
 
   // Only a 404 (or 400 for a malformed slug) means "not found"; network
   // failures (status null) and 5xx show ErrorState with a retry instead.
   const notFound = !loading && !attraction && (!error || status === 404 || status === 400);
-  const meta = <PageMeta title={attraction ? [attraction.name_bn, attraction.name].filter(Boolean).join(" — ") : notFound ? "স্থানটি পাওয়া যায়নি · Attraction not found" : "আকর্ষণীয় স্থান · Attractions"} description={attraction ? attraction.desc : undefined} image={attraction?.image} />;
+  const meta = <PageMeta title={attraction ? pick(attraction, "name") : notFound ? t("স্থানটি পাওয়া যায়নি", "Attraction not found") : t("আকর্ষণীয় স্থান", "Attractions")} description={attraction ? attraction.desc : undefined} image={attraction?.image} />;
   if (loading) return <>{meta}<Spinner /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
@@ -25,15 +27,16 @@ export default function AttractionDetailPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {meta}
         <EmptyState
-          message="স্থানটি পাওয়া যায়নি · Attraction not found. Check the link or browse the districts."
-          action={<Link to="/districts" className="btn btn-primary btn-sm"><HiArrowLeft className="mr-1" /> Browse Districts</Link>}
+          message={t("স্থানটি পাওয়া যায়নি। লিংকটি যাচাই করুন অথবা জেলাগুলো ঘুরে দেখুন।", "Attraction not found. Check the link or browse the districts.")}
+          action={<Link to="/districts" className="btn btn-primary btn-sm"><HiArrowLeft className="mr-1" /> {t("জেলাগুলো দেখুন", "Browse Districts")}</Link>}
         />
       </div>
     );
   }
 
   const a = attraction;
-  const districtLabel = a.district_name_en || a.district_name_bn || "District";
+  const districtName = pick({ name_bn: a.district_name_bn, name_en: a.district_name_en }, "name");
+  const districtLabel = districtName || t("জেলা", "District");
   const detailsHtml = renderRichText(a.details);
 
   return (
@@ -41,7 +44,7 @@ export default function AttractionDetailPage() {
       {meta}
       {/* Hero */}
       <div className="relative h-64 md:h-80 overflow-hidden">
-        <CoverImage image={a.image} alt={a.name} sizes="100vw" width={1600} height={640} priority />
+        <CoverImage image={a.image} alt={pick(a, "name")} sizes="100vw" width={1600} height={640} priority />
         <div className="absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 max-w-7xl mx-auto">
           {a.district_slug ? (
@@ -50,14 +53,14 @@ export default function AttractionDetailPage() {
             </Link>
           ) : (
             <Link to="/districts" className="btn btn-sm btn-ghost text-base-content/70 mb-3">
-              <HiArrowLeft className="mr-1" /> All Districts
+              <HiArrowLeft className="mr-1" /> {t("সব জেলা", "All Districts")}
             </Link>
           )}
           <div className="flex items-center gap-2 mb-2">
             <TypeBadge type={a.type} className="" />
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold text-base-content">{a.name_bn || a.name}</h1>
-          {a.name_bn && <p className="text-lg text-base-content/60">{a.name}</p>}
+          <h1 className="text-3xl md:text-5xl font-bold text-base-content">{pick(a, "name")}</h1>
+          {lang === "bn" && a.name_bn && <p className="text-lg text-base-content/60">{a.name}</p>}
         </div>
       </div>
 
@@ -68,7 +71,7 @@ export default function AttractionDetailPage() {
             {(a.location || a.district_name_en) && (
               <p className="flex items-center gap-2 text-base-content/70">
                 <HiLocationMarker className="text-primary shrink-0" aria-hidden="true" />
-                {[a.location, a.district_name_en].filter(Boolean).join(", ")}
+                {[a.location, a.district_name_en && districtName].filter(Boolean).join(", ")}
               </p>
             )}
             {a.desc && <p className="text-lg text-base-content/80">{a.desc}</p>}
@@ -88,22 +91,23 @@ export default function AttractionDetailPage() {
 // Other attractions of the same district. Mounted only once the attraction
 // (and so its district) is known; a failure here leaves the page intact.
 function MoreInDistrict({ attraction: a, label }) {
+  const { t } = useLang();
   const { data, loading, error } = useFetch(`/attractions?district=${encodeURIComponent(a.district_slug)}`);
   const more = asArray(data).filter((o) => o.slug !== a.slug);
   return (
     <div className="space-y-3">
-      <h2 className="font-bold text-base-content">More in {label}</h2>
+      <h2 className="font-bold text-base-content">{t(`${label}-এর আরও দর্শনীয় স্থান`, `More in ${label}`)}</h2>
       {loading ? (
-        <div role="status" aria-live="polite" className="py-4 text-center"><span className="loading loading-spinner loading-md text-primary" aria-label="Loading attractions" /></div>
+        <div role="status" aria-live="polite" className="py-4 text-center"><span className="loading loading-spinner loading-md text-primary" aria-label={t("দর্শনীয় স্থান লোড হচ্ছে", "Loading attractions")} /></div>
       ) : error ? (
-        <p role="alert" className="text-sm text-base-content/50">Couldn't load other attractions.</p>
+        <p role="alert" className="text-sm text-base-content/50">{t("অন্য দর্শনীয় স্থানগুলো লোড করা যায়নি।", "Couldn't load other attractions.")}</p>
       ) : more.length === 0 ? (
-        <p className="text-sm text-base-content/50">No other attractions listed yet.</p>
+        <p className="text-sm text-base-content/50">{t("এখনো অন্য কোনো দর্শনীয় স্থান যোগ করা হয়নি।", "No other attractions listed yet.")}</p>
       ) : (
         more.map((o) => <AttractionCard key={o._id || o.slug} attraction={o} />)
       )}
       <Link to={`/districts/${a.district_slug}`} className="btn btn-outline btn-sm w-full">
-        {label} guide
+        {t(`${label} গাইড`, `${label} guide`)}
       </Link>
     </div>
   );

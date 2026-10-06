@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import RequireAuth from "./components/RequireAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PageMeta from "./components/PageMeta";
+import { useLang } from "./context/LanguageContext";
 import { Spinner } from "./components/StateViews";
 
 // After a deploy, an open tab may ask for a chunk that no longer exists.
@@ -60,7 +61,13 @@ const SignupPage = page(() => import("./pages/SignupPage"));
 const ProfilePage = page(() => import("./pages/ProfilePage"));
 const BookingPage = page(() => import("./pages/BookingPage"));
 const CheckoutPage = page(() => import("./pages/CheckoutPage"));
+const TicketsPage = page(() => import("./pages/TicketsPage"));
 const PaymentPage = page(() => import("./pages/PaymentPage"));
+const ShopPage = page(() => import("./pages/ShopPage"));
+const ProductDetailPage = page(() => import("./pages/ProductDetailPage"));
+const CartPage = page(() => import("./pages/CartPage"));
+const OrderPage = page(() => import("./pages/OrderPage"));
+const OrderPaymentPage = page(() => import("./pages/OrderPaymentPage"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -84,13 +91,14 @@ function Layout({ children, noFooter }) {
 }
 
 function NotFoundPage() {
+  const { t } = useLang();
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-      <PageMeta title="পাতা পাওয়া যায়নি · Page not found" description="The page you were looking for doesn't exist." />
+      <PageMeta title={t("পাতা পাওয়া যায়নি", "Page not found")} description={t("আপনি যে পাতাটি খুঁজছেন সেটি নেই।", "The page you were looking for doesn't exist.")} />
       <meta name="robots" content="noindex" />
       <h1 className="text-4xl font-bold text-base-content mb-4">404</h1>
-      <p className="text-base-content/50 mb-6">Page not found</p>
-      <Link to="/" className="btn btn-primary">Go Home</Link>
+      <p className="text-base-content/50 mb-6">{t("পাতা পাওয়া যায়নি", "Page not found")}</p>
+      <Link to="/" className="btn btn-primary">{t("হোমে ফিরে যান", "Go Home")}</Link>
     </div>
   );
 }
@@ -111,7 +119,13 @@ export default function App() {
         <Route path="/plans/:slug" element={<Layout><PlanDetailPage /></Layout>} />
         <Route path="/plans/:slug/book" element={<Layout><RequireAuth><BookingPage /></RequireAuth></Layout>} />
         <Route path="/bookings/:id/checkout" element={<Layout><RequireAuth><CheckoutPage /></RequireAuth></Layout>} />
+        <Route path="/bookings/:id/tickets" element={<Layout><RequireAuth><TicketsPage /></RequireAuth></Layout>} />
         <Route path="/bookings/:id/pay" element={<Layout><RequireAuth><PaymentPage /></RequireAuth></Layout>} />
+        <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
+        <Route path="/shop/:slug" element={<Layout><ProductDetailPage /></Layout>} />
+        <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+        <Route path="/orders/:id" element={<Layout><RequireAuth><OrderPage /></RequireAuth></Layout>} />
+        <Route path="/orders/:id/pay" element={<Layout><RequireAuth><OrderPaymentPage /></RequireAuth></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/frames" element={<Layout><FramesPage /></Layout>} />

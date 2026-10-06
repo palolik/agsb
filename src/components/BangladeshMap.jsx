@@ -2,10 +2,14 @@ import { memo } from "react";
 import { DISTRICT_PATHS } from "../data/bdMapShapes";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { MAP_VIEWBOX } from "../data/districtMapPositions";
+import { useLang } from "../context/LanguageContext";
 
 // Each label is centred on its district's pin point (allDistricts.js):
 // baseline about a third of the 25px font below it.
 const LABEL_BASELINE_OFFSET = 9;
+
+// Shorter Bangla labels where the full name doesn't fit (mirrors `map_label`).
+const MAP_LABELS_BN = { chapainawabganj: "নবাবগঞ্জ" };
 
 // Clickable districts act as buttons: Enter/Space activate them like a click.
 function onActivateKey(e, fn) {
@@ -24,12 +28,14 @@ function onActivateKey(e, fn) {
 //   ariaLabel(slug)      accessible name of a district button
 //   onHover(slug|null)   pointer/focus enters or leaves a district
 function BangladeshMap({ districtClass, showLabels = true, className = "", onSelect, isInteractive, ariaLabel, onHover }) {
+  const { lang, t } = useLang();
+  const bn = lang === "bn";
   return (
     <svg
       viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
       className={`bd-map ${className}`}
       role={onSelect ? "group" : "img"}
-      aria-label="Map of Bangladesh"
+      aria-label={t("বাংলাদেশের মানচিত্র", "Map of Bangladesh")}
     >
       <g className="bd-districts">
         {/* SVG has no z-index: the selected district is drawn last so its
@@ -45,7 +51,7 @@ function BangladeshMap({ districtClass, showLabels = true, className = "", onSel
             ? {
               role: "button",
               tabIndex: 0,
-              "aria-label": ariaLabel?.(d.slug) || d.name_en,
+              "aria-label": ariaLabel?.(d.slug) || (bn ? d.name_bn || d.name_en : d.name_en),
               onClick: () => onSelect(d.slug),
               onKeyDown: (e) => onActivateKey(e, () => onSelect(d.slug)),
               onMouseEnter: () => onHover?.(d.slug),
@@ -70,7 +76,7 @@ function BangladeshMap({ districtClass, showLabels = true, className = "", onSel
         <g className="bd-labels" aria-hidden="true">
           {ALL_DISTRICTS.map((d) => (
             <text key={d.slug} x={d.pin[0]} y={d.pin[1] + LABEL_BASELINE_OFFSET} textAnchor="middle" className="bd-label">
-              {d.map_label || d.name_en}
+              {bn ? MAP_LABELS_BN[d.slug] || d.name_bn || d.name_en : d.map_label || d.name_en}
             </text>
           ))}
         </g>

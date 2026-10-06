@@ -1,17 +1,22 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { HiMenu, HiX, HiUser } from "react-icons/hi";
+import { HiMenu, HiX, HiUser, HiShoppingCart } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import ThemeToggle from "./ThemeToggle";
+import LanguageToggle from "./LanguageToggle";
+import { useLang } from "../context/LanguageContext";
+import LogoMark from "./LogoMark";
 
 const nav = [
-  { to: "/", label: "Home" },
-  { to: "/districts", label: "Districts" },
-  { to: "/map", label: "Map" },
-  { to: "/plans", label: "Trip Plans" },
-  { to: "/blog", label: "Blog" },
-  { to: "/partners", label: "Partners" },
-  { to: "/frames", label: "Frames" },
+  { to: "/", bn: "হোম", en: "Home" },
+  { to: "/districts", bn: "জেলা", en: "Districts" },
+  { to: "/map", bn: "ম্যাপ", en: "Map" },
+  { to: "/plans", bn: "ট্রিপ প্ল্যান", en: "Trip Plans" },
+  { to: "/shop", bn: "শপ", en: "Shop" },
+  { to: "/blog", bn: "ব্লগ", en: "Blog" },
+  { to: "/partners", bn: "পার্টনার", en: "Partners" },
+  { to: "/frames", bn: "ফ্রেম", en: "Frames" },
 ];
 
 // "/" only matches itself; other entries also match their sub-pages
@@ -25,17 +30,19 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const { user } = useAuth();
+  const { count } = useCart();
+  const { t } = useLang();
 
   return (
-    <nav className="bg-base-200/80 backdrop-blur-xl border-b border-base-300 sticky top-0 z-50">
+    <nav className="print:hidden bg-base-200/80 backdrop-blur-xl border-b border-base-300 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-content font-bold text-lg">ঘ</div>
+            <LogoMark className="w-9 h-9" />
             <div className="hidden sm:block">
               <div className="text-sm font-bold text-base-content leading-tight">আমিঘুরিসারাবাংলাদেশ</div>
-              <div className="text-[10px] text-secondary leading-tight tracking-wide">64 DISTRICTS · ONE COUNTRY</div>
+              <div className="text-[10px] text-secondary leading-tight tracking-wide">{t("৬৪ জেলা · এক দেশ", "64 DISTRICTS · ONE COUNTRY")}</div>
             </div>
           </Link>
 
@@ -52,7 +59,7 @@ export default function Navbar() {
                     : "text-base-content/70 hover:text-base-content hover:bg-base-300/50"
                 }`}
               >
-                {n.label}
+                {t(n.bn, n.en)}
               </Link>
             ))}
           </div>
@@ -60,13 +67,27 @@ export default function Navbar() {
           {/* Right actions */}
           <div className="flex items-center gap-2">
             <Link to="/contact" className="btn btn-primary btn-sm hidden md:flex">
-              Plan a Trip
+              {t("ট্রিপ প্ল্যান করুন", "Plan a Trip")}
             </Link>
+            <div className="hidden sm:block"><LanguageToggle /></div>
             <ThemeToggle />
             <Link
+              to="/cart"
+              aria-label={count ? t(`কার্ট (${count}টি পণ্য)`, `Cart (${count} item${count === 1 ? "" : "s"})`) : t("কার্ট", "Cart")}
+              title={t("কার্ট", "Cart")}
+              className={`btn btn-ghost btn-sm btn-circle relative ${pathname === "/cart" ? "text-primary" : ""}`}
+            >
+              <HiShoppingCart className="w-5 h-5" aria-hidden="true" />
+              {count > 0 && (
+                <span aria-hidden="true" className="badge badge-primary badge-xs absolute -top-1 -right-1 min-w-4 h-4 px-1 text-[10px] font-bold">
+                  {count > 99 ? "99+" : count}
+                </span>
+              )}
+            </Link>
+            <Link
               to={user ? "/profile" : "/login"}
-              aria-label={user ? `My profile (${user.name || "account"})` : "Log in"}
-              title={user ? "My profile" : "Log in"}
+              aria-label={user ? t(`আমার প্রোফাইল (${user.name || "অ্যাকাউন্ট"})`, `My profile (${user.name || "account"})`) : t("লগ ইন", "Log in")}
+              title={user ? t("আমার প্রোফাইল", "My profile") : t("লগ ইন", "Log in")}
               className="btn btn-ghost btn-sm"
             >
               {user ? (
@@ -79,7 +100,7 @@ export default function Navbar() {
             </Link>
             <button
               type="button"
-              aria-label={open ? "Close menu" : "Open menu"}
+              aria-label={open ? t("মেনু বন্ধ করুন", "Close menu") : t("মেনু খুলুন", "Open menu")}
               aria-expanded={open}
               aria-controls="mobile-menu"
               className="btn btn-ghost btn-sm btn-circle lg:hidden"
@@ -107,19 +128,26 @@ export default function Navbar() {
                     : "text-base-content/70"
                 }`}
               >
-                {n.label}
+                {t(n.bn, n.en)}
               </Link>
             ))}
             <div className="pt-2 border-t border-base-300 space-y-2">
+              <div className="flex items-center justify-between px-3 py-1 sm:hidden">
+                <span className="text-sm text-base-content/70">{t("ভাষা", "Language")}</span>
+                <LanguageToggle />
+              </div>
+              <Link to="/cart" onClick={() => setOpen(false)} className="btn btn-ghost btn-sm w-full">
+                <HiShoppingCart className="w-4 h-4" aria-hidden="true" /> {t("কার্ট", "Cart")}{count > 0 ? ` (${count})` : ""}
+              </Link>
               <Link to="/contact" onClick={() => setOpen(false)} className="btn btn-primary btn-sm w-full">
-                Plan a Trip
+                {t("ট্রিপ প্ল্যান করুন", "Plan a Trip")}
               </Link>
               <Link
                 to={user ? "/profile" : "/login"}
                 onClick={() => setOpen(false)}
                 className="btn btn-ghost btn-sm w-full"
               >
-                {user ? `My Profile (${user.name})` : "Log In / Sign Up"}
+                {user ? t(`আমার প্রোফাইল (${user.name})`, `My Profile (${user.name})`) : t("লগ ইন / সাইন আপ", "Log In / Sign Up")}
               </Link>
             </div>
           </div>

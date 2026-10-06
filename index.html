@@ -11,6 +11,10 @@
           mode = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
         }
         document.documentElement.setAttribute("data-theme", mode === "light" ? "agsb-light" : "agsb");
+        // Language (keep in sync with src/context/LanguageContext.jsx).
+        var lang;
+        try { lang = localStorage.getItem("agsb_lang"); } catch (e) {}
+        if (lang === "en") document.documentElement.lang = "en";
       })();
     </script>
     <meta charset="UTF-8" />
