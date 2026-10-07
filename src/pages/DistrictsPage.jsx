@@ -4,7 +4,7 @@ import { useFetch } from "../hooks/useFetch";
 import { HiSearch } from "react-icons/hi";
 import { asArray, asText } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
-import { districtCountsByDivision } from "../data";
+import { districtCountsByDivision, DIVISION_CAPITAL_SLUGS } from "../data";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import { useLang } from "../context/LanguageContext";
@@ -105,26 +105,35 @@ export default function DistrictsPage() {
           action={<button type="button" className="btn btn-ghost btn-sm" onClick={() => { setSearch(""); setActiveDivision("all"); }}>{t("ফিল্টার মুছুন", "Clear filters")}</button>}
         />
       ) : (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filtered.map(d => (
-          <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group border border-base-300">
-            <figure className="h-36 overflow-hidden">
-              <CoverImage image={d.image} alt={lang === "bn" ? d.name_bn || districtName(d.name_en) : districtName(d.name_en)} sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            </figure>
-            <div className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-xs text-base-content/40">{pick(asArray(divisions).find(dv => dv.id === d.division_id), "name")}</span>
-              </div>
-              <h3 className="font-bold text-base-content">{lang === "bn" ? d.name_bn || districtName(d.name_en) : districtName(d.name_en)}</h3>
-              {lang === "bn" && <p className="text-sm text-base-content/50">{d.name_en}</p>}
-              <div className="flex items-center justify-between mt-2 text-xs text-base-content/40">
-                <span>{d.trip_type}</span>
-                <span>{d.budget}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-[14rem] grid-flow-dense gap-4">
+        {/* Division capitals take a 2x2 block; grid-flow-dense backfills the gaps they leave. */}
+        {filtered.map(d => {
+          const isCapital = DIVISION_CAPITAL_SLUGS.has(d.slug);
+          return (
+          <Link key={d.id} to={`/districts/${d.slug}`} className={`card relative h-full overflow-hidden group border border-base-300 bg-base-200 ${isCapital ? "sm:col-span-2 sm:row-span-2" : ""}`}>
+            <CoverImage image={d.image} alt={lang === "bn" ? d.name_bn || districtName(d.name_en) : districtName(d.name_en)} sizes={isCapital ? "(min-width: 1280px) 50vw, (min-width: 1024px) 66vw, 100vw" : "(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            {/* Name always visible; the rest slides up from the bottom on hover/focus. */}
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-3 pt-10 text-white">
+              <h3 className={`font-bold drop-shadow ${isCapital ? "text-lg sm:text-3xl" : "text-lg"}`}>{lang === "bn" ? d.name_bn || districtName(d.name_en) : districtName(d.name_en)}</h3>
+              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] group-focus-visible:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-out">
+                <div className="overflow-hidden">
+                  <div className="translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 transition-all duration-300 ease-out pt-1">
+                    {lang === "bn" && <p className="text-sm text-white/70">{d.name_en}</p>}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      <span className="text-xs text-white/70">{pick(asArray(divisions).find(dv => dv.id === d.division_id), "name")}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2 text-xs text-white/70">
+                      <span>{d.trip_type}</span>
+                      <span>{d.budget}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
       )}
     </div>

@@ -237,3 +237,40 @@ select:-webkit-autofill {
   --tw-prose-th-borders: var(--color-base-300);
   --tw-prose-td-borders: var(--color-base-300);
 }
+
+/* Hero district graph (src/components/DistrictGraph.jsx) */
+.district-graph .dg-bn,
+.district-graph .dg-en {
+  fill-opacity: 0;
+  animation: dg-swap 8s ease-in-out infinite;
+  animation-delay: var(--dg-delay, 0s);
+  transition: opacity 0.4s;
+}
+.district-graph .dg-en { animation-name: dg-swap-alt; }
+.district-graph .dg-label { transition: opacity 0.4s; }
+@keyframes dg-swap {
+  0%, 42% { fill-opacity: 0.8; }
+  50%, 92% { fill-opacity: 0; }
+  100% { fill-opacity: 0.8; }
+}
+@keyframes dg-swap-alt {
+  0%, 42% { fill-opacity: 0; }
+  50%, 92% { fill-opacity: 0.6; }
+  100% { fill-opacity: 0; }
+}
+.district-graph .dg-card { animation: dg-card-in 0.45s cubic-bezier(.2,.8,.2,1.2) both; }
+@keyframes dg-card-in {
+  from { opacity: 0; transform: translate(0, -20px) scale(0.85); }
+  to { opacity: 1; transform: translate(0, -46px) scale(1); }
+}
+.district-graph .dg-pulse { animation: dg-pulse 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes dg-pulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 0.5; }
+}
+.district-graph .dg-edge-lit { stroke-dasharray: 14 10; animation: dg-flow 1s linear infinite; }
+@keyframes dg-flow { to { stroke-dashoffset: -24; } }
+@media (prefers-reduced-motion: reduce) {
+  .district-graph * { animation: none !important; }
+  .district-graph .dg-bn { fill-opacity: 0.8; }
+}

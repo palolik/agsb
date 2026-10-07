@@ -26,3 +26,8 @@ export function attractionsByDistrict(attractions) {
   }
   return groups;
 }
+
+// Slugs of the eight division headquarters districts.
+export const DIVISION_CAPITAL_SLUGS = new Set([
+  "dhaka", "chittagong", "rajshahi", "khulna", "barishal", "sylhet", "rangpur", "mymensingh",
+]);

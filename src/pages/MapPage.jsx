@@ -68,6 +68,23 @@ function MapView({ onRetry }) {
     [selected, hovered],
   );
 
+  // Districts grouped under their division, in the API's division order;
+  // anything without a known division goes last.
+  const districtsByDivision = useMemo(() => {
+    const groups = asArray(divisions).map((dv) => ({
+      key: dv.id,
+      label: nameOf(dv),
+      items: MAP_DISTRICTS.filter((d) => d.division_id === dv.id),
+    }));
+    const known = new Set(groups.map((g) => g.key));
+    const rest = MAP_DISTRICTS.filter((d) => !known.has(d.division_id));
+    if (rest.length) groups.push({ key: "other", label: t("অন্যান্য", "Other"), items: rest });
+    const byName = (a, b) => nameOf(a).localeCompare(nameOf(b), lang);
+    return groups.filter((g) => g.items.length).map((g) => ({ ...g, items: [...g.items].sort(byName) }));
+    // nameOf/t only change with lang.
+  }, [divisions, MAP_DISTRICTS, lang]);
+  const [listOpenByDefault] = useState(() => typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches);
+
   const failure = districtsError;
   const busy = !failure && districtsLoading;
 
@@ -93,41 +110,43 @@ function MapView({ onRetry }) {
       </div>
 
       {/* Header overlay */}
-      <div className="absolute top-4 left-4 z-[1000]">
+      <div className="absolute top-4 left-4 z-[1000] w-64 sm:w-72">
         <div className="bg-base-200/90 backdrop-blur-lg rounded-xl p-3 border border-base-300 shadow-xl">
           <h1 className="text-lg font-bold text-base-content flex items-center gap-2"><HiMap className="text-primary" /> {t("বাংলাদেশের মানচিত্র", "Bangladesh Map")}</h1>
           <p className="text-xs text-base-content/50">{t("যেকোনো জেলায় ক্লিক করে ঘুরে দেখুন", "Click any district to explore")}</p>
-          {/* List fallback: the same districts as plain links, for keyboard,
-              screen-reader and small-screen users who'd rather not use the map. */}
+          {/* District list grouped by division: the same districts as plain links,
+              for keyboard, screen-reader and small-screen users who'd rather not
+              use the map. Open by default where there's room beside the map. */}
           {MAP_DISTRICTS.length > 0 && (
-            <details className="mt-2 text-xs">
+            <details className="mt-2 text-xs" open={listOpenByDefault}>
               <summary className="cursor-pointer text-primary">{t(`সব ${MAP_DISTRICTS.length}টি জেলার তালিকা`, `List all ${MAP_DISTRICTS.length} districts`)}</summary>
-              <ul className="mt-2 max-h-48 overflow-y-auto space-y-1 pr-1">
-                {MAP_DISTRICTS.map((d) => (
-                  <li key={d.slug}>
-                    <Link to={`/districts/${d.slug}`} className="text-base-content/70 hover:text-primary">
-                      {nameOf(d)}
-                    </Link>
-                  </li>
+              <div className="mt-2 max-h-[calc(100dvh-64px-9rem)] overflow-y-auto pr-1 space-y-3">
+                {districtsByDivision.map(({ key, label, items }) => (
+                  <section key={key}>
+                    <h2 className="flex items-center gap-1.5 font-semibold text-base-content/80 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      {label}
+                      <span className="font-normal text-base-content/40">({items.length})</span>
+                    </h2>
+                    <ul className="grid grid-cols-2 gap-x-3 gap-y-1 pl-3.5">
+                      {items.map((d) => (
+                        <li key={d.slug}>
+                          <Link
+                            to={`/districts/${d.slug}`}
+                            className="text-base-content/70 hover:text-primary"
+                            onMouseEnter={() => setHovered(d.slug)}
+                            onMouseLeave={() => setHovered(null)}
+                          >
+                            {nameOf(d)}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
                 ))}
-              </ul>
+              </div>
             </details>
           )}
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 z-[1000] hidden md:block">
-        <div className="bg-base-200/90 backdrop-blur-lg rounded-xl p-3 border border-base-300 shadow-xl">
-          <p className="text-xs font-medium text-base-content/70 mb-2">{t("বিভাগসমূহ", "Divisions")}</p>
-          <div className="grid grid-cols-2 gap-1">
-            {asArray(divisions).map(dv => (
-              <div key={dv.id} className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                <span className="text-xs text-base-content/60">{nameOf(dv)}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 

@@ -2,14 +2,16 @@ import { Link } from "react-router-dom";
 import { districtCountsByDivision, countAttractions } from "../data";
 import { useFetch } from "../hooks/useFetch";
 import { toPlainText } from "../lib/richText";
-import { HiArrowRight, HiLocationMarker, HiMap, HiStar, HiClock, HiUserGroup, HiCalendar } from "react-icons/hi";
-import { FaSuitcaseRolling, FaHiking } from "react-icons/fa";
+import { HiArrowRight, HiLocationMarker, HiMap, HiClock, HiCalendar } from "react-icons/hi";
+import { FaSuitcaseRolling } from "react-icons/fa";
 import { planStatus, formatDateRange } from "../lib/planSchedule";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import ProductCard from "../components/ProductCard";
+import DistrictCarousel from "../components/DistrictCarousel";
+import DistrictGraph from "../components/DistrictGraph";
 import { useLang } from "../context/LanguageContext";
 import { RatingBadge } from "../components/Feedback";
 
@@ -28,7 +30,7 @@ export default function HomePage() {
   const divisions = divisionsQ.data;
   const blogPosts = blogQ.data;
   const travelPlans = plansQ.data;
-  const featured = asArray(districts).filter(d => d.status === "complete").slice(0, 6);
+  const featured = asArray(districts).filter(d => d.status === "complete").slice(0, 12);
   const countsByDivision = districtCountsByDivision(districts);
 
   // Stats come straight from the API responses; a stat whose request failed
@@ -46,7 +48,7 @@ export default function HomePage() {
       {/* Hero */}
       <section className="hero-gradient relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23F2A93B\" fill-opacity=\"0.3\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"}} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-28 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-28 relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] gap-8 items-center">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 text-primary text-sm mb-6">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -72,6 +74,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+          <DistrictGraph className="hidden lg:block h-[34rem] -my-12" />
         </div>
       </section>
 
@@ -95,7 +98,8 @@ export default function HomePage() {
       )}
 
       {/* Featured Districts */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+      <section className="py-16 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-base-content">{t("জনপ্রিয় জেলা", "Popular Districts")}</h2>
@@ -107,37 +111,17 @@ export default function HomePage() {
         </div>
         {districtsQ.loading ? <Spinner /> : districtsQ.error ? (
           <ErrorState message={districtsQ.error} onRetry={districtsQ.reload} />
-        ) : featured.length === 0 ? (
+        ) : featured.length === 0 && (
           <EmptyState message={t("জনপ্রিয় জেলার তথ্য শীঘ্রই আসছে।", "Featured districts are coming soon.")} action={<Link to="/districts" className="btn btn-primary btn-sm">{t("সব জেলা দেখুন", "Browse all districts")}</Link>} />
-        ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {featured.map(d => (
-            <Link key={d.id} to={`/districts/${d.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
-              <figure className="h-48 overflow-hidden">
-                <CoverImage image={d.image} alt={pick(d, "name")} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              </figure>
-              <div className="card-body p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="badge badge-sm">
-                    {pick(asArray(divisions).find(dv => dv.id === d.division_id), "name")}
-                  </span>
-                  <span className="badge badge-sm badge-ghost">{d.trip_type}</span>
-                </div>
-                <h3 className="text-lg font-bold text-base-content">{pick(d, "name")}</h3>
-                <p className="text-sm text-base-content/50">{lang === "bn" ? d.name_en : d.name_bn} — {d.tagline}</p>
-                <div className="flex items-center gap-4 mt-2 text-xs text-base-content/40">
-                  <span>{d.budget}</span>
-                  <span className="flex items-center gap-0.5">{Array.from({ length: Math.min(d.difficulty, 5) }, (_, i) => <HiStar key={i} className="text-warning" />)} <span className="ml-1">{d.difficulty}/5</span></span>
-                  <span className="flex items-center gap-1">{d.family ? <><HiUserGroup /> {t("পরিবার", "Family")}</> : <><FaHiking /> {t("অ্যাডভেঞ্চার", "Adventure")}</>}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
         )}
+      </div>
+      {/* Full-bleed so the curved carousel can run edge to edge. */}
+      {!districtsQ.loading && !districtsQ.error && <DistrictCarousel districts={featured} divisions={divisions} />}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="sm:hidden mt-4 text-center">
           <Link to="/districts" className="btn btn-primary btn-sm">{t("সব জেলা দেখুন", "View all districts")}</Link>
         </div>
+      </div>
       </section>
 
       {/* Divisions */}
