@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { HiSearch, HiShoppingCart, HiX } from "react-icons/hi";
+import { HiArrowRight, HiClock, HiSearch, HiShoppingBag, HiShoppingCart, HiX } from "react-icons/hi";
 import { useFetch } from "../hooks/useFetch";
 import { useCart } from "../context/CartContext";
 import { asArray } from "../lib/safe";
+import { canBuy, canRent } from "../lib/shop";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 import ProductCard from "../components/ProductCard";
@@ -13,6 +14,25 @@ const MODES = [
   { value: "", label: { bn: "সব", en: "All" } },
   { value: "buy", label: { bn: "কিনুন", en: "Buy" } },
   { value: "rent", label: { bn: "ভাড়া", en: "Rent" } },
+];
+
+// The shop lists rentals and items for sale separately; a product offered
+// both ways appears in both lists.
+const LISTS = [
+  {
+    mode: "rent",
+    has: canRent,
+    icon: HiClock,
+    title: { bn: "ভাড়া নিন", en: "Rent for your trip" },
+    subtitle: { bn: "দিন হিসেবে ভাড়া, ট্রিপ শেষে ফেরত দিন", en: "Pay by the day, return it after the trip" },
+  },
+  {
+    mode: "buy",
+    has: canBuy,
+    icon: HiShoppingBag,
+    title: { bn: "কিনে নিন", en: "Buy to keep" },
+    subtitle: { bn: "নিজের গিয়ার, প্রতিটা ট্রিপের জন্য", en: "Your own gear, for every trip" },
+  },
 ];
 
 export default function ShopPage() {
@@ -128,8 +148,36 @@ export default function ShopPage() {
           )}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {asArray(products).map((p) => <ProductCard key={p._id} product={p} />)}
+        <div className="space-y-14">
+          {LISTS.filter((l) => !mode || l.mode === mode).map((l) => {
+            const items = asArray(products).filter(l.has);
+            if (items.length === 0) return null;
+            return (
+              <section key={l.mode} aria-labelledby={`shop-${l.mode}`}>
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-base-300 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                      <l.icon className="h-6 w-6" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h2 id={`shop-${l.mode}`} className="text-xl md:text-2xl font-bold text-base-content">
+                        {t(l.title.bn, l.title.en)} <span className="ml-1 text-base font-medium text-base-content/40">{items.length}</span>
+                      </h2>
+                      <p className="text-sm text-base-content/50">{t(l.subtitle.bn, l.subtitle.en)}</p>
+                    </div>
+                  </div>
+                  {!mode && (
+                    <button type="button" onClick={() => setParam("mode", l.mode)} className="btn btn-ghost btn-sm text-primary">
+                      {t("শুধু এগুলো দেখুন", "Show only these")} <HiArrowRight className="ml-1" />
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {items.map((p) => <ProductCard key={p._id} product={p} mode={l.mode} />)}
+                </div>
+              </section>
+            );
+          })}
         </div>
       )}
     </div>

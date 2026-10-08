@@ -1,22 +1,22 @@
 import { Link } from "react-router-dom";
 import { districtCountsByDivision, countAttractions } from "../data";
 import { useFetch } from "../hooks/useFetch";
-import { toPlainText } from "../lib/richText";
-import { HiArrowRight, HiLocationMarker, HiMap, HiClock, HiCalendar } from "react-icons/hi";
+import { HiArrowRight, HiLocationMarker, HiMap } from "react-icons/hi";
 import { FaSuitcaseRolling } from "react-icons/fa";
-import { planStatus, formatDateRange } from "../lib/planSchedule";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
-import CoverImage from "../components/CoverImage";
 import ProductCard from "../components/ProductCard";
 import DistrictCarousel from "../components/DistrictCarousel";
-import DistrictGraph from "../components/DistrictGraph";
+import DistrictWordCloud from "../components/DistrictWordCloud";
+import DivisionTiles from "../components/DivisionTiles";
+import TripCard from "../components/TripCard";
+import BlogCard from "../components/BlogCard";
+import UpcomingTrips, { upcomingPlans } from "../components/UpcomingTrips";
 import { useLang } from "../context/LanguageContext";
-import { RatingBadge } from "../components/Feedback";
-
+import DistrictGraph from "../components/DistrictGraph";
 export default function HomePage() {
-  const { lang, t, pick } = useLang();
+  const { t } = useLang();
   // Each section handles its own loading/error/empty state, so one failed
   // request never blanks the rest of the page.
   const districtsQ = useFetch("/districts");
@@ -74,7 +74,8 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-          <DistrictGraph className="hidden lg:block h-[34rem] -my-12" />
+                   {/* <DistrictWordCloud className="hidden lg:block h-[36rem] -my-14" /> */}
+<DistrictGraph className="hidden lg:block h-[34rem] -my-12" />
         </div>
       </section>
 
@@ -93,6 +94,24 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+      )}
+
+      {/* Upcoming trips: hidden until there is a bookable plan to show. */}
+      {!plansQ.loading && !plansQ.error && upcomingPlans(travelPlans).length > 0 && (
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-base-content">{t("আসন্ন ট্রিপ", "Upcoming Trips")}</h2>
+              <p className="text-base-content/50 mt-1">{t("সিট থাকতে থাকতেই দলে যোগ দিন", "Join the group before the seats run out")}</p>
+            </div>
+            <Link to="/plans" className="btn btn-ghost btn-sm text-primary hidden sm:flex">
+              {t("সব প্ল্যান", "All plans")} <HiArrowRight className="ml-1" />
+            </Link>
+          </div>
+          <UpcomingTrips plans={travelPlans} />
         </div>
       </section>
       )}
@@ -127,24 +146,21 @@ export default function HomePage() {
       {/* Divisions */}
       <section className="bg-base-200/50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-base-content mb-2">{t("৮ বিভাগ", "8 Divisions")}</h2>
-          <p className="text-base-content/50 mb-8">{t("বিভাগ ধরে ধরে ঘুরে দেখুন বাংলাদেশ", "Explore Bangladesh division by division")}</p>
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-base-content">{t("৮ বিভাগ", "8 Divisions")}</h2>
+              <p className="text-base-content/50 mt-1">{t("বিভাগ ধরে ধরে ঘুরে দেখুন বাংলাদেশ", "Explore Bangladesh division by division")}</p>
+            </div>
+            <Link to="/map" className="btn btn-ghost btn-sm text-primary hidden sm:flex">
+              <HiMap className="mr-1" /> {t("ম্যাপে দেখুন", "View on map")}
+            </Link>
+          </div>
           {divisionsQ.loading ? <Spinner /> : divisionsQ.error ? (
             <ErrorState message={divisionsQ.error} onRetry={divisionsQ.reload} />
           ) : asArray(divisions).length === 0 ? (
             <EmptyState message={t("কোনো বিভাগ পাওয়া যায়নি।", "No divisions yet.")} />
           ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {asArray(divisions).map(dv => (
-              <Link key={dv.id} to={`/districts?division=${dv.slug}`} className="card bg-base-200 card-hover p-4 text-center border border-base-300">
-                <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-lg font-bold bg-primary/10 text-primary">
-                  {districtsQ.loading || districtsQ.error ? "–" : (countsByDivision[dv.id] || 0)}
-                </div>
-                <h3 className="font-bold text-base-content text-sm">{pick(dv, "name")}</h3>
-                <p className="text-xs text-base-content/50">{lang === "bn" ? dv.name_en : dv.name_bn}</p>
-              </Link>
-            ))}
-          </div>
+            <DivisionTiles divisions={asArray(divisions)} districts={districts} counts={countsByDivision} countsReady={!districtsQ.loading && !districtsQ.error} />
           )}
         </div>
       </section>
@@ -165,28 +181,8 @@ export default function HomePage() {
         ) : asArray(travelPlans).length === 0 ? (
           <EmptyState message={t("এখনো কোনো ট্রাভেল প্ল্যান নেই।", "No travel plans yet.")} />
         ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {asArray(travelPlans).slice(0, 3).map(p => (
-            <Link key={p.id} to={`/plans/${p.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
-              <figure className="h-40 overflow-hidden relative">
-                <CoverImage image={p.image} alt={pick(p, "title")} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute top-3 right-3 badge badge-primary">{p.duration}</div>
-                <span className={`absolute top-3 left-3 badge ${planStatus(p).badge}`}>{pick(planStatus(p), "label")}</span>
-              </figure>
-              <div className="card-body p-4">
-                <h3 className="font-bold text-base-content">{pick(p, "title")}</h3>
-                <RatingBadge rating={p.rating} />
-                <p className="text-sm text-base-content/50">{lang === "bn" ? p.title_en : p.title_bn}</p>
-                <div className="flex items-center gap-3 mt-2 text-xs text-base-content/40">
-                  <span className="flex items-center gap-1"><HiLocationMarker /> {asArray(p.districts).join(", ")}</span>
-                  <span>{p.cost}</span>
-                </div>
-                {p.start_date && (
-                  <div className="flex items-center gap-1 text-xs text-base-content/60"><HiCalendar className="text-primary" /> {formatDateRange(p.start_date, p.end_date, lang)}</div>
-                )}
-              </div>
-            </Link>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {asArray(travelPlans).slice(0, 3).map(p => <TripCard key={p.id} plan={p} />)}
         </div>
         )}
       </section>
@@ -235,22 +231,8 @@ export default function HomePage() {
           ) : asArray(blogPosts).length === 0 ? (
             <EmptyState message={t("এখনো কোনো ব্লগ পোস্ট নেই।", "No blog posts yet.")} />
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {asArray(blogPosts).slice(0, 3).map(b => (
-              <Link key={b.id} to={`/blog/${b.slug}`} className="card bg-base-200 card-hover overflow-hidden group">
-                <figure className="h-40 overflow-hidden">
-                  <CoverImage image={b.image} alt={pick(b, "title")} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </figure>
-                <div className="card-body p-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="badge badge-sm badge-primary badge-outline">{b.category}</span>
-                    <span className="text-xs text-base-content/40 flex items-center gap-1"><HiClock /> {b.readTime}</span>
-                  </div>
-                  <h3 className="font-bold text-base-content">{pick(b, "title")}</h3>
-                  <p className="text-sm text-base-content/50 line-clamp-2">{toPlainText(b.excerpt)}</p>
-                </div>
-              </Link>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {asArray(blogPosts).slice(0, 3).map(b => <BlogCard key={b.id} post={b} />)}
           </div>
           )}
         </div>

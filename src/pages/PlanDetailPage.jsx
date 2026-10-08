@@ -165,7 +165,9 @@ export default function PlanDetailPage() {
           </div>
         </div>
       </div>
-      <Feedback type="plan" target={plan.slug} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+        <Feedback type="plan" target={plan.slug} />
+      </div>
     </div>
   );
 }

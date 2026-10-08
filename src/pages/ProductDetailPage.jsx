@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import Feedback from "../components/Feedback";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { HiArrowLeft, HiCalendar, HiCheckCircle, HiMinus, HiPlus, HiShoppingCart, HiTruck } from "react-icons/hi";
 import { useFetch } from "../hooks/useFetch";
 import { useCart } from "../context/CartContext";
@@ -54,7 +54,9 @@ function ProductDetail({ slug }) {
   const { addItem } = useCart();
   const { lang, t, pick } = useLang();
   const { data: product, loading, error, status, reload } = useFetch(`/products/${slug}`);
-  const [kindChoice, setKindChoice] = useState(null);
+  // ?kind=buy|rent (from the shop's buy and rent lists) preselects the mode.
+  const [searchParams] = useSearchParams();
+  const [kindChoice, setKindChoice] = useState(() => searchParams.get("kind"));
   const [options, setOptions] = useState({});
   const [qty, setQty] = useState(1);
   const today = todayInDhaka();

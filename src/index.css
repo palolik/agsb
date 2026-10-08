@@ -274,3 +274,154 @@ select:-webkit-autofill {
   .district-graph * { animation: none !important; }
   .district-graph .dg-bn { fill-opacity: 0.8; }
 }
+
+/* Hero district word cloud (src/components/DistrictWordCloud.jsx) */
+.district-cloud .dc-map path {
+  fill: color-mix(in oklab, var(--color-primary) 7%, transparent);
+  stroke: color-mix(in oklab, var(--color-base-content) 18%, transparent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: fill 0.3s, fill-opacity 0.3s;
+}
+.district-cloud .dc-map path.dc-map-lit { fill: color-mix(in oklab, var(--color-primary) 35%, transparent); }
+.district-cloud .dc-map { animation: dc-map-breathe 6s ease-in-out infinite; }
+@keyframes dc-map-breathe {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+.district-cloud .dc-pin { transform: translate(-50%, -50%); }
+.district-cloud .dc-word {
+  color: var(--color-primary);
+  display: inline-grid;
+  place-items: center;
+  line-height: 1.1;
+  white-space: nowrap;
+  cursor: default;
+  animation: var(--dc-anim) var(--dc-dur) ease-in-out var(--dc-delay) infinite var(--dc-dir);
+  transition: filter 0.3s;
+}
+.district-cloud .dc-pin:hover .dc-word { filter: brightness(1.25) drop-shadow(0 0 6px currentColor); }
+.district-cloud .dc-left  { --dc-anim: dc-slide-x; --dc-dir: alternate-reverse; }
+.district-cloud .dc-right { --dc-anim: dc-slide-x; --dc-dir: alternate; }
+.district-cloud .dc-up    { --dc-anim: dc-slide-y; --dc-dir: alternate-reverse; }
+.district-cloud .dc-down  { --dc-anim: dc-slide-y; --dc-dir: alternate; }
+@keyframes dc-slide-x {
+  from { transform: translateX(calc(var(--dc-dist) * -1)); }
+  to   { transform: translateX(var(--dc-dist)); }
+}
+@keyframes dc-slide-y {
+  from { transform: translateY(calc(var(--dc-dist) * -1)); }
+  to   { transform: translateY(var(--dc-dist)); }
+}
+.district-cloud .dc-bn,
+.district-cloud .dc-en {
+  grid-area: 1 / 1;
+  animation: dc-swap 9s ease-in-out var(--dc-swap-delay) infinite;
+}
+.district-cloud .dc-en { animation-name: dc-swap-alt; }
+.district-cloud .dc-start-en .dc-bn { animation-name: dc-swap-alt; }
+.district-cloud .dc-start-en .dc-en { animation-name: dc-swap; }
+@keyframes dc-swap {
+  0%, 42%  { opacity: 1; transform: none; }
+  50%, 92% { opacity: 0; transform: translateY(-0.35em); }
+  100%     { opacity: 1; transform: none; }
+}
+@keyframes dc-swap-alt {
+  0%, 42%  { opacity: 0; transform: translateY(0.35em); }
+  50%, 92% { opacity: 1; transform: none; }
+  100%     { opacity: 0; transform: translateY(0.35em); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .district-cloud * { animation: none !important; }
+  .district-cloud .dc-en { opacity: 0; }
+}
+
+/* Home-page division cards (src/components/DivisionTiles.jsx) */
+.division-tile {
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  animation: division-in 0.5s ease-out var(--tile-delay, 0ms) both;
+}
+.division-tile:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+  box-shadow: 0 14px 34px var(--card-shadow);
+}
+.division-tile .division-photo { transition: transform 0.7s cubic-bezier(.2,.8,.2,1); }
+.division-tile:hover .division-photo { transform: scale(1.08); }
+.division-tile .division-shape path {
+  fill: rgb(255 255 255 / 0.12);
+  stroke: rgb(255 255 255 / 0.75);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  transition: fill 0.3s;
+}
+.division-tile .division-shape {
+  transform-origin: 100% 0%;
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.4));
+  transition: transform 0.5s cubic-bezier(.2,.8,.2,1);
+}
+.division-tile:hover .division-shape { transform: scale(1.08) rotate(-3deg); }
+.division-tile:hover .division-shape path { fill: color-mix(in oklab, var(--color-primary) 55%, transparent); }
+.division-tile .division-arrow {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.division-tile:hover .division-arrow { opacity: 1; transform: none; }
+@keyframes division-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .division-tile, .division-tile * { animation: none !important; transition: none !important; }
+}
+
+/* Photo cards: the photo fills the card, details sit on its dark lower half.
+   Used by TripCard.jsx and ProductCard.jsx. */
+.photo-card {
+  isolation: isolate;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset;
+  transition: transform 0.4s cubic-bezier(.2,.8,.2,1), box-shadow 0.4s;
+}
+.photo-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -12px var(--card-shadow), 0 0 0 2px color-mix(in oklab, var(--color-primary) 70%, transparent);
+}
+.photo-card .photo-card-img { transition: transform 1.2s cubic-bezier(.2,.8,.2,1); }
+.photo-card:hover .photo-card-img { transform: scale(1.1); }
+.photo-card .photo-card-shade {
+  background:
+    linear-gradient(to bottom, rgb(0 0 0 / 0.35), transparent 25%),
+    linear-gradient(to top, rgb(0 0 0 / 0.92), rgb(0 0 0 / 0.6) 35%, transparent 70%);
+}
+/* Solid dark label on a photo (status, price, date). */
+.photo-chip {
+  background: rgb(12 14 13 / 0.78);
+  color: #fff;
+}
+/* Solid white round button with a dark icon. */
+.photo-arrow {
+  background: #fff;
+  color: rgb(12 14 13);
+}
+.photo-card .photo-card-panel { text-shadow: 0 1px 8px rgb(0 0 0 / 0.35); }
+/* Highlights + seats fold open on hover; always open without a mouse. */
+.photo-card .photo-card-more {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.45s cubic-bezier(.2,.8,.2,1), opacity 0.35s;
+}
+.photo-card:hover .photo-card-more,
+.photo-card:focus-visible .photo-card-more { grid-template-rows: 1fr; opacity: 1; }
+@media (hover: none) {
+  .photo-card .photo-card-more { grid-template-rows: 1fr; opacity: 1; }
+}
+.trip-route-dash {
+  width: 0.8rem;
+  border-top: 1.5px dashed rgb(255 255 255 / 0.5);
+  margin-inline: 0.1rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-card, .photo-card * { transition: none !important; }
+}

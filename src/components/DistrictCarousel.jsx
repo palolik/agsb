@@ -10,10 +10,16 @@ const AUTO_ADVANCE_MS = 3000;
 const RESUME_AFTER_MS = 6000;
 const MAX_TILT_DEG = 38;
 const EDGE_SCALE = 0.3;
+// Without the scrollend event, scrolling must stop this long before the loop
+// jumps back to the middle copy.
+const SETTLE_MS = 140;
 
 // Horizontally scrolling district cards bent around a curve: each card tilts
 // and grows with its distance from the centre, as if seen from inside a
-// cylinder. Auto-advances unless the user is interacting or prefers reduced
+// cylinder. Loops forever: the list is rendered three times and, whenever
+// scrolling settles outside the middle copy, the scroller jumps by one copy's
+// width to the identical spot in the middle copy, which looks like nothing
+// happened. Auto-advances unless the user is interacting or prefers reduced
 // motion.
 export default function DistrictCarousel({ districts, divisions }) {
   const { t, pick } = useLang();
@@ -22,6 +28,8 @@ export default function DistrictCarousel({ districts, divisions }) {
   const pausedUntil = useRef(0);
   const hovering = useRef(false);
   const list = asArray(districts);
+  const copies = list.length > 1 ? 3 : 1;
+  const looped = Array.from({ length: copies }, (_, c) => list.map(d => ({ d, c }))).flat();
 
   const applyCurve = useCallback(() => {
     const scroller = scrollerRef.current;
@@ -45,29 +53,54 @@ export default function DistrictCarousel({ districts, divisions }) {
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(() => { frame = 0; applyCurve(); });
     };
-    // Start on the middle card so both sides curve evenly.
-    const mid = cardRefs.current[Math.floor(list.length / 2)];
+    const n = list.length;
+    // Once scrolling settles in the first or last copy, jump to the same spot
+    // in the middle copy.
+    let settle = 0;
+    const recenter = () => {
+      const cards = cardRefs.current;
+      if (copies < 3 || !cards[n] || !cards[2 * n]) return;
+      const copyWidth = cards[n].offsetLeft - cards[0].offsetLeft;
+      const center = scroller.scrollLeft + scroller.clientWidth / 2;
+      const shift = center < cards[n].offsetLeft ? copyWidth : center >= cards[2 * n].offsetLeft ? -copyWidth : 0;
+      if (!shift) return;
+      // Re-curve in the same frame as the jump, with the cards' transform
+      // transition off, so no card visibly animates from its old tilt.
+      for (const el of cards) if (el) el.style.transition = "none";
+      scroller.scrollLeft += shift;
+      applyCurve();
+      void scroller.offsetWidth;
+      for (const el of cards) if (el) el.style.transition = "";
+    };
+    const hasScrollEnd = "onscrollend" in window;
+    const onScroll = () => {
+      schedule();
+      if (hasScrollEnd) return;
+      clearTimeout(settle);
+      settle = setTimeout(recenter, SETTLE_MS);
+    };
+    // Start on the middle card of the middle copy so both sides curve evenly.
+    const mid = cardRefs.current[(copies === 3 ? n : 0) + Math.floor(n / 2)];
     if (mid) scroller.scrollLeft = mid.offsetLeft + mid.offsetWidth / 2 - scroller.clientWidth / 2;
     applyCurve();
-    scroller.addEventListener("scroll", schedule, { passive: true });
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    if (hasScrollEnd) scroller.addEventListener("scrollend", recenter);
     window.addEventListener("resize", schedule);
     return () => {
       cancelAnimationFrame(frame);
-      scroller.removeEventListener("scroll", schedule);
+      clearTimeout(settle);
+      scroller.removeEventListener("scroll", onScroll);
+      scroller.removeEventListener("scrollend", recenter);
       window.removeEventListener("resize", schedule);
     };
-  }, [applyCurve, list.length]);
+  }, [applyCurve, list.length, copies]);
 
   const step = useCallback((dir) => {
     const scroller = scrollerRef.current;
     const first = cardRefs.current[0];
     if (!scroller || !first) return;
     const gap = parseFloat(getComputedStyle(scroller).columnGap) || 0;
-    const atEnd = scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 2;
-    const atStart = scroller.scrollLeft <= 2;
-    if (dir > 0 && atEnd) scroller.scrollTo({ left: 0, behavior: "smooth" });
-    else if (dir < 0 && atStart) scroller.scrollTo({ left: scroller.scrollWidth, behavior: "smooth" });
-    else scroller.scrollBy({ left: dir * (first.offsetWidth + gap), behavior: "smooth" });
+    scroller.scrollBy({ left: dir * (first.offsetWidth + gap), behavior: "smooth" });
   }, []);
 
   // Auto-advance, skipped while hovered, recently touched, the tab is hidden,
@@ -102,11 +135,15 @@ export default function DistrictCarousel({ districts, divisions }) {
         className="relative flex gap-6 sm:gap-10 overflow-x-auto snap-x snap-mandatory scrollbar-none py-16 px-[calc(50%-5.5rem)] sm:px-[calc(50%-6.5rem)]"
         aria-label={t("জনপ্রিয় জেলা", "Popular districts")}
       >
-        {list.map((d, i) => (
+        {looped.map(({ d, c }, i) => (
           <Link
-            key={d.id}
+            key={`${c}-${d.id}`}
             ref={(el) => { cardRefs.current[i] = el; }}
             to={`/districts/${d.slug}`}
+            // The outer copies only exist for the loop; keep them out of the
+            // tab order and away from screen readers.
+            aria-hidden={copies === 3 && c !== 1 ? true : undefined}
+            tabIndex={copies === 3 && c !== 1 ? -1 : undefined}
             className="relative shrink-0 snap-center w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl bg-base-300 group will-change-transform transition-transform duration-150 ease-out"
           >
             <CoverImage image={d.image} alt={pick(d, "name")} sizes="(min-width: 640px) 270px, 230px" width={416} height={555} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
