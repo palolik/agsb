@@ -6,7 +6,6 @@ import { useCart } from "../context/CartContext";
 import ThemeToggle from "./ThemeToggle";
 import LanguageToggle from "./LanguageToggle";
 import { useLang } from "../context/LanguageContext";
-import LogoMark from "./LogoMark";
 
 const nav = [
   { to: "/", bn: "হোম", en: "Home" },
@@ -39,12 +38,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <LogoMark className="w-9 h-9" />
-            <div className="hidden sm:block">
-              <div className="text-sm font-bold text-base-content leading-tight">আমিঘুরিসারাবাংলাদেশ</div>
-              <div className="text-[10px] text-secondary leading-tight tracking-wide">{t("৬৪ জেলা · এক দেশ", "64 DISTRICTS · ONE COUNTRY")}</div>
-            </div>
-          </Link>
+            <img src="/assets/agsb_logo.webp" alt="আমি ঘুরি সারা বাংলাদেশ" width="400" height="247" className="h-12 w-auto" />          </Link>
 
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-1">

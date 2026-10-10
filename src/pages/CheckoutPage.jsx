@@ -101,7 +101,7 @@ export default function CheckoutPage() {
   const { lang, t, pick } = useLang();
 
   const pending = bookingFetchState({ loading, error, status, reload, booking });
-  const meta = <PageMeta title={t("চেকআউট", "Checkout")} />;
+  const meta = <PageMeta noindex title={t("চেকআউট", "Checkout")} />;
   if (pending) return <>{meta}{pending}</>;
   if (isHoldExpired(booking)) return <>{meta}<HoldExpired booking={booking} /></>;
 

@@ -112,7 +112,7 @@ export default function ProfilePage() {
     [visitedSet, lang],
   );
 
-  const meta = <PageMeta title={t("আমার প্রোফাইল", "My Profile")} />;
+  const meta = <PageMeta noindex title={t("আমার প্রোফাইল", "My Profile")} />;
   if (!ready) return meta;
   if (!user) return <>{meta}<Navigate to="/login" replace state={{ from: "/profile" }} /></>;
 

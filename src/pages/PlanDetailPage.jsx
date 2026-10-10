@@ -10,9 +10,9 @@ import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
-import { toPlainText } from "../lib/richText";
 import SeatsMeter from "../components/SeatsMeter";
 import { useLang } from "../context/LanguageContext";
+import { planSeo } from "../lib/seo";
 
 export default function PlanDetailPage() {
   const { slug } = useParams();
@@ -31,7 +31,8 @@ export default function PlanDetailPage() {
   // Only a 404 (or 400 for a malformed slug) means "not found"; network
   // failures (status null) and 5xx show ErrorState with a retry instead.
   const notFound = !loading && !plan && (!error || status === 404 || status === 400);
-  const meta = <PageMeta title={plan ? pick(plan, "title") : notFound ? t("প্ল্যান পাওয়া যায়নি", "Plan not found") : t("ট্রাভেল প্ল্যান", "Trip Plans")} description={plan ? [plan.duration, plan.cost, toPlainText(pick(plan, "description"))].filter(Boolean).join(" · ") : undefined} image={plan?.image} />;
+  const seo = plan ? planSeo(plan, lang) : null;
+  const meta = <PageMeta title={seo ? seo.title : notFound ? t("প্ল্যান পাওয়া যায়নি", "Plan not found") : t("ট্রাভেল প্ল্যান", "Trip Plans")} description={seo?.description} image={plan?.image} />;
   if (loading) return <>{meta}<Spinner /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;

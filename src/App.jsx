@@ -94,8 +94,7 @@ function NotFoundPage() {
   const { t } = useLang();
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-      <PageMeta title={t("পাতা পাওয়া যায়নি", "Page not found")} description={t("আপনি যে পাতাটি খুঁজছেন সেটি নেই।", "The page you were looking for doesn't exist.")} />
-      <meta name="robots" content="noindex" />
+      <PageMeta noindex title={t("পাতা পাওয়া যায়নি", "Page not found")} description={t("আপনি যে পাতাটি খুঁজছেন সেটি নেই।", "The page you were looking for doesn't exist.")} />
       <h1 className="text-4xl font-bold text-base-content mb-4">404</h1>
       <p className="text-base-content/50 mb-6">{t("পাতা পাওয়া যায়নি", "Page not found")}</p>
       <Link to="/" className="btn btn-primary">{t("হোমে ফিরে যান", "Go Home")}</Link>

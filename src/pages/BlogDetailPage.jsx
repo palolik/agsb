@@ -9,8 +9,8 @@ import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
-import { toPlainText } from "../lib/richText";
 import { useLang } from "../context/LanguageContext";
+import { postSeo } from "../lib/seo";
 
 export default function BlogDetailPage() {
   const { slug } = useParams();
@@ -22,7 +22,8 @@ export default function BlogDetailPage() {
   // Only a 404 (or 400 for a malformed slug) means "not found"; network
   // failures (status null) and 5xx show ErrorState with a retry instead.
   const notFound = !loading && !post && (!error || status === 404 || status === 400);
-  const meta = <PageMeta title={post ? pick(post, "title") : notFound ? t("পোস্ট পাওয়া যায়নি", "Post not found") : t("ট্রাভেল ব্লগ", "Travel Blog")} description={post ? toPlainText(post.excerpt) : undefined} image={post?.image} type={post ? "article" : "website"} />;
+  const seo = post ? postSeo(post, lang) : null;
+  const meta = <PageMeta title={seo ? seo.title : notFound ? t("পোস্ট পাওয়া যায়নি", "Post not found") : t("ট্রাভেল ব্লগ", "Travel Blog")} description={seo?.description} image={post?.image} type={post ? "article" : "website"} />;
   if (loading) return <>{meta}<Spinner /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;

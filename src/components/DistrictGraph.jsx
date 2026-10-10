@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ALL_DISTRICTS } from "../data/allDistricts";
 import { districtName } from "../lib/districtNames";
+import { DISTRICT_PATHS } from "../data/bdMapShapes";
 
 // Hero "knowledge graph": every district is a node placed at its map pin, so
 // the graph keeps Bangladesh's shape, linked to its nearest neighbours. Nodes
@@ -10,8 +11,6 @@ import { districtName } from "../lib/districtNames";
 
 const NEIGHBOURS = 3;
 const SPOTLIGHT_MS = 2600;
-// One hue per division_id (1–8).
-const DIVISION_HUES = [0, 155, 35, 250, 300, 85, 200, 15, 120];
 
 // Deterministic 0..1 noise so the layout is stable across renders.
 const noise = (i, salt) => {
@@ -24,7 +23,6 @@ function buildGraph() {
     slug: d.slug,
     en: districtName(d.name_en),
     bn: d.name_bn,
-    hue: DIVISION_HUES[d.division_id] ?? 160,
     x: d.pin[0],
     y: d.pin[1],
     // Drift: amplitude (viewBox units), speed and phase per axis.
@@ -124,6 +122,13 @@ export default function DistrictGraph({ className = "" }) {
           </radialGradient>
         </defs>
 
+        {/* Country outline behind the graph, from the same map viewBox as the pins. */}
+        <g fill="var(--color-primary)" fillOpacity="0.06" stroke="var(--color-primary)" strokeOpacity="0.35" strokeWidth="2" strokeLinejoin="round">
+          {Object.entries(DISTRICT_PATHS).flatMap(([slug, paths]) =>
+            paths.map((d, k) => <path key={`${slug}-${k}`} d={d} />)
+          )}
+        </g>
+
         <g strokeLinecap="round">
           {edges.map((e, k) => (
             <line
@@ -150,7 +155,7 @@ export default function DistrictGraph({ className = "" }) {
               style={{ cursor: "default" }}
             >
               <circle r="34" fill="transparent" />
-              <circle r={i === spot ? 0 : 11} fill={`oklch(0.72 0.15 ${n.hue})`} stroke="var(--color-base-100)" strokeWidth="3" />
+              <circle r={i === spot ? 0 : 11} fill="oklch(0.72 0.16 150)" stroke="var(--color-base-100)" strokeWidth="3" />
               <g className="dg-label" style={{ "--dg-delay": `${-(i * 0.53) % 8}s` }} opacity={i === spot ? 0 : 1}>
                 <text className="dg-bn" y="-22" textAnchor="middle" fontSize="30" fill="var(--color-base-content)">{n.bn}</text>
                 <text className="dg-en" y="-22" textAnchor="middle" fontSize="28" fill="var(--color-base-content)">{n.en}</text>

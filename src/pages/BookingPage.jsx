@@ -46,7 +46,7 @@ export default function BookingPage() {
   }, [count]);
 
   const meta = (
-    <PageMeta
+    <PageMeta noindex
       title={plan ? t(`বুকিং: ${pick(plan, "title")}`, `Book: ${plan.title_en || plan.title_bn}`) : t("ট্রিপ বুক করুন", "Book a trip")}
       description={plan ? t(`${pick(plan, "title")} — সিট বুক করুন।`, `Book seats on ${plan.title_en || plan.title_bn}.`) : undefined}
       image={plan?.image}

@@ -23,7 +23,7 @@ export default function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
 
-  const meta = <PageMeta title={t("সাইন আপ", "Sign up")} description={t("ঘোরা জেলাগুলোর হিসাব রাখতে আর ব্যাজ সংগ্রহ করতে বিনামূল্যে অ্যাকাউন্ট খুলুন।", "Create a free account to track the districts you have visited and collect badges.")} />;
+  const meta = <PageMeta noindex title={t("সাইন আপ", "Sign up")} description={t("ঘোরা জেলাগুলোর হিসাব রাখতে আর ব্যাজ সংগ্রহ করতে বিনামূল্যে অ্যাকাউন্ট খুলুন।", "Create a free account to track the districts you have visited and collect badges.")} />;
   if (user) return <>{meta}<Navigate to={redirectTo} replace /></>;
 
   async function handleSubmit(e) {

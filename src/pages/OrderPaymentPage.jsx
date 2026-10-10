@@ -31,7 +31,7 @@ export default function OrderPaymentPage() {
   useRefetchOnFocus(reload, !done);
 
   const pending = orderFetchState({ loading: loading && !order, error, status, reload, order });
-  const meta = <PageMeta title={t("পেমেন্ট", "Payment")} />;
+  const meta = <PageMeta noindex title={t("পেমেন্ট", "Payment")} />;
   if (pending) return <>{meta}{pending}</>;
   if (!done && isOrderHoldExpired(order, now)) return <>{meta}<OrderHoldExpired order={order} message={conflict} /></>;
   if (!done && !canPayOrder(order, now)) {

@@ -1,6 +1,7 @@
 import { useLayoutEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { resolveImage } from "../lib/api";
+import { BRAND, HOME_TITLE, DEFAULT_DESCRIPTION } from "../lib/seo";
 
 // Per-page <title>, description, Open Graph / Twitter tags and canonical URL.
 // React 19 hoists <title>/<meta>/<link> rendered anywhere into <head>.
@@ -12,10 +13,9 @@ import { resolveImage } from "../lib/api";
 // - image: absolute URL, /uploads/... path (resolved against the API) or a
 //   site-relative path such as /og.png (resolved against VITE_SITE_URL).
 // - path: canonical path; defaults to the current pathname.
+// - noindex: keep the page out of search results (account, cart, payment…).
 
-export const BRAND = "আমিঘুরিসারাবাংলাদেশ";
-export const DEFAULT_DESCRIPTION =
-  "Discover all 64 districts of Bangladesh. Plan trips, collect district badges, download photo frames, and become a true explorer.";
+export { BRAND, DEFAULT_DESCRIPTION };
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "")).replace(/\/+$/, "");
 
@@ -53,11 +53,11 @@ function clip(text, max = 200) {
   return clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean;
 }
 
-export default function PageMeta({ title, description, image, path, type = "website" }) {
+export default function PageMeta({ title, description, image, path, type = "website", noindex = false }) {
   const { pathname } = useLocation();
   useHideDefaults();
 
-  const fullTitle = title ? `${title} | ${BRAND}` : `${BRAND} — ৬৪ জেলা, এক দেশ, অসংখ্য গল্প`;
+  const fullTitle = title ? `${title} | ${BRAND}` : HOME_TITLE;
   const desc = clip(description) || DEFAULT_DESCRIPTION;
   const url = `${SITE_URL}${path ?? pathname}`;
   const img = absoluteImage(image || "/og-image.png");
@@ -66,7 +66,7 @@ export default function PageMeta({ title, description, image, path, type = "webs
     <>
       <title>{fullTitle}</title>
       <meta name="description" content={desc} />
-      <link rel="canonical" href={url} />
+      {noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={url} />}
       <meta property="og:site_name" content={BRAND} />
       <meta property="og:type" content={type} />
       <meta property="og:title" content={fullTitle} />

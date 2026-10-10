@@ -31,7 +31,7 @@ export default function PaymentPage() {
   // Background refetches keep the current booking on screen (and the form
   // filled in) instead of flashing the spinner.
   const pending = bookingFetchState({ loading: loading && !booking, error, status, reload, booking });
-  const meta = <PageMeta title={t("পেমেন্ট", "Payment")} />;
+  const meta = <PageMeta noindex title={t("পেমেন্ট", "Payment")} />;
   if (pending) return <>{meta}{pending}</>;
   if (!done && isHoldExpired(booking, now)) return <>{meta}<HoldExpired booking={booking} message={conflict} /></>;
   if (!done && !canPay(booking, now)) {

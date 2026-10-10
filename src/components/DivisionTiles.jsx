@@ -115,10 +115,7 @@ export default function DivisionTiles({ divisions, districts, counts, countsRead
                 {shape.paths.map((d, k) => <path key={k} d={d} />)}
               </svg>
             )}
-            <span className="relative text-xs font-medium uppercase tracking-wider text-white/60">
-              {t("বিভাগ", "Division")} {String(i + 1).padStart(2, "0")}
-            </span>
-            <div className="relative">
+            <div className="relative mt-auto">
               <h3 className="text-xl md:text-2xl font-bold leading-tight drop-shadow">{main}</h3>
               <p className="text-sm text-white/70">{sub}</p>
               <div className="mt-3 flex items-center gap-2">

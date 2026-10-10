@@ -78,7 +78,7 @@ export default function TicketsPage() {
   const { t } = useLang();
 
   const pending = bookingFetchState({ loading, error, status, reload, booking });
-  const meta = <PageMeta title={t("টিকিট", "Tickets")} />;
+  const meta = <PageMeta noindex title={t("টিকিট", "Tickets")} />;
   if (pending) return <>{meta}{pending}</>;
 
   const back = (

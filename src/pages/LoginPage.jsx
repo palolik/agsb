@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
 
-  const meta = <PageMeta title={t("লগইন", "Log in")} />;
+  const meta = <PageMeta noindex title={t("লগইন", "Log in")} />;
   if (user) return <>{meta}<Navigate to={redirectTo} replace /></>;
 
   async function handleSubmit(e) {

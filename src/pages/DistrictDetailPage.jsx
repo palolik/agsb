@@ -13,6 +13,7 @@ import { ALL_DISTRICTS } from "../data/allDistricts";
 import AttractionCard from "../components/AttractionCard";
 import { useLang } from "../context/LanguageContext";
 import { districtName } from "../lib/districtNames";
+import { districtSeo } from "../lib/seo";
 
 // Only the 64 districts on the profile map can be checked in to.
 const MAP_SLUGS = new Set(ALL_DISTRICTS.map((d) => d.slug));
@@ -46,7 +47,8 @@ export default function DistrictDetailPage() {
   // Only a 404 (or 400 for a malformed slug) means "not found"; network
   // failures (status null) and 5xx show ErrorState with a retry instead.
   const notFound = !loading && !district && (!error || status === 404 || status === 400);
-  const meta = <PageMeta title={district ? dn(district) : notFound ? t("জেলা পাওয়া যায়নি", "District not found") : t("জেলা", "Districts")} description={district ? district.tagline : undefined} image={district?.image} />;
+  const seo = district ? districtSeo(district, lang, asArray(attractionsQ.data)) : null;
+  const meta = <PageMeta title={seo ? seo.title : notFound ? t("জেলা পাওয়া যায়নি", "District not found") : t("জেলা", "Districts")} description={seo?.description} image={district?.image} />;
   if (loading) return <>{meta}<Spinner /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;

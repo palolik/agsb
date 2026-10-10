@@ -137,7 +137,7 @@ export default function OrderPage() {
   const { lang, t } = useLang();
 
   const pending = orderFetchState({ loading, error, status, reload, order });
-  const meta = <PageMeta title={t("অর্ডার", "Order")} />;
+  const meta = <PageMeta noindex title={t("অর্ডার", "Order")} />;
   if (pending) return <>{meta}{pending}</>;
   if (isOrderHoldExpired(order)) return <>{meta}<OrderHoldExpired order={order} /></>;
 

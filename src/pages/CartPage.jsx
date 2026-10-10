@@ -157,7 +157,7 @@ export default function CartPage() {
     }
   }
 
-  const meta = <PageMeta title={t("কার্ট", "Cart")} description={t("আপনার ট্রাভেল গিয়ারের কার্ট।", "Your travel gear cart.")} />;
+  const meta = <PageMeta noindex title={t("কার্ট", "Cart")} description={t("আপনার ট্রাভেল গিয়ারের কার্ট।", "Your travel gear cart.")} />;
 
   if (items.length === 0) {
     return (

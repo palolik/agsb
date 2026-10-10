@@ -170,10 +170,6 @@ body {
   min-height: 100vh;
 }
 
-.hero-gradient {
-  background: linear-gradient(135deg, var(--hero-from), var(--hero-to) 60%);
-}
-
 /* Chips: soft tinted pills, consistent across the site */
 .badge {
   border-radius: 9999px;

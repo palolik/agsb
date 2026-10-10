@@ -12,6 +12,7 @@ import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import { useLang } from "../context/LanguageContext";
+import { productSeo } from "../lib/seo";
 
 function Gallery({ images, alt }) {
   const { t } = useLang();
@@ -70,8 +71,8 @@ function ProductDetail({ slug }) {
   const notFound = !loading && !product && (!error || status === 404 || status === 400);
   const meta = (
     <PageMeta
-      title={product ? pick(product, "name") : notFound ? t("পণ্য পাওয়া যায়নি", "Product not found") : t("শপ", "Shop")}
-      description={product?.summary}
+      title={product ? productSeo(product, lang).title : notFound ? t("পণ্য পাওয়া যায়নি", "Product not found") : t("শপ", "Shop")}
+      description={product ? productSeo(product, lang).description : undefined}
       image={asArray(product?.images)[0]}
     />
   );

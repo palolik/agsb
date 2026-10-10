@@ -8,6 +8,7 @@ import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import AttractionCard, { TypeBadge } from "../components/AttractionCard";
 import { useLang } from "../context/LanguageContext";
+import { attractionSeo } from "../lib/seo";
 
 export default function AttractionDetailPage() {
   const { slug } = useParams();
@@ -17,7 +18,8 @@ export default function AttractionDetailPage() {
   // Only a 404 (or 400 for a malformed slug) means "not found"; network
   // failures (status null) and 5xx show ErrorState with a retry instead.
   const notFound = !loading && !attraction && (!error || status === 404 || status === 400);
-  const meta = <PageMeta title={attraction ? pick(attraction, "name") : notFound ? t("স্থানটি পাওয়া যায়নি", "Attraction not found") : t("আকর্ষণীয় স্থান", "Attractions")} description={attraction ? attraction.desc : undefined} image={attraction?.image} />;
+  const seo = attraction ? attractionSeo(attraction, lang) : null;
+  const meta = <PageMeta title={seo ? seo.title : notFound ? t("স্থানটি পাওয়া যায়নি", "Attraction not found") : t("আকর্ষণীয় স্থান", "Attractions")} description={seo?.description} image={attraction?.image} />;
   if (loading) return <>{meta}<Spinner /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
