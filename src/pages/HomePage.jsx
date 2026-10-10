@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
 import { districtCountsByDivision, countAttractions } from "../data";
 import { useFetch } from "../hooks/useFetch";
-import { HiArrowRight, HiLocationMarker, HiMap } from "react-icons/hi";
-import { FaSuitcaseRolling } from "react-icons/fa";
+import { HiArrowRight, HiMap } from "react-icons/hi";
 import { asArray } from "../lib/safe";
 import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
@@ -36,66 +35,64 @@ export default function HomePage() {
   // Stats come straight from the API responses; a stat whose request failed
   // is left out instead of showing a made-up number.
   const statItems = [
-    !districtsQ.error && { key: "Districts", label: t("জেলা", "Districts"), val: districtsQ.loading ? null : asArray(districts).length, icon: HiMap },
-    !attractionsQ.error && { key: "Attractions", label: t("দর্শনীয় স্থান", "Attractions"), val: attractionsQ.loading ? null : countAttractions(attractionsQ.data), icon: HiLocationMarker },
-    !plansQ.error && { key: "Travel Plans", label: t("ট্রাভেল প্ল্যান", "Travel Plans"), val: plansQ.loading ? null : asArray(travelPlans).length, icon: FaSuitcaseRolling },
+    !districtsQ.error && { key: "Districts", label: t("জেলা", "Districts"), val: districtsQ.loading ? null : asArray(districts).length },
+    !attractionsQ.error && { key: "Attractions", label: t("দর্শনীয় স্থান", "Attractions"), val: attractionsQ.loading ? null : countAttractions(attractionsQ.data) },
+    !plansQ.error && { key: "Travel Plans", label: t("ট্রাভেল প্ল্যান", "Travel Plans"), val: plansQ.loading ? null : asArray(travelPlans).length },
   ].filter(Boolean);
 
   const meta = <PageMeta description={t("ট্রিপ প্ল্যান করুন, অজানা সব জায়গা খুঁজে নিন, জেলা ব্যাজ সংগ্রহ করুন আর জেলা থেকে জেলায় ঘুরে হয়ে উঠুন বাংলাদেশের সত্যিকারের অভিযাত্রী।", "Plan trips, discover hidden gems, collect district badges, and become a true explorer of Bangladesh — district by district.")} />;
   return (
     <div>
       {meta}
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-28 relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] gap-8 items-center">
+    <section className="relative overflow-hidden text-white [text-shadow:0_2px_12px_rgb(0_0_0/0.55)] min-h-svh -mt-16 pt-16 flex flex-col">
+        <img src="/assets/morning-lake-with-boat.webp" alt="" width="1920" height="1080" fetchPriority="high" className="absolute inset-0 w-full h-full object-cover object-[50%_50%]" />
+        <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-2 md:pt-4 pb-10 relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,36rem)] gap-8 items-center">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 text-primary text-sm mb-6">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary text-primary-content text-sm mb-6 [text-shadow:none]">
+              <span className="w-2 h-2 rounded-full bg-primary-content animate-pulse" />
               {t("৬৪ জেলা চ্যালেঞ্জ — শুরু করুন আজই", "64-District Challenge — start today")}
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-base-content leading-tight mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4">
               {t("৬৪ জেলা,", "64 districts,")}<br />
-              <span className="text-primary">{t("এক দেশ,", "one country,")}</span><br />
+              <span>{t("এক দেশ,", "one country,")}</span><br />
               {t("অসংখ্য গল্প।", "countless stories.")}
             </h1>
-            <p className="text-lg text-base-content/60 mb-8 max-w-xl">
+            <p className="text-lg text-white/90 mb-8 max-w-xl">
               {t(
                 "ট্রিপ প্ল্যান করুন, অজানা সব জায়গা খুঁজে নিন, জেলা ব্যাজ সংগ্রহ করুন আর হয়ে উঠুন বাংলাদেশের সত্যিকারের অভিযাত্রী। আপনার ৬৪ জেলার যাত্রা শুরু হোক এখান থেকেই।",
                 "Plan trips, discover hidden gems, collect district badges, and become a true explorer of Bangladesh. Your 64-district journey starts here."
               )}
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/districts" className="btn btn-primary btn-lg">
+              <Link to="/districts" className="btn btn-primary btn-lg [text-shadow:none]">
                 {t("জেলা ঘুরে দেখুন", "Explore Districts")} <HiArrowRight className="ml-1" />
               </Link>
-              <Link to="/map" className="btn btn-ghost btn-lg border-none">
+              <Link to="/map" className="btn btn-ghost btn-lg border-none text-white hover:bg-white/15">
                 <HiMap className="mr-1" /> {t("ম্যাপ খুলুন", "Open Map")}
               </Link>
             </div>
           </div>
-                   {/* <DistrictWordCloud className="hidden lg:block h-[36rem] -my-14" /> */}
-<DistrictGraph className="hidden lg:block h-[34rem] -my-12" />
+          {/* <DistrictWordCloud className="hidden lg:block h-[36rem] -my-14" /> */}
+          {/* Capped to the space left between the navbar and the stats bar. */}
+          <DistrictGraph className="hidden lg:block h-[min(40rem,calc(100svh-12rem))] translate-x-12 xl:translate-x-20" />
         </div>
-      </section>
 
-      {/* Stats */}
-      {statItems.length > 0 && (
-      <section className="bg-base-200 border-y border-base-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="flex flex-wrap justify-center gap-x-16 gap-y-6 text-center" data-testid="home-stats">
-            {statItems.map(s => (
-              <div key={s.key} data-stat={s.key}>
-                <s.icon className="w-7 h-7 text-primary mx-auto mb-1" />
-                <div className="text-2xl md:text-3xl font-bold text-primary" data-stat-value>
-                  {s.val === null ? <span className="loading loading-dots loading-sm" aria-label={t("লোড হচ্ছে", "Loading")} /> : s.val.toLocaleString("en-US")}
+        {/* Stats */}
+        {statItems.length > 0 && (
+          <div className="relative w-full bg-black/30 backdrop-blur-md border-t border-white/15">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap justify-around gap-x-16 gap-y-6 text-center" data-testid="home-stats">
+              {statItems.map(s => (
+                <div key={s.key} data-stat={s.key}>
+                  <div className="text-2xl md:text-3xl font-bold" data-stat-value>
+                    {s.val === null ? <span className="loading loading-dots loading-sm" aria-label={t("লোড হচ্ছে", "Loading")} /> : s.val.toLocaleString("en-US")}
+                  </div>
+                  <div className="text-sm text-white/85">{s.label}</div>
                 </div>
-                <div className="text-sm text-base-content/50">{s.label}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </section>
-      )}
 
       {/* Upcoming trips: hidden until there is a bookable plan to show. */}
       {!plansQ.loading && !plansQ.error && upcomingPlans(travelPlans).length > 0 && (
@@ -239,13 +236,26 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-        <div className="card bg-primary text-primary-content p-8 md:p-12 text-center">
-          <h2 className="text-2xl md:text-4xl font-bold mb-3">{t("আপনার ৬৪ জেলা চ্যালেঞ্জ শুরু করুন", "Start your 64-district challenge")}</h2>
-          <p className="text-primary-content/70 mb-6 max-w-xl mx-auto">{t("অগ্রগতি ট্র্যাক করুন, জেলা ব্যাজ অর্জন করুন, ফটো ফ্রেম সংগ্রহ করুন আর পেয়ে যান ৬৪ জেলা ভ্রমণের চূড়ান্ত সার্টিফিকেট।", "Track your progress, earn district badges, collect photo frames, and get the ultimate 64-district certificate.")}</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/membership" className="btn bg-base-100 text-primary hover:bg-base-200 border-none">{t("এখনই যোগ দিন — ফ্রি", "Join Now — Free")}</Link>
-            <Link to="/frames" className="btn btn-ghost text-primary-content hover:bg-primary-content/10 border-none">{t("ফ্রেম দেখুন", "Browse Frames")}</Link>
+        <div className="card relative overflow-hidden bg-base-300 text-white p-8 md:p-12 text-center">
+          {/* Sunset at Kuakata — Kazi Asadullah Al Emran, CC BY-SA 4.0, via Wikimedia Commons. */}
+          <img src="/assets/kuakata-sunset.webp" alt="" width="1600" height="1067" loading="lazy" className="absolute inset-0 w-full h-full object-cover object-[50%_55%]" />
+          <div className="absolute inset-0 bg-black/45" />
+          <div className="relative">
+            <h2 className="text-2xl md:text-4xl font-bold mb-3 drop-shadow">{t("আপনার ৬৪ জেলা চ্যালেঞ্জ শুরু করুন", "Start your 64-district challenge")}</h2>
+            <p className="text-white/85 mb-6 max-w-xl mx-auto drop-shadow">{t("অগ্রগতি ট্র্যাক করুন, জেলা ব্যাজ অর্জন করুন, ফটো ফ্রেম সংগ্রহ করুন আর পেয়ে যান ৬৪ জেলা ভ্রমণের চূড়ান্ত সার্টিফিকেট।", "Track your progress, earn district badges, collect photo frames, and get the ultimate 64-district certificate.")}</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link to="/membership" className="btn btn-primary border-none">{t("এখনই যোগ দিন — ফ্রি", "Join Now — Free")}</Link>
+              <Link to="/frames" className="btn btn-ghost text-white hover:bg-white/15 border-none">{t("ফ্রেম দেখুন", "Browse Frames")}</Link>
+            </div>
           </div>
+          <a
+            href="https://commons.wikimedia.org/wiki/File:Kuakata_sunset.jpg"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-2 right-3 text-[10px] text-white/60 hover:text-white hover:underline"
+          >
+            {t("ছবি", "Photo")}: Kazi Asadullah Al Emran · CC BY-SA 4.0
+          </a>
         </div>
       </section>
     </div>

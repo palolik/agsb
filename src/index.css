@@ -243,6 +243,13 @@ select:-webkit-autofill {
   transition: opacity 0.4s;
 }
 .district-graph .dg-en { animation-name: dg-swap-alt; }
+/* Hero map outline: dark in both themes so the white names read on the photo. */
+.district-graph .dg-map {
+  fill: black;
+  fill-opacity: 0.45;
+  stroke: white;
+  stroke-opacity: 0.2;
+}
 .district-graph .dg-label { transition: opacity 0.4s; }
 @keyframes dg-swap {
   0%, 42% { fill-opacity: 0.8; }

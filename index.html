@@ -15,12 +15,16 @@
         var lang;
         try { lang = localStorage.getItem("agsb_lang"); } catch (e) {}
         if (lang === "en") document.documentElement.lang = "en";
+        // The app is about to render: hide the plain-HTML page copy that
+        // scripts/build-seo.mjs puts in #root for crawlers.
+        document.documentElement.classList.add("js");
       })();
     </script>
+    <style>.js .prerender { display: none; }</style>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/og-image.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#006a4e" />
     <title data-default-meta>আমি ঘুরি সারা বাংলাদেশ — ৬৪ জেলার ভ্রমণ গাইড</title>
     <!-- Defaults for crawlers that don't run JS. PageMeta (src/components/PageMeta.jsx)

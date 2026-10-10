@@ -155,7 +155,7 @@ function MapView({ onRetry }) {
         <div className="absolute left-4 right-4 bottom-4 max-h-[65%] sm:max-h-none sm:left-auto sm:top-4 z-[1000] sm:w-80 flex flex-col">
           <div className="bg-base-200/95 backdrop-blur-lg rounded-xl border border-base-300 shadow-2xl min-h-0 sm:h-full overflow-y-auto">
             <div className="relative">
-              <CoverImage image={selected.image} alt={nameOf(selected)} className="w-full h-36 object-cover rounded-t-xl" placeholderClassName="w-full h-36 bg-base-300 rounded-t-xl" sizes="320px" width={320} height={144} priority />
+              <CoverImage image={selected.image} alt={nameOf(selected)} className="w-full h-56 object-cover rounded-t-xl" placeholderClassName="w-full h-56 bg-base-300 rounded-t-xl" sizes="320px" width={320} height={224} priority />
               <button type="button" aria-label={t("জেলার বিস্তারিত বন্ধ করুন", "Close district details")} onClick={() => setSelected(null)} className="absolute top-2 right-2 btn btn-circle btn-sm btn-ghost bg-base-200/80">
                 <HiX aria-hidden="true" />
               </button>

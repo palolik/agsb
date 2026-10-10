@@ -3,7 +3,6 @@ import { HiMail, HiPhone, HiHeart } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
 import { site, whatsappUrl, telUrl, mailtoUrl } from "../config/site";
 import { useSocials } from "../hooks/useSocials";
-import LogoMark from "./LogoMark";
 import { useLang } from "../context/LanguageContext";
 
 export default function Footer() {
@@ -19,9 +18,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-3">
-              <LogoMark className="w-8 h-8" />
-              <span className="font-bold text-base-content">AGSB</span>
+            <Link to="/" className="inline-block mb-3">
+              <img src="/assets/agsb_logo.webp" alt="আমি ঘুরি সারা বাংলাদেশ" width="400" height="247" loading="lazy" className="h-16 w-auto" />
             </Link>
             <p className="text-sm text-base-content/60 mb-4">
               {t("৬৪ জেলা, এক দেশ, অসংখ্য গল্প।", "64 districts, one country, countless stories.")}<br />

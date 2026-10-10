@@ -113,7 +113,7 @@ export default function DistrictGraph({ className = "" }) {
   const isLit = ([a, b]) => a === spot || b === spot;
 
   return (
-    <div className={`district-graph relative ${className}`} aria-hidden="true">
+    <div className={`district-graph relative [text-shadow:none] ${className}`} aria-hidden="true">
       <svg viewBox="-60 40 1580 1730" className="w-full h-full overflow-visible">
         <defs>
           <radialGradient id="dg-glow">
@@ -122,8 +122,9 @@ export default function DistrictGraph({ className = "" }) {
           </radialGradient>
         </defs>
 
-        {/* Country outline behind the graph, from the same map viewBox as the pins. */}
-        <g fill="var(--color-primary)" fillOpacity="0.06" stroke="var(--color-primary)" strokeOpacity="0.35" strokeWidth="2" strokeLinejoin="round">
+        {/* Country outline behind the graph (same viewBox as the pins). Colours
+            in src/index.css (.dg-map). */}
+        <g className="dg-map" strokeWidth="2" strokeLinejoin="round">
           {Object.entries(DISTRICT_PATHS).flatMap(([slug, paths]) =>
             paths.map((d, k) => <path key={`${slug}-${k}`} d={d} />)
           )}
@@ -135,8 +136,8 @@ export default function DistrictGraph({ className = "" }) {
               key={k}
               ref={el => (edgeRefs.current[k] = el)}
               x1={nodes[e[0]].x} y1={nodes[e[0]].y} x2={nodes[e[1]].x} y2={nodes[e[1]].y}
-              stroke={isLit(e) ? "var(--color-primary)" : "var(--color-base-content)"}
-              strokeOpacity={isLit(e) ? 0.85 : 0.14}
+              stroke={isLit(e) ? "var(--color-primary)" : "white"}
+              strokeOpacity={isLit(e) ? 0.85 : 0.35}
               strokeWidth={isLit(e) ? 5 : 2.5}
               className={isLit(e) ? "dg-edge-lit" : undefined}
               style={{ transition: "stroke-opacity .6s, stroke-width .6s" }}
@@ -155,10 +156,10 @@ export default function DistrictGraph({ className = "" }) {
               style={{ cursor: "default" }}
             >
               <circle r="34" fill="transparent" />
-              <circle r={i === spot ? 0 : 11} fill="oklch(0.72 0.16 150)" stroke="var(--color-base-100)" strokeWidth="3" />
+              <circle r={i === spot ? 0 : 11} fill="oklch(0.72 0.16 150)" />
               <g className="dg-label" style={{ "--dg-delay": `${-(i * 0.53) % 8}s` }} opacity={i === spot ? 0 : 1}>
-                <text className="dg-bn" y="-22" textAnchor="middle" fontSize="30" fill="var(--color-base-content)">{n.bn}</text>
-                <text className="dg-en" y="-22" textAnchor="middle" fontSize="28" fill="var(--color-base-content)">{n.en}</text>
+                <text className="dg-bn" y="-22" textAnchor="middle" fontSize="30" fill="white" fontWeight="600">{n.bn}</text>
+                <text className="dg-en" y="-22" textAnchor="middle" fontSize="28" fill="white" fontWeight="600">{n.en}</text>
               </g>
             </g>
           ))}
@@ -167,7 +168,7 @@ export default function DistrictGraph({ className = "" }) {
         {s && (
           <g ref={spotRef} transform={`translate(${s.x} ${s.y})`} style={{ pointerEvents: "none" }}>
             <circle r="90" fill="url(#dg-glow)" className="dg-pulse" />
-            <circle r="17" fill="var(--color-primary)" stroke="var(--color-base-100)" strokeWidth="5" />
+            <circle r="17" fill="var(--color-primary)" />
             <g key={spot} className="dg-card" transform="translate(0 -46)">
               <rect x={-cardW / 2} y="-104" width={cardW} height="104" rx="22"
                 fill="var(--color-base-100)" fillOpacity="0.92"

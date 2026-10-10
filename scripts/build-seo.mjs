@@ -329,7 +329,7 @@ function renderHtml(template, siteUrl, page) {
     .replace(/<title[^>]*data-default-meta[^>]*>[\s\S]*?<\/title>\s*/g, "")
     .replace(/[ \t]*<(meta|link)\b[^>]*data-default-meta[^>]*>\s*/g, "")
     .replace("</head>", `${head}\n  </head>`)
-    .replace(/<div id="root"><\/div>/, `<div id="root">${nav}${main}</div>`);
+    .replace(/<div id="root"><\/div>/, `<div id="root"><div class="prerender">${nav}${main}</div></div>`);
 }
 
 function sitemapXml(siteUrl, pages) {

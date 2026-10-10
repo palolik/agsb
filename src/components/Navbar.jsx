@@ -33,7 +33,8 @@ export default function Navbar() {
   const { t } = useLang();
 
   return (
-    <nav className="print:hidden bg-base-200/80 backdrop-blur-xl border-b border-base-300 sticky top-0 z-50">
+    // Always the dark theme, whatever the site theme is.
+    <nav data-theme="agsb" className="print:hidden bg-base-200/50 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -49,7 +50,7 @@ export default function Navbar() {
                 aria-current={isActive(pathname, n.to) ? "page" : undefined}
                 className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                   isActive(pathname, n.to)
-                    ? "bg-primary/15 text-primary font-medium"
+                    ? "bg-primary text-primary-content font-medium"
                     : "text-base-content/70 hover:text-base-content hover:bg-base-300/50"
                 }`}
               >
@@ -118,7 +119,7 @@ export default function Navbar() {
                 aria-current={isActive(pathname, n.to) ? "page" : undefined}
                 className={`block px-3 py-2.5 rounded-lg text-sm ${
                   isActive(pathname, n.to)
-                    ? "bg-primary/15 text-primary font-medium"
+                    ? "bg-primary text-primary-content font-medium"
                     : "text-base-content/70"
                 }`}
               >
