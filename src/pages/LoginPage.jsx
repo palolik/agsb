@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLang } from "../context/LanguageContext";
-import { HiMail, HiLockClosed } from "react-icons/hi";
+import { HiMail, HiLockClosed, HiCheckCircle } from "react-icons/hi";
 import { normalizeEmail } from "../lib/validation";
 import PageMeta from "../components/PageMeta";
 import LogoMark from "../components/LogoMark";
@@ -13,6 +13,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/profile";
+  // Set by pages that send the user here, e.g. after a password reset.
+  const notice = location.state?.notice || "";
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -48,6 +50,9 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="card bg-base-200 p-6 border border-base-300 space-y-4">
+        {notice && !error && (
+          <div role="status" className="alert alert-success text-sm py-2"><HiCheckCircle className="w-5 h-5" aria-hidden="true" /> {notice}</div>
+        )}
         {error && <div className="alert alert-error text-sm py-2">{error}</div>}
 
         <div>
@@ -66,7 +71,12 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="label"><span className="label-text">{t("পাসওয়ার্ড", "Password")}</span></label>
+          <div className="flex items-center justify-between gap-2">
+            <label className="label"><span className="label-text">{t("পাসওয়ার্ড", "Password")}</span></label>
+            <Link to="/forgot-password" state={{ email: form.email }} className="text-sm text-primary hover:underline">
+              {t("পাসওয়ার্ড ভুলে গেছেন?", "Forgot password?")}
+            </Link>
+          </div>
           <label className="input input-bordered bg-base-300 w-full">
             <HiLockClosed className="w-5 h-5 shrink-0 text-base-content/40" />
             <input

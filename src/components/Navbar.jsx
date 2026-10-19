@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import ThemeToggle from "./ThemeToggle";
 import LanguageToggle from "./LanguageToggle";
+import NotificationBell from "./NotificationBell";
 import { useLang } from "../context/LanguageContext";
 
 const nav = [
@@ -79,6 +80,7 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
+            <NotificationBell />
             <Link
               to={user ? "/profile" : "/login"}
               aria-label={user ? t(`আমার প্রোফাইল (${user.name || "অ্যাকাউন্ট"})`, `My profile (${user.name || "account"})`) : t("লগ ইন", "Log in")}

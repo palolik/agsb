@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import RequireAuth from "./components/RequireAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PageMeta from "./components/PageMeta";
+import NotificationToast from "./components/NotificationToast";
 import { useLang } from "./context/LanguageContext";
 import { Spinner } from "./components/StateViews";
 
@@ -58,6 +59,9 @@ const MembershipPage = page(() => import("./pages/MembershipPage"));
 const PartnersPage = page(() => import("./pages/PartnersPage"));
 const LoginPage = page(() => import("./pages/LoginPage"));
 const SignupPage = page(() => import("./pages/SignupPage"));
+const ForgotPasswordPage = page(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = page(() => import("./pages/ResetPasswordPage"));
+const NotificationsPage = page(() => import("./pages/NotificationsPage"));
 const ProfilePage = page(() => import("./pages/ProfilePage"));
 const BookingPage = page(() => import("./pages/BookingPage"));
 const CheckoutPage = page(() => import("./pages/CheckoutPage"));
@@ -86,6 +90,7 @@ function Layout({ children, noFooter }) {
         </ErrorBoundary>
       </main>
       {!noFooter && <Footer />}
+      <NotificationToast />
     </div>
   );
 }
@@ -132,6 +137,9 @@ export default function App() {
         <Route path="/partners" element={<Layout><PartnersPage /></Layout>} />
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
         <Route path="/signup" element={<Layout><SignupPage /></Layout>} />
+        <Route path="/forgot-password" element={<Layout><ForgotPasswordPage /></Layout>} />
+        <Route path="/reset-password" element={<Layout><ResetPasswordPage /></Layout>} />
+        <Route path="/notifications" element={<Layout><RequireAuth><NotificationsPage /></RequireAuth></Layout>} />
         <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
         <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
       </Routes>

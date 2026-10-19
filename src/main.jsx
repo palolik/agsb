@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { CartProvider } from "./context/CartContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -12,9 +13,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <ThemeProvider>
     <LanguageProvider>
       <AuthProvider>
-        <CartProvider>
-          <App />
-        </CartProvider>
+        <NotificationProvider>
+          <CartProvider>
+            <App />
+          </CartProvider>
+        </NotificationProvider>
       </AuthProvider>
     </LanguageProvider>
     </ThemeProvider>

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { apiGet, apiSend, TOKEN_KEY, USER_KEY, AUTH_EXPIRED_EVENT } from "../lib/api";
+import { forgetPush, unregisterPush } from "../lib/push";
 
 const AuthContext = createContext(null);
 
@@ -25,7 +26,10 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // api.js fires this on any 401 after it has cleared the stored session.
-    const onExpired = () => setUser(null);
+    const onExpired = () => {
+      setUser(null);
+      forgetPush();
+    };
     window.addEventListener(AUTH_EXPIRED_EVENT, onExpired);
 
     const stored = loadStoredUser();
@@ -47,6 +51,7 @@ export function AuthProvider({ children }) {
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(USER_KEY);
             setUser(null);
+            forgetPush();
           }
         });
     } else if (stored) {
@@ -70,7 +75,9 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   }
 
-  function logout() {
+  async function logout() {
+    // Unregister this browser's push token while the session token still works.
+    await unregisterPush();
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     setUser(null);

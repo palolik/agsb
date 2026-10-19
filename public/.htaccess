@@ -56,4 +56,8 @@ DirectorySlash Off
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
+  # The push service worker must never be cached as immutable.
+  <Files "firebase-messaging-sw.js">
+    Header set Cache-Control "no-cache"
+  </Files>
 </IfModule>
