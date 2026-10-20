@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -60,7 +60,6 @@ const PartnersPage = page(() => import("./pages/PartnersPage"));
 const LoginPage = page(() => import("./pages/LoginPage"));
 const SignupPage = page(() => import("./pages/SignupPage"));
 const ForgotPasswordPage = page(() => import("./pages/ForgotPasswordPage"));
-const ResetPasswordPage = page(() => import("./pages/ResetPasswordPage"));
 const NotificationsPage = page(() => import("./pages/NotificationsPage"));
 const ProfilePage = page(() => import("./pages/ProfilePage"));
 const BookingPage = page(() => import("./pages/BookingPage"));
@@ -138,7 +137,8 @@ export default function App() {
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
         <Route path="/signup" element={<Layout><SignupPage /></Layout>} />
         <Route path="/forgot-password" element={<Layout><ForgotPasswordPage /></Layout>} />
-        <Route path="/reset-password" element={<Layout><ResetPasswordPage /></Layout>} />
+        {/* Old emailed reset links land here; the flow is now a code on /forgot-password. */}
+        <Route path="/reset-password" element={<Navigate to="/forgot-password" replace />} />
         <Route path="/notifications" element={<Layout><RequireAuth><NotificationsPage /></RequireAuth></Layout>} />
         <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
         <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
