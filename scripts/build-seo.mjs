@@ -20,14 +20,16 @@ import { dirname, resolve } from "node:path";
 import {
   BRAND, HOME_TITLE, DEFAULT_DESCRIPTION, plainText,
   districtSeo, attractionSeo, planSeo, postSeo, productSeo,
+  homeFaq, districtFaq, planFaq, faqJsonLd,
 } from "../src/lib/seo.js";
 import { districtName } from "../src/lib/districtNames.js";
+import { isBookable } from "../src/lib/planSchedule.js";
 
 // Bangla title / description of each static page, as set by its <PageMeta>.
 const STATIC_PAGES = [
-  { path: "/", priority: "1.0", changefreq: "daily", h1: HOME_TITLE, description: "ট্রিপ প্ল্যান করুন, অজানা সব জায়গা খুঁজে নিন, জেলা ব্যাজ সংগ্রহ করুন আর জেলা থেকে জেলায় ঘুরে হয়ে উঠুন বাংলাদেশের সত্যিকারের অভিযাত্রী।" },
-  { path: "/districts", priority: "0.9", changefreq: "weekly", title: "৬৪ জেলা", description: "বাংলাদেশের প্রতিটি জেলা ঘুরে দেখুন: দর্শনীয় স্থান, খাবার, যাতায়াত, বাজেট আর ভ্রমণের সেরা সময়।" },
-  { path: "/plans", priority: "0.8", changefreq: "weekly", title: "ট্রাভেল প্ল্যান", description: "সব বাজেটের জন্য তৈরি ভ্রমণ পরিকল্পনা — উইকেন্ড ট্রিপ থেকে একাধিক জেলার ট্যুর পর্যন্ত।" },
+  { path: "/", priority: "1.0", changefreq: "daily", h1: "বাংলাদেশ ট্যুর প্ল্যান ও ভ্রমণ গাইড — ৬৪ জেলা", description: DEFAULT_DESCRIPTION },
+  { path: "/districts", priority: "0.9", changefreq: "weekly", title: "৬৪ জেলার ভ্রমণ গাইড ও ট্যুর প্ল্যান", description: "বাংলাদেশের ৬৪ জেলার ভ্রমণ গাইড ও ট্যুর প্ল্যান: প্রতিটি জেলার দর্শনীয় স্থান, খাবার, যাতায়াত, খরচ আর ভ্রমণের সেরা সময়।" },
+  { path: "/plans", priority: "0.9", changefreq: "weekly", title: "ট্যুর প্ল্যান ও ট্যুর প্যাকেজ", description: "বাংলাদেশ ট্যুর প্ল্যান ও গ্রুপ ট্যুর প্যাকেজ: খরচ, সময়সূচি আর জেলাসহ তৈরি ভ্রমণ পরিকল্পনা — উইকেন্ড ট্রিপ থেকে একাধিক জেলার ট্যুর পর্যন্ত। অনলাইনে বুক করুন।" },
   { path: "/blog", priority: "0.8", changefreq: "daily", title: "ট্রাভেল ব্লগ", description: "সারা বাংলাদেশের গাইড, গল্প আর স্থানীয় অভিজ্ঞতা।" },
   { path: "/map", priority: "0.7", changefreq: "monthly", title: "মানচিত্র", description: "বাংলাদেশের ইন্টারঅ্যাকটিভ মানচিত্রে ট্রাভেল গাইডসহ জেলাগুলো খুঁজে নিন।" },
   { path: "/shop", priority: "0.7", changefreq: "weekly", title: "শপ", description: "পরের ট্রিপের জন্য তাঁবু, ব্যাকপ্যাকসহ ট্রাভেল গিয়ার কিনুন বা ভাড়া নিন — বাংলাদেশের যেকোনো প্রান্তে।" },
@@ -39,7 +41,7 @@ const STATIC_PAGES = [
 ];
 
 const NAV = [
-  ["/districts", "৬৪ জেলা"], ["/map", "মানচিত্র"], ["/plans", "ট্রাভেল প্ল্যান"],
+  ["/districts", "৬৪ জেলা"], ["/map", "মানচিত্র"], ["/plans", "ট্যুর প্ল্যান"],
   ["/shop", "শপ"], ["/blog", "ট্রাভেল ব্লগ"], ["/frames", "ফটো ফ্রেম"], ["/about", "আমাদের সম্পর্কে"],
 ];
 
@@ -122,6 +124,10 @@ function buildPages(siteUrl, apiOrigin, data) {
   const list = (items) => (items.length ? `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>` : "");
   const section = (title, body) => (body ? `<section><h2>${esc(title)}</h2>${body}</section>` : "");
   const crumbHtml = (items) => `<nav aria-label="breadcrumb"><ol>${items.map(([name, path]) => `<li>${link(path, name)}</li>`).join("")}</ol></nav>`;
+  const imgHtml = (src, alt) => (src ? `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy">` : "");
+  const faqHtml = (faq, title = "সাধারণ জিজ্ঞাসা") =>
+    section(title, faq.length ? `<dl>${faq.map(({ q, a }) => `<dt>${esc(q)}</dt><dd>${esc(a)}</dd>`).join("")}</dl>` : "");
+  const planName = (p) => p.title_bn || p.title_en || "";
 
   const { districts = [], attractions = [], plans = [], posts = [], products = [] } = data;
   const dName = (d) => d.name_bn || districtName(d.name_en);
@@ -131,7 +137,7 @@ function buildPages(siteUrl, apiOrigin, data) {
     byDistrict.get(a.district_slug).push(a);
   }
   const districtLinks = districts.map((d) => `${link(slugPath("/districts", d.slug), dName(d))}${d.tagline ? ` — ${esc(d.tagline)}` : ""}`);
-  const planLinks = plans.map((p) => `${link(slugPath("/plans", p.slug), planSeo(p).title)}${p.duration ? ` (${esc(p.duration)})` : ""}`);
+  const planLinks = plans.map((p) => `${link(slugPath("/plans", p.slug), planName(p))}${p.duration ? ` (${esc(p.duration)})` : ""}`);
   const postLinks = posts.map((p) => link(slugPath("/blog", p.slug), postSeo(p).title));
   const productLinks = products.map((p) => link(slugPath("/shop", p.slug), productSeo(p).title));
 
@@ -139,7 +145,8 @@ function buildPages(siteUrl, apiOrigin, data) {
 
   for (const s of STATIC_PAGES) {
     const extra = {
-      "/": section("জনপ্রিয় জেলা", list(districtLinks.slice(0, 16))) + section("ট্রাভেল প্ল্যান", list(planLinks.slice(0, 6))) + section("ট্রাভেল ব্লগ", list(postLinks.slice(0, 6))),
+      "/": section("জনপ্রিয় জেলা", list(districtLinks.slice(0, 16))) + section("ট্যুর প্ল্যান ও ট্যুর প্যাকেজ", list(planLinks.slice(0, 6))) + section("ট্রাভেল ব্লগ", list(postLinks.slice(0, 6)))
+        + faqHtml(homeFaq("bn"), "বাংলাদেশ ট্যুর প্ল্যান: সাধারণ জিজ্ঞাসা"),
       "/districts": list(districtLinks),
       "/plans": list(planLinks),
       "/blog": list(postLinks),
@@ -155,6 +162,7 @@ function buildPages(siteUrl, apiOrigin, data) {
             "@type": "WebSite", "@id": abs("/#website"), name: "আমি ঘুরি সারা বাংলাদেশ",
             alternateName: "Ami Ghuri Shara Bangladesh", url: abs("/"), inLanguage: ["bn", "en"], publisher: { "@id": abs("/#org") },
           },
+          faqJsonLd(homeFaq("bn")),
         ]
       : [crumbs([["হোম", "/"], [s.title, s.path]])];
     pages.push({
@@ -178,14 +186,20 @@ function buildPages(siteUrl, apiOrigin, data) {
     ].filter(Boolean).join("");
     const food = Array.isArray(d.food) ? d.food.filter(Boolean).map(esc) : [];
     const trail = [["হোম", "/"], ["৬৪ জেলা", "/districts"], [dName(d), path]];
+    // Same match as DistrictDetailPage: plans list districts by English name.
+    const ownPlans = plans.filter((p) => Array.isArray(p.districts) && p.districts.includes(d.name_en));
+    const faq = districtFaq(d, own, ownPlans, "bn");
     pages.push({
       path, priority: "0.8", changefreq: "monthly", lastmod: lastmod(d),
       fullTitle: `${seo.title} | ${BRAND}`, h1: seo.title, description: seo.description, image: img(d.image),
       body: crumbHtml(trail)
+        + imgHtml(img(d.image), `${dName(d)} ভ্রমণ`)
         + `<p>${esc(d.tagline || "")} ${d.name_en ? `(${esc(districtName(d.name_en))})` : ""}</p>`
         + (facts ? `<ul>${facts}</ul>` : "")
         + section("দর্শনীয় স্থান", list(own.map((a) => `${link(slugPath("/attractions", a.slug), a.name_bn || a.name)}${a.desc ? ` — ${esc(a.desc)}` : ""}`)))
-        + section("বিখ্যাত খাবার", list(food)),
+        + section("বিখ্যাত খাবার", list(food))
+        + section(`${dName(d)} ট্যুর প্ল্যান`, list(ownPlans.map((p) => `${link(slugPath("/plans", p.slug), planName(p))}${p.duration ? ` (${esc(p.duration)})` : ""}`)))
+        + faqHtml(faq, `${dName(d)} ভ্রমণ: সাধারণ জিজ্ঞাসা`),
       jsonLd: [
         {
           "@type": "TouristDestination",
@@ -201,6 +215,7 @@ function buildPages(siteUrl, apiOrigin, data) {
             : undefined,
         },
         crumbs(trail),
+        faqJsonLd(faq),
       ],
     });
   }
@@ -213,7 +228,7 @@ function buildPages(siteUrl, apiOrigin, data) {
     pages.push({
       path, priority: "0.6", changefreq: "monthly", lastmod: lastmod(a),
       fullTitle: `${seo.title} | ${BRAND}`, h1: a.name_bn || a.name, description: seo.description, image: img(a.image),
-      body: crumbHtml(trail) + `<p>${esc(a.desc || "")}</p>` + (a.location ? `<p>${esc(a.location)}</p>` : ""),
+      body: crumbHtml(trail) + imgHtml(img(a.image), a.name_bn || a.name) + `<p>${esc(a.desc || "")}</p>` + (a.location ? `<p>${esc(a.location)}</p>` : ""),
       jsonLd: [
         {
           "@type": "TouristAttraction", name: a.name_bn || a.name, alternateName: a.name_bn && a.name ? a.name : undefined,
@@ -228,21 +243,29 @@ function buildPages(siteUrl, apiOrigin, data) {
   for (const p of plans) {
     const path = slugPath("/plans", p.slug);
     const seo = planSeo(p, "bn");
-    const trail = [["হোম", "/"], ["ট্রাভেল প্ল্যান", "/plans"], [seo.title, path]];
+    const trail = [["হোম", "/"], ["ট্যুর প্ল্যান", "/plans"], [planName(p), path]];
+    const faq = planFaq(p, "bn", { bookable: isBookable(p) });
     pages.push({
-      path, priority: "0.7", changefreq: "weekly", lastmod: lastmod(p),
-      fullTitle: `${seo.title} | ${BRAND}`, h1: seo.title, description: seo.description, image: img(p.image),
+      path, priority: "0.8", changefreq: "weekly", lastmod: lastmod(p),
+      fullTitle: `${seo.title} | ${BRAND}`, h1: planName(p), description: seo.description, image: img(p.image),
       body: crumbHtml(trail)
+        + imgHtml(img(p.image), planName(p))
         + `<ul>${[p.duration && `<li>সময়: ${esc(p.duration)}</li>`, p.cost && `<li>খরচ: ${esc(p.cost)}</li>`, Array.isArray(p.districts) && p.districts.length && `<li>জেলা: ${esc(p.districts.join(", "))}</li>`].filter(Boolean).join("")}</ul>`
         + `<p>${esc(plainText(p.description_bn || p.description_en))}</p>`
-        + section("হাইলাইটস", list((Array.isArray(p.highlights) ? p.highlights : []).map(esc))),
+        + section("হাইলাইটস", list((Array.isArray(p.highlights) ? p.highlights : []).map(esc)))
+        + faqHtml(faq),
       jsonLd: [
         {
-          "@type": "TouristTrip", name: seo.title, description: plainText(p.description_bn || p.description_en) || undefined,
+          "@type": "TouristTrip", name: planName(p), alternateName: p.title_bn && p.title_en ? p.title_en : undefined,
+          description: plainText(p.description_bn || p.description_en) || undefined,
           url: abs(path), image: img(p.image) || undefined, touristType: p.type || undefined,
           provider: { "@type": "Organization", name: "আমি ঘুরি সারা বাংলাদেশ", url: abs("/") },
+          offers: p.price > 0
+            ? { "@type": "Offer", price: p.price, priceCurrency: "BDT", url: abs(path), availability: isBookable(p) ? "https://schema.org/InStock" : "https://schema.org/SoldOut" }
+            : undefined,
         },
         crumbs(trail),
+        faqJsonLd(faq),
       ],
     });
   }
@@ -255,7 +278,7 @@ function buildPages(siteUrl, apiOrigin, data) {
     pages.push({
       path, priority: "0.7", changefreq: "monthly", lastmod: date, type: "article",
       fullTitle: `${seo.title} | ${BRAND}`, h1: seo.title, description: seo.description, image: img(post.image),
-      body: crumbHtml(trail) + `<p>${esc(plainText(post.content || post.excerpt))}</p>`
+      body: crumbHtml(trail) + imgHtml(img(post.image), seo.title) + `<p>${esc(plainText(post.content || post.excerpt))}</p>`
         + (post.districtSlug ? `<p>${link(slugPath("/districts", post.districtSlug), "জেলার ভ্রমণ গাইড দেখুন")}</p>` : ""),
       jsonLd: [
         {
@@ -278,7 +301,7 @@ function buildPages(siteUrl, apiOrigin, data) {
     pages.push({
       path, priority: "0.6", changefreq: "weekly", lastmod: lastmod(p),
       fullTitle: `${seo.title} | ${BRAND}`, h1: seo.title, description: seo.description, image: images[0],
-      body: crumbHtml(trail) + `<p>${esc(p.summary || "")}</p><p>${esc(plainText(p.description))}</p>`
+      body: crumbHtml(trail) + imgHtml(images[0], seo.title) + `<p>${esc(p.summary || "")}</p><p>${esc(plainText(p.description))}</p>`
         + (price > 0 ? `<p>দাম: ৳${esc(price)}</p>` : "") + (Number(p.rentPerDay) > 0 ? `<p>ভাড়া: ৳${esc(p.rentPerDay)} / দিন</p>` : ""),
       jsonLd: [
         {
@@ -304,7 +327,7 @@ function renderHtml(template, siteUrl, page) {
   const url = `${siteUrl}${page.path === "/" ? "/" : page.path}`;
   const desc = clip(page.description) || DEFAULT_DESCRIPTION;
   const image = page.image || `${siteUrl}/og-image.png`;
-  const ld = JSON.stringify({ "@context": "https://schema.org", "@graph": page.jsonLd }).replace(/</g, "\\u003c");
+  const ld = JSON.stringify({ "@context": "https://schema.org", "@graph": page.jsonLd.filter(Boolean) }).replace(/</g, "\\u003c");
   const head = [
     `<title data-default-meta>${esc(page.fullTitle)}</title>`,
     `<meta name="description" content="${esc(desc)}" data-default-meta />`,
@@ -340,9 +363,10 @@ function sitemapXml(siteUrl, pages) {
     e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>` : null,
     `    <changefreq>${e.changefreq}</changefreq>`,
     `    <priority>${e.priority}</priority>`,
+    e.image ? `    <image:image><image:loc>${xmlEscape(e.image)}</image:loc></image:image>` : null,
     "  </url>",
   ].filter(Boolean).join("\n"));
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${urls.join("\n")}\n</urlset>\n`;
 }
 
 function robotsTxt(siteUrl) {

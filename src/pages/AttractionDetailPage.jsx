@@ -20,7 +20,7 @@ export default function AttractionDetailPage() {
   const notFound = !loading && !attraction && (!error || status === 404 || status === 400);
   const seo = attraction ? attractionSeo(attraction, lang) : null;
   const meta = <PageMeta title={seo ? seo.title : notFound ? t("স্থানটি পাওয়া যায়নি", "Attraction not found") : t("আকর্ষণীয় স্থান", "Attractions")} description={seo?.description} image={attraction?.image} />;
-  if (loading) return <>{meta}<Spinner /></>;
+  if (loading) return <>{meta}<Spinner page /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
   }

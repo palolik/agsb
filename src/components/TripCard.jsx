@@ -26,7 +26,7 @@ export default function TripCard({ plan: p }) {
   const eyebrow = [p.type, p.duration].filter(Boolean).join(" · ");
 
   return (
-    <Link to={`/plans/${p.slug}`} className="photo-card group relative flex aspect-[4/5] min-h-[26rem] flex-col justify-between overflow-hidden rounded-3xl bg-base-300 text-white">
+    <Link to={`/plans/${p.slug}`} className="photo-card group relative flex w-full min-w-0 aspect-[4/5] min-h-[26rem] flex-col justify-between overflow-hidden rounded-3xl bg-base-300 text-white">
       <CoverImage image={p.image} alt={pick(p, "title")} className="photo-card-img absolute inset-0 h-full w-full object-cover" placeholderClassName="absolute inset-0 bg-gradient-to-br from-primary/70 to-base-300" />
       <div className="photo-card-shade absolute inset-0" aria-hidden="true" />
 

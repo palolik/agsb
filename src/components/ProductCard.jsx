@@ -25,7 +25,7 @@ export default function ProductCard({ product: p, mode }) {
   ].filter(Boolean);
 
   return (
-    <Link to={to} className="photo-card group relative flex aspect-[4/5] min-h-[22rem] flex-col justify-between overflow-hidden rounded-3xl bg-base-300 text-white">
+    <Link to={to} className="photo-card group relative flex w-full min-w-0 aspect-[4/5] min-h-[22rem] flex-col justify-between overflow-hidden rounded-3xl bg-base-300 text-white">
       <CoverImage
         image={asArray(p.images)[0]}
         alt={pick(p, "name")}

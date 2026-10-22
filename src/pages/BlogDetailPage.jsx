@@ -24,7 +24,7 @@ export default function BlogDetailPage() {
   const notFound = !loading && !post && (!error || status === 404 || status === 400);
   const seo = post ? postSeo(post, lang) : null;
   const meta = <PageMeta title={seo ? seo.title : notFound ? t("পোস্ট পাওয়া যায়নি", "Post not found") : t("ট্রাভেল ব্লগ", "Travel Blog")} description={seo?.description} image={post?.image} type={post ? "article" : "website"} />;
-  if (loading) return <>{meta}<Spinner /></>;
+  if (loading) return <>{meta}<Spinner page /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
   }

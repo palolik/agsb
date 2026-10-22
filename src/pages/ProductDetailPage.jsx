@@ -76,7 +76,7 @@ function ProductDetail({ slug }) {
       image={asArray(product?.images)[0]}
     />
   );
-  if (loading) return <>{meta}<Spinner /></>;
+  if (loading) return <>{meta}<Spinner page /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
   }

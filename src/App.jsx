@@ -85,7 +85,7 @@ function Layout({ children, noFooter }) {
       <Navbar />
       <main className="flex-1">
         <ErrorBoundary key={pathname}>
-          <Suspense fallback={<Spinner />}>{children}</Suspense>
+          <Suspense fallback={<Spinner page />}>{children}</Suspense>
         </ErrorBoundary>
       </main>
       {!noFooter && <Footer />}

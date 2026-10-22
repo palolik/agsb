@@ -48,7 +48,7 @@ export default function DistrictsPage() {
     return matchDiv && matchSearch;
   });
 
-  const meta = <PageMeta title={t("৬৪ জেলা", "Districts")} description={t("বাংলাদেশের প্রতিটি জেলা ঘুরে দেখুন: দর্শনীয় স্থান, খাবার, যাতায়াত, বাজেট আর ভ্রমণের সেরা সময়।", "Explore every district of Bangladesh: attractions, food, transport, budgets and the best time to visit.")} />;
+  const meta = <PageMeta title={t("৬৪ জেলার ভ্রমণ গাইড ও ট্যুর প্ল্যান", "64 District Travel Guide & Tour Plans")} description={t("বাংলাদেশের ৬৪ জেলার ভ্রমণ গাইড ও ট্যুর প্ল্যান: প্রতিটি জেলার দর্শনীয় স্থান, খাবার, যাতায়াত, খরচ আর ভ্রমণের সেরা সময়।", "Travel guide and tour plans for all 64 districts of Bangladesh: places to visit, food, transport, costs and the best time to go.")} />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {meta}

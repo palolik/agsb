@@ -5,7 +5,6 @@ import { useLang } from "../context/LanguageContext";
 import { HiMail, HiLockClosed, HiCheckCircle } from "react-icons/hi";
 import { normalizeEmail } from "../lib/validation";
 import PageMeta from "../components/PageMeta";
-import LogoMark from "../components/LogoMark";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
@@ -44,7 +43,6 @@ export default function LoginPage() {
     <div className="max-w-md mx-auto px-4 sm:px-6 py-16">
       {meta}
       <div className="text-center mb-8">
-        <LogoMark className="w-12 h-12 mx-auto mb-4 block" />
         <h1 className="text-2xl md:text-3xl font-bold text-base-content">{t("আবার স্বাগতম", "Welcome back")}</h1>
         <p className="text-base-content/50 mt-1">{t("আপনার ঘোরা জেলাগুলোর হিসাব রাখতে ও ট্রিপ সামলাতে লগইন করুন", "Log in to track your districts and manage your trips")}</p>
       </div>

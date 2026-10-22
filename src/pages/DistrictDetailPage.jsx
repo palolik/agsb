@@ -13,7 +13,8 @@ import { ALL_DISTRICTS } from "../data/allDistricts";
 import AttractionCard from "../components/AttractionCard";
 import { useLang } from "../context/LanguageContext";
 import { districtName } from "../lib/districtNames";
-import { districtSeo } from "../lib/seo";
+import { districtSeo, districtFaq } from "../lib/seo";
+import FaqSection from "../components/FaqSection";
 
 // Only the 64 districts on the profile map can be checked in to.
 const MAP_SLUGS = new Set(ALL_DISTRICTS.map((d) => d.slug));
@@ -49,7 +50,7 @@ export default function DistrictDetailPage() {
   const notFound = !loading && !district && (!error || status === 404 || status === 400);
   const seo = district ? districtSeo(district, lang, asArray(attractionsQ.data)) : null;
   const meta = <PageMeta title={seo ? seo.title : notFound ? t("জেলা পাওয়া যায়নি", "District not found") : t("জেলা", "Districts")} description={seo?.description} image={district?.image} />;
-  if (loading) return <>{meta}<Spinner /></>;
+  if (loading) return <>{meta}<Spinner page /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
   }
@@ -83,7 +84,10 @@ export default function DistrictDetailPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="badge">{pick(division, "name")}</span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold text-base-content">{dn(district)}</h1>
+          <h1 className="text-3xl md:text-5xl font-bold text-base-content">
+            {dn(district)}
+            <span className="block mt-1 text-base md:text-xl font-semibold text-primary">{t("ট্যুর প্ল্যান ও ভ্রমণ গাইড", "Tour plan & travel guide")}</span>
+          </h1>
           <p className="text-lg text-base-content/60">{lang === "bn" ? `${district.name_en} — ${asText(district.tagline)}` : district.tagline}</p>
         </div>
         <PhotoCredit credit={district.image_credit} />
@@ -136,7 +140,7 @@ export default function DistrictDetailPage() {
             {/* Related Plans */}
             {relatedPlans.length > 0 && (
               <div>
-                <h2 className="text-xl font-bold text-base-content mb-4">{t("ট্রাভেল প্ল্যান", "Travel plans")}</h2>
+                <h2 className="text-xl font-bold text-base-content mb-4">{t(`${dn(district)} ট্যুর প্ল্যান`, `${dn(district)} tour plans`)}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {relatedPlans.map(p => (
                     <Link key={p.id} to={`/plans/${p.slug}`} className="card bg-base-200 p-4 border border-base-300 card-hover">
@@ -147,6 +151,11 @@ export default function DistrictDetailPage() {
                 </div>
               </div>
             )}
+
+            <FaqSection
+              title={t(`${dn(district)} ভ্রমণ: সাধারণ জিজ্ঞাসা`, `${dn(district)} travel FAQ`)}
+              faq={districtFaq(district, asArray(attractionsQ.data), relatedPlans, lang)}
+            />
           </div>
 
           {/* Sidebar */}
@@ -216,7 +225,8 @@ function DistrictAttractions({ query }) {
   const { t } = useLang();
   const { data, loading, error, reload } = query;
   if (loading) {
-    return <div role="status" aria-live="polite" className="py-6 text-center"><span className="loading loading-spinner loading-md text-primary" aria-label={t("দর্শনীয় স্থান লোড হচ্ছে", "Loading attractions")} /></div>;
+    // Holds roughly the height of the cards that replace it (less layout shift).
+    return <div role="status" aria-live="polite" className="min-h-[28rem] sm:min-h-[16rem] py-6 flex items-start justify-center"><span className="loading loading-spinner loading-md text-primary" aria-label={t("দর্শনীয় স্থান লোড হচ্ছে", "Loading attractions")} /></div>;
   }
   if (error) {
     return (

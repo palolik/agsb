@@ -7,7 +7,6 @@ import { HiUser, HiMail, HiPhone, HiLockClosed, HiLocationMarker } from "react-i
 import { asArray } from "../lib/safe";
 import { isValidBdPhone, normalizeEmail, normalizePhone, phoneError as phoneErrorText } from "../lib/validation";
 import PageMeta from "../components/PageMeta";
-import LogoMark from "../components/LogoMark";
 import { districtName } from "../lib/districtNames";
 
 export default function SignupPage() {
@@ -67,7 +66,6 @@ export default function SignupPage() {
     <div className="max-w-md mx-auto px-4 sm:px-6 py-16">
       {meta}
       <div className="text-center mb-8">
-        <LogoMark className="w-12 h-12 mx-auto mb-4 block" />
         <h1 className="text-2xl md:text-3xl font-bold text-base-content">{t("অ্যাকাউন্ট তৈরি করুন", "Create an account")}</h1>
         <p className="text-base-content/50 mt-1">{t("যোগ দিন আর শুরু করুন আপনার ৬৪ জেলা চ্যালেঞ্জ — একদম ফ্রি", "Join and start your 64-district challenge — free")}</p>
       </div>

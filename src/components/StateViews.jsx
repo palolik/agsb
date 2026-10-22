@@ -3,12 +3,14 @@ import { useLang } from "../context/LanguageContext";
 
 // Shared loading / error / empty states for data-driven pages and sections.
 
-export function Spinner({ label }) {
+export function Spinner({ label, page = false }) {
   const { t } = useLang();
   // Omitted label → default text; label={null} or "" hides it.
   const text = label === undefined ? t("লোড হচ্ছে…", "Loading…") : label;
+  // `page`: stands in for a whole page, so it holds a screen's height and the
+  // footer doesn't jump when the content arrives (layout shift / CLS).
   return (
-    <div role="status" aria-live="polite" className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+    <div role="status" aria-live="polite" className={`flex flex-col items-center justify-center gap-3 py-16 text-center ${page ? "min-h-svh" : ""}`}>
       <span className="loading loading-spinner loading-lg text-primary" aria-hidden="true" />
       {text && <p className="text-sm text-base-content/60">{text}</p>}
     </div>

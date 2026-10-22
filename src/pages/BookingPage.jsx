@@ -52,7 +52,7 @@ export default function BookingPage() {
       image={plan?.image}
     />
   );
-  if (loading) return <>{meta}<Spinner /></>;
+  if (loading) return <>{meta}<Spinner page /></>;
   if (error && status !== 404) {
     return <>{meta}<div className="max-w-3xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
   }

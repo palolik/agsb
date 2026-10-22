@@ -40,7 +40,7 @@ export default function Footer() {
             <div className="space-y-2">
               <Link to="/districts" className="block text-sm text-base-content/60 hover:text-primary transition-colors">{t("সব জেলা", "All Districts")}</Link>
               <Link to="/map" className="block text-sm text-base-content/60 hover:text-primary transition-colors">{t("ইন্টারঅ্যাকটিভ ম্যাপ", "Interactive Map")}</Link>
-              <Link to="/plans" className="block text-sm text-base-content/60 hover:text-primary transition-colors">{t("ট্রিপ প্ল্যান", "Trip Plans")}</Link>
+              <Link to="/plans" className="block text-sm text-base-content/60 hover:text-primary transition-colors">{t("ট্যুর প্ল্যান", "Tour Plans")}</Link>
               <Link to="/shop" className="block text-sm text-base-content/60 hover:text-primary transition-colors">{t("শপ", "Shop")}</Link>
               <Link to="/blog" className="block text-sm text-base-content/60 hover:text-primary transition-colors">{t("ট্রাভেল ব্লগ", "Travel Blog")}</Link>
               <Link to="/frames" className="block text-sm text-base-content/60 hover:text-primary transition-colors">{t("ফটো ফ্রেম", "Photo Frames")}</Link>

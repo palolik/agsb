@@ -12,7 +12,7 @@ const nav = [
   { to: "/", bn: "হোম", en: "Home" },
   { to: "/districts", bn: "জেলা", en: "Districts" },
   { to: "/map", bn: "ম্যাপ", en: "Map" },
-  { to: "/plans", bn: "ট্রিপ প্ল্যান", en: "Trip Plans" },
+  { to: "/plans", bn: "ট্যুর প্ল্যান", en: "Tour Plans" },
   { to: "/shop", bn: "শপ", en: "Shop" },
   { to: "/blog", bn: "ব্লগ", en: "Blog" },
   { to: "/partners", bn: "পার্টনার", en: "Partners" },
@@ -63,7 +63,7 @@ export default function Navbar() {
           {/* Right actions */}
           <div className="flex items-center gap-2">
             <Link to="/contact" className="btn btn-primary btn-sm hidden md:flex">
-              {t("ট্রিপ প্ল্যান করুন", "Plan a Trip")}
+              {t("ট্যুর প্ল্যান করুন", "Plan a Tour")}
             </Link>
             <div className="hidden sm:block"><LanguageToggle /></div>
             <ThemeToggle />
@@ -137,7 +137,7 @@ export default function Navbar() {
                 <HiShoppingCart className="w-4 h-4" aria-hidden="true" /> {t("কার্ট", "Cart")}{count > 0 ? ` (${count})` : ""}
               </Link>
               <Link to="/contact" onClick={() => setOpen(false)} className="btn btn-primary btn-sm w-full">
-                {t("ট্রিপ প্ল্যান করুন", "Plan a Trip")}
+                {t("ট্যুর প্ল্যান করুন", "Plan a Tour")}
               </Link>
               <Link
                 to={user ? "/profile" : "/login"}

@@ -2,7 +2,7 @@
 # _redirects are only read by Vercel / Netlify).
 
 Options -MultiViews -Indexes
-# home.html is the prerendered home page (scripts/prerender.mjs); index.html
+# home.html is the prerendered home page (scripts/build-seo.mjs); index.html
 # stays the plain SPA shell used as the fallback for every other route.
 DirectoryIndex home.html index.html
 # /districts is both a page (districts.html) and a folder of detail pages;
@@ -26,7 +26,7 @@ DirectorySlash Off
   RewriteCond %{DOCUMENT_ROOT}/home.html -f
   RewriteRule ^$ /home.html [L]
 
-  # Prerendered pages from scripts/prerender.mjs: /blog/x -> /blog/x.html
+  # Prerendered pages from scripts/build-seo.mjs: /blog/x -> /blog/x.html
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{DOCUMENT_ROOT}/$1.html -f
   RewriteRule ^(.+)$ /$1.html [L]

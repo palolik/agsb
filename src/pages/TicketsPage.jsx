@@ -5,7 +5,6 @@ import { GENDERS, PAYMENT_STATUS, taka, hasTickets } from "../lib/booking";
 import { asArray } from "../lib/safe";
 import { HiArrowLeft, HiPrinter, HiCalendar, HiUser } from "react-icons/hi";
 import PageMeta from "../components/PageMeta";
-import LogoMark from "../components/LogoMark";
 import { bookingFetchState } from "./CheckoutPage";
 import { useLang } from "../context/LanguageContext";
 
@@ -21,7 +20,6 @@ function TicketCard({ booking, traveller, index }) {
       {/* Main part */}
       <div className="flex-1 p-5 min-w-0">
         <div className="flex items-center gap-2">
-          <LogoMark className="w-8 h-8" />
           <div className="leading-tight">
             <div className="text-xs font-bold text-base-content">আমিঘুরিসারাবাংলাদেশ</div>
             <div className="text-[10px] tracking-wide text-base-content/50">{t("ভ্রমণ টিকিট", "TRAVEL TICKET")}</div>

@@ -7,7 +7,8 @@ import { Spinner, ErrorState, EmptyState } from "../components/StateViews";
 import PageMeta from "../components/PageMeta";
 import ProductCard from "../components/ProductCard";
 import DistrictCarousel from "../components/DistrictCarousel";
-import DistrictWordCloud from "../components/DistrictWordCloud";
+import FaqSection from "../components/FaqSection";
+import { DEFAULT_DESCRIPTION, homeFaq } from "../lib/seo";
 import DivisionTiles from "../components/DivisionTiles";
 import TripCard from "../components/TripCard";
 import BlogCard from "../components/BlogCard";
@@ -15,7 +16,7 @@ import UpcomingTrips, { upcomingPlans } from "../components/UpcomingTrips";
 import { useLang } from "../context/LanguageContext";
 import DistrictGraph from "../components/DistrictGraph";
 export default function HomePage() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   // Each section handles its own loading/error/empty state, so one failed
   // request never blanks the rest of the page.
   const districtsQ = useFetch("/districts");
@@ -40,7 +41,7 @@ export default function HomePage() {
     !plansQ.error && { key: "Travel Plans", label: t("ট্রাভেল প্ল্যান", "Travel Plans"), val: plansQ.loading ? null : asArray(travelPlans).length },
   ].filter(Boolean);
 
-  const meta = <PageMeta description={t("ট্রিপ প্ল্যান করুন, অজানা সব জায়গা খুঁজে নিন, জেলা ব্যাজ সংগ্রহ করুন আর জেলা থেকে জেলায় ঘুরে হয়ে উঠুন বাংলাদেশের সত্যিকারের অভিযাত্রী।", "Plan trips, discover hidden gems, collect district badges, and become a true explorer of Bangladesh — district by district.")} />;
+  const meta = <PageMeta description={t(DEFAULT_DESCRIPTION, "Bangladesh tour plans and travel planning for all 64 districts — costs, transport, places to visit and group tour packages you can book online.")} />;
   return (
     <div>
       {meta}
@@ -48,23 +49,23 @@ export default function HomePage() {
         <img src="/assets/morning-lake-with-boat.webp" alt="" width="1920" height="1080" fetchPriority="high" className="absolute inset-0 w-full h-full object-cover object-[50%_50%]" />
         <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-2 md:pt-4 pb-10 relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,36rem)] gap-8 items-center">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary text-primary-content text-sm mb-6 [text-shadow:none]">
+            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary text-primary-content text-sm mb-6 [text-shadow:none]">
               <span className="w-2 h-2 rounded-full bg-primary-content animate-pulse" />
               {t("৬৪ জেলা চ্যালেঞ্জ — শুরু করুন আজই", "64-District Challenge — start today")}
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-8 sm:mb-4">
               {t("৬৪ জেলা,", "64 districts,")}<br />
-              <span>{t("এক দেশ,", "one country,")}</span><br />
+              <span className="text-primary sm:text-inherit">{t("এক দেশ,", "one country,")}</span><br />
               {t("অসংখ্য গল্প।", "countless stories.")}
             </h1>
-            <p className="text-lg text-white/90 mb-8 max-w-xl">
+            <p className="hidden sm:block text-lg text-white/90 mb-8 max-w-xl">
               {t(
-                "ট্রিপ প্ল্যান করুন, অজানা সব জায়গা খুঁজে নিন, জেলা ব্যাজ সংগ্রহ করুন আর হয়ে উঠুন বাংলাদেশের সত্যিকারের অভিযাত্রী। আপনার ৬৪ জেলার যাত্রা শুরু হোক এখান থেকেই।",
+                "ট্যুর প্ল্যান করুন, অজানা সব জায়গা খুঁজে নিন, জেলা ব্যাজ সংগ্রহ করুন আর হয়ে উঠুন বাংলাদেশের সত্যিকারের অভিযাত্রী। আপনার ৬৪ জেলার যাত্রা শুরু হোক এখান থেকেই।",
                 "Plan trips, discover hidden gems, collect district badges, and become a true explorer of Bangladesh. Your 64-district journey starts here."
               )}
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/districts" className="btn btn-primary btn-lg [text-shadow:none]">
+              <Link to="/districts" className="btn btn-primary btn-lg [text-shadow:none] hidden sm:inline-flex">
                 {t("জেলা ঘুরে দেখুন", "Explore Districts")} <HiArrowRight className="ml-1" />
               </Link>
               <Link to="/map" className="btn btn-ghost btn-lg border-none text-white hover:bg-white/15">
@@ -74,7 +75,7 @@ export default function HomePage() {
           </div>
           {/* <DistrictWordCloud className="hidden lg:block h-[36rem] -my-14" /> */}
           {/* Capped to the space left between the navbar and the stats bar. */}
-          <DistrictGraph className="hidden lg:block h-[min(40rem,calc(100svh-12rem))] translate-x-12 xl:translate-x-20" />
+          <DistrictGraph className="h-[22rem] sm:h-[30rem] lg:h-[min(40rem,calc(100svh-12rem))] min-[1400px]:translate-x-20" />
         </div>
 
         {/* Stats */}
@@ -165,8 +166,8 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-base-content">{t("ট্রাভেল প্ল্যান", "Travel Plans")}</h2>
-            <p className="text-base-content/50 mt-1">{t("সব বাজেটের জন্য তৈরি ভ্রমণসূচি", "Ready-made itineraries for every budget")}</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-base-content">{t("ট্যুর প্ল্যান ও ট্যুর প্যাকেজ", "Tour Plans & Packages")}</h2>
+            <p className="text-base-content/50 mt-1">{t("সব বাজেটের জন্য তৈরি ভ্রমণ পরিকল্পনা", "Ready-made travel plans for every budget")}</p>
           </div>
           <Link to="/plans" className="btn btn-ghost btn-sm text-primary hidden sm:flex">
             {t("সব প্ল্যান", "All plans")} <HiArrowRight className="ml-1" />
@@ -233,6 +234,13 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* FAQ */}
+      <FaqSection
+        className="max-w-3xl mx-auto px-4 sm:px-6 pt-8"
+        title={t("বাংলাদেশ ট্যুর প্ল্যান: সাধারণ জিজ্ঞাসা", "Bangladesh tour planning: FAQ")}
+        faq={homeFaq(lang)}
+      />
 
       {/* CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">

@@ -14,7 +14,7 @@ export default function BlogCard({ post: b, featured = false }) {
   return (
     <Link
       to={`/blog/${b.slug}`}
-      className={`photo-card group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-base-300 text-white ${featured ? "min-h-[26rem] md:col-span-2" : "aspect-[4/5] min-h-[24rem]"}`}
+      className={`photo-card group relative flex w-full min-w-0 flex-col justify-between overflow-hidden rounded-3xl bg-base-300 text-white ${featured ? "min-h-[26rem] md:col-span-2" : "aspect-[4/5] min-h-[24rem]"}`}
     >
       <CoverImage
         image={b.image}

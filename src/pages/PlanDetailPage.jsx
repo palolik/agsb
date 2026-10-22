@@ -12,7 +12,8 @@ import PageMeta from "../components/PageMeta";
 import CoverImage from "../components/CoverImage";
 import SeatsMeter from "../components/SeatsMeter";
 import { useLang } from "../context/LanguageContext";
-import { planSeo } from "../lib/seo";
+import { planSeo, planFaq } from "../lib/seo";
+import FaqSection from "../components/FaqSection";
 
 export default function PlanDetailPage() {
   const { slug } = useParams();
@@ -33,7 +34,7 @@ export default function PlanDetailPage() {
   const notFound = !loading && !plan && (!error || status === 404 || status === 400);
   const seo = plan ? planSeo(plan, lang) : null;
   const meta = <PageMeta title={seo ? seo.title : notFound ? t("প্ল্যান পাওয়া যায়নি", "Plan not found") : t("ট্রাভেল প্ল্যান", "Trip Plans")} description={seo?.description} image={plan?.image} />;
-  if (loading) return <>{meta}<Spinner /></>;
+  if (loading) return <>{meta}<Spinner page /></>;
   if (error && !notFound) {
     return <>{meta}<div className="max-w-7xl mx-auto px-4 py-8"><ErrorState message={error} onRetry={reload} /></div></>;
   }
@@ -112,6 +113,8 @@ export default function PlanDetailPage() {
                 </div>
               </div>
             )}
+
+            <FaqSection faq={planFaq(plan, lang, { bookable: isBookable(plan) })} />
           </div>
 
           {/* Sidebar */}

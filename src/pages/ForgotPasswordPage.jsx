@@ -6,7 +6,6 @@ import { useLang } from "../context/LanguageContext";
 import { apiSend } from "../lib/api";
 import { normalizeEmail } from "../lib/validation";
 import PageMeta from "../components/PageMeta";
-import LogoMark from "../components/LogoMark";
 
 const MIN_PASSWORD = 8;
 const MAX_PASSWORD = 200;
@@ -196,7 +195,6 @@ export default function ForgotPasswordPage() {
     <div className="max-w-md mx-auto px-4 sm:px-6 py-16">
       <PageMeta noindex title={t("পাসওয়ার্ড ভুলে গেছেন", "Forgot password")} />
       <div className="text-center mb-6">
-        <LogoMark className="w-12 h-12 mx-auto mb-4 block" />
         <h1 className="text-2xl md:text-3xl font-bold text-base-content">
           {step === 3 ? t("নতুন পাসওয়ার্ড দিন", "Set a new password") : t("পাসওয়ার্ড ভুলে গেছেন?", "Forgot your password?")}
         </h1>
